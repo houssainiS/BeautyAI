@@ -1,17 +1,25 @@
-import cv2
-import numpy as np
-from PIL import Image
-import mediapipe as mp
+# recommender/models/face_crop_utils.py
 
-mp_face_mesh = mp.solutions.face_mesh
+def get_face_mesh():
+    import mediapipe as mp
 
-def detect_and_crop_face(pil_image: Image.Image) -> Image.Image:
+    if not hasattr(get_face_mesh, "_solution"):
+        get_face_mesh._solution = mp.solutions.face_mesh
+    return get_face_mesh._solution
+
+
+def detect_and_crop_face(pil_image):
     """
     Detect face using MediaPipe Face Mesh, crop tight face box, return PIL image.
     Raises ValueError if no face or multiple faces detected.
     """
+    import numpy as np
+    from PIL import Image
+
     image = np.array(pil_image.convert("RGB"))
     h, w, _ = image.shape
+
+    mp_face_mesh = get_face_mesh()
 
     with mp_face_mesh.FaceMesh(
         static_image_mode=True,
@@ -38,7 +46,8 @@ def detect_and_crop_face(pil_image: Image.Image) -> Image.Image:
         face_crop = image[y_min:y_max, x_min:x_max]
         return Image.fromarray(face_crop)
 
-def crop_left_eye(pil_image: Image.Image) -> Image.Image:
+
+def crop_left_eye(pil_image):
     """
     Crop the left eye (person's right eye in the image).
     """
@@ -46,7 +55,8 @@ def crop_left_eye(pil_image: Image.Image) -> Image.Image:
         33, 133, 160, 159, 158, 144, 153, 154, 155, 133
     ])
 
-def crop_right_eye(pil_image: Image.Image) -> Image.Image:
+
+def crop_right_eye(pil_image):
     """
     Crop the right eye (person's left eye in the image).
     """
@@ -54,12 +64,18 @@ def crop_right_eye(pil_image: Image.Image) -> Image.Image:
         362, 263, 387, 386, 385, 373, 380, 381, 382, 362
     ])
 
-def _crop_eye(pil_image: Image.Image, eye_indices: list) -> Image.Image:
+
+def _crop_eye(pil_image, eye_indices):
     """
     Helper function to crop eye region based on given landmark indices.
     """
+    import numpy as np
+    from PIL import Image
+
     image = np.array(pil_image.convert("RGB"))
     h, w, _ = image.shape
+
+    mp_face_mesh = get_face_mesh()
 
     with mp_face_mesh.FaceMesh(
         static_image_mode=True,

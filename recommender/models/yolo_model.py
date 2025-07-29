@@ -1,35 +1,45 @@
+
 import os
-import cv2
-import numpy as np
-from PIL import Image
-from ultralytics import YOLO
 
-# Load YOLOv8 Model Once
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-YOLO_MODEL_PATH = os.path.join(BASE_DIR, "best.pt")
-yolo_model = YOLO(YOLO_MODEL_PATH)
+def get_yolo_model():
+    from ultralytics import YOLO
+    import os
 
-def detect_skin_defects_yolo(image: Image.Image, conf_threshold=0.3):
+    if not hasattr(get_yolo_model, "_model"):
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        YOLO_MODEL_PATH = os.path.join(BASE_DIR, "best.pt")
+        get_yolo_model._model = YOLO(YOLO_MODEL_PATH)
+
+    return get_yolo_model._model
+
+
+def detect_skin_defects_yolo(image, conf_threshold=0.3):
     """
     Detect skin defects using YOLOv8.
     Returns:
       - detections: list of dicts with 'bbox', 'label', 'confidence'
       - annotated_image: PIL Image with boxes drawn
     """
+    # Lazy imports
+    import numpy as np
+    import cv2
+    from PIL import Image
+
+    model = get_yolo_model()
+
     # Convert PIL to OpenCV
     image_cv2 = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
     # Predict
-    results = yolo_model.predict(source=image_cv2, conf=conf_threshold, stream=False)[0]
+    results = model.predict(source=image_cv2, conf=conf_threshold, stream=False)[0]
 
     detections = []
     if results.boxes is not None:
         for box in results.boxes:
-            # bbox in xyxy format (float), convert to int list
             bbox = box.xyxy[0].cpu().numpy().astype(int).tolist()  # [x1, y1, x2, y2]
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
-            label = yolo_model.names[cls_id]
+            label = model.names[cls_id]
 
             detections.append({
                 "bbox": bbox,

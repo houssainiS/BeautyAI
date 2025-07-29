@@ -1,19 +1,30 @@
 # recommender/models/segment_skin_conditions_yolo.py
-from ultralytics import YOLO
-import numpy as np
-import cv2
-from PIL import Image
+def get_seg_model():
+    # Lazy import
+    from ultralytics import YOLO
+    import os
 
-# Load model once (on import)
-seg_model = YOLO("C:/Users/Slimen/Desktop/tets 3 seg/skin_condition_seg.pt")
+    # You can adjust the model path to use relative or Render-compatible paths
+    model_path = "C:/Users/Slimen/Desktop/tets 3 seg/skin_condition_seg.pt"
+
+    if not hasattr(get_seg_model, "_model"):
+        get_seg_model._model = YOLO(model_path)
+    return get_seg_model._model
+
 
 def segment_skin_conditions(image_pil):
+    # Lazy imports
+    import numpy as np
+    import cv2
+    from PIL import Image
+
     # Convert PIL to OpenCV
     image_np = np.array(image_pil)
     image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
     # Run inference
-    results = seg_model.predict(image_bgr)
+    model = get_seg_model()
+    results = model.predict(image_bgr)
 
     # Overlay masks and results
     image_result = results[0].plot()

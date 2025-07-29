@@ -13,7 +13,7 @@ from recommender.models.facemesh_model import detect_and_crop_face, crop_left_ey
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SKIN_TYPE_MODEL_PATH = os.path.join(BASE_DIR, "skin_model.pth")
 EYE_COLOR_MODEL_PATH = os.path.join(BASE_DIR, "eye_color_model.pth")
-ACNE_MODEL_PATH = os.path.join(BASE_DIR, "acne.pth")  # <-- added acne model path
+ACNE_MODEL_PATH = os.path.join(BASE_DIR, "acne.pth")
 
 # ----------------------
 # 🧠 Model Definitions
@@ -38,16 +38,14 @@ class EyeColorResNet(nn.Module):
         super(EyeColorResNet, self).__init__()
         self.base_model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
         self.base_model.fc = nn.Linear(self.base_model.fc.in_features, num_classes)
-
     def forward(self, x):
         return self.base_model(x)
 
-class AcneResNet(nn.Module):  # <-- fixed acne model class
+class AcneResNet(nn.Module):
     def __init__(self, num_classes=5):
         super(AcneResNet, self).__init__()
-        self.backbone = models.resnet18(weights=None)  # no pretrained weights
+        self.backbone = models.resnet18(weights=None)
         self.backbone.fc = nn.Linear(self.backbone.fc.in_features, num_classes)
-
     def forward(self, x):
         return self.backbone(x)
 
@@ -65,35 +63,54 @@ transform_eye = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-transform_acne = transforms.Compose([  # <-- transform for acne model
+transform_acne = transforms.Compose([
     transforms.Resize((640, 640)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
 # ----------------------
-# ⚙️ Load Models
+# ⚙️ Lazy Load Models
 # ----------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-type_model = SkinCNN()
-type_model.load_state_dict(torch.load(SKIN_TYPE_MODEL_PATH, map_location=device))
-type_model.to(device).eval()
+_type_model = None
+_eye_model = None
+_acne_model = None
 
-eye_model = EyeColorResNet(num_classes=6)
-eye_model.load_state_dict(torch.load(EYE_COLOR_MODEL_PATH, map_location=device))
-eye_model.to(device).eval()
+def get_type_model():
+    global _type_model
+    if _type_model is None:
+        model = SkinCNN()
+        model.load_state_dict(torch.load(SKIN_TYPE_MODEL_PATH, map_location=device))
+        model.to(device).eval()
+        _type_model = model
+    return _type_model
 
-acne_model = AcneResNet(num_classes=5)
-acne_model.load_state_dict(torch.load(ACNE_MODEL_PATH, map_location=device))
-acne_model.to(device).eval()
+def get_eye_model():
+    global _eye_model
+    if _eye_model is None:
+        model = EyeColorResNet(num_classes=6)
+        model.load_state_dict(torch.load(EYE_COLOR_MODEL_PATH, map_location=device))
+        model.to(device).eval()
+        _eye_model = model
+    return _eye_model
+
+def get_acne_model():
+    global _acne_model
+    if _acne_model is None:
+        model = AcneResNet(num_classes=5)
+        model.load_state_dict(torch.load(ACNE_MODEL_PATH, map_location=device))
+        model.to(device).eval()
+        _acne_model = model
+    return _acne_model
 
 # ----------------------
 # 🏷️ Class Labels
 # ----------------------
 skin_type_labels = ['dry', 'normal', 'oily']
 eye_color_labels = ['Amber', 'Blue', 'Brown', 'Green', 'Grey', 'Hazel']
-acne_labels = ['0', '1', '2', '3', 'Clear']  # Adjust as needed
+acne_labels = ['0', '1', '2', '3', 'Clear']
 
 # ----------------------
 # 🔮 Prediction Functions
@@ -104,7 +121,7 @@ def predict_acne(image: Image.Image) -> dict:
     input_tensor = transform_acne(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        outputs = acne_model(input_tensor)
+        outputs = get_acne_model()(input_tensor)
         probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
         pred_idx = probs.argmax()
         confidence = probs[pred_idx]
@@ -125,17 +142,15 @@ def predict(image: Image.Image) -> dict:
     except ValueError as e:
         return {"error": str(e)}
 
-    # Prepare inputs
     input_type = transform_type(face_image).unsqueeze(0).to(device)
     input_left_eye = transform_eye(left_eye).unsqueeze(0).to(device)
     input_right_eye = transform_eye(right_eye).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        type_out = type_model(input_type)[1]
-        left_eye_out = torch.sigmoid(eye_model(input_left_eye)).cpu().numpy()[0]
-        right_eye_out = torch.sigmoid(eye_model(input_right_eye)).cpu().numpy()[0]
+        type_out = get_type_model()(input_type)[1]
+        left_eye_out = torch.sigmoid(get_eye_model()(input_left_eye)).cpu().numpy()[0]
+        right_eye_out = torch.sigmoid(get_eye_model()(input_right_eye)).cpu().numpy()[0]
 
-        # Classifications
         type_probs = F.softmax(type_out, dim=1).cpu().numpy()[0]
         type_pred = skin_type_labels[int(type_probs.argmax())]
 
@@ -144,7 +159,6 @@ def predict(image: Image.Image) -> dict:
         left_eye_color = max(left_eye_dict, key=left_eye_dict.get)
         right_eye_color = max(right_eye_dict, key=right_eye_dict.get)
 
-    # Add acne prediction on the cropped face
     acne_result = predict_acne(face_image)
 
     return {
