@@ -1,0 +1,5 @@
+Django
+torch
+torchvision
+Pillow
+numpy

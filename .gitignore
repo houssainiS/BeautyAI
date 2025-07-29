@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Django
+*.sqlite3
+.env
+
+
+
+# Virtualenv
+venv/
+.env/
+
+#big models 
+recommender/models/best.pt
+recommender/models/eye_color_model.pth
+recommender/models/acne.pth
+recommender/models/skin_condition_seg.pt
+recommender/models/skin_model.pth
