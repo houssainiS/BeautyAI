@@ -15,7 +15,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-insecure-key-for-dev")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+
+allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = allowed_hosts_env.split(",") if allowed_hosts_env else []
+
+if "ALL" in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["*"]  # allow all hosts (only for dev/debug, be careful!)
 
 
 # Application definition
