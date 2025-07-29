@@ -22,6 +22,7 @@ ALLOWED_HOSTS = allowed_hosts_env.split(",") if allowed_hosts_env else []
 if "ALL" in ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["*"]  # allow all hosts (only for dev/debug, be careful!)
 
+print("🟢 ENV PORT:", os.environ.get("PORT")) #just to see gunicorn port
 
 # Application definition
 INSTALLED_APPS = [
