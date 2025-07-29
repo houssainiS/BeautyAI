@@ -21,7 +21,7 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # if "ALL" in ALLOWED_HOSTS:
 #     ALLOWED_HOSTS = ["*"]  # allow all hosts (only for dev/debug, be careful!)
-ALLOWED_HOSTS = [".vercel.app"]
+ALLOWED_HOSTS = ["*"]
 
 
 print("🟢 ENV PORT:", os.environ.get("PORT")) #just to see gunicorn port
