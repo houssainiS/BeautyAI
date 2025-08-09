@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'recommender.middleware.VisitorTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'makeupAI_hosted.urls'
@@ -69,11 +70,16 @@ WSGI_APPLICATION = 'makeupAI_hosted.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL")
-    )
+    'default': {
+        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+        'NAME': os.getenv("DB_NAME", BASE_DIR / 'db.sqlite3'),
+        # For other engines like PostgreSQL, you can add more fields:
+        # 'USER': os.getenv("DB_USER"),
+        # 'PASSWORD': os.getenv("DB_PASSWORD"),
+        # 'HOST': os.getenv("DB_HOST", "localhost"),
+        # 'PORT': os.getenv("DB_PORT", "5432"),
+    }
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

@@ -135,7 +135,7 @@
                     <div class="face-analysis-card" id="croppedFaceSection" style="display:none;">
                         <div class="face-display">
                             <div class="face-frame">
-                                <img id="croppedFaceImage" src="/placeholder.svg?height=200&width=200" alt="Detected Face">
+                                <img id="croppedFaceImage" src="" alt="Detected Face">
                                 <div class="face-badge">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -234,11 +234,11 @@
                             </div>
                             <div class="segmentation-container">
                                 <div class="segmentation-tabs">
-                                    <button class="tab-btn active" data-tab="original">
+                                    <button class="tab-btn" data-tab="original">
                                         <i class="fas fa-image"></i>
                                         Original
                                     </button>
-                                    <button class="tab-btn" data-tab="segmented">
+                                    <button class="tab-btn active" data-tab="segmented">
                                         <i class="fas fa-layer-group"></i>
                                         Segmented
                                     </button>
@@ -248,16 +248,16 @@
                                     </button>
                                 </div>
                                 <div class="segmentation-display">
-                                    <div class="image-container" id="originalContainer">
-                                        <img id="originalImage" src="/placeholder.svg?height=300&width=300" alt="Original Face">
+                                    <div class="image-container" id="originalContainer" style="display:none;">
+                                        <img id="originalImage" src="" alt="Original Face">
                                     </div>
-                                    <div class="image-container" id="segmentedContainer" style="display:none;">
-                                        <img id="segmentedImage" src="/placeholder.svg?height=300&width=300" alt="Segmented Analysis">
+                                    <div class="image-container" id="segmentedContainer">
+                                        <img id="segmentedImage" src="" alt="Segmented Analysis">
                                     </div>
                                     <div class="image-container" id="overlayContainer" style="display:none;">
                                         <div class="overlay-wrapper">
-                                            <img id="overlayOriginal" src="/placeholder.svg?height=300&width=300" alt="Original">
-                                            <img id="overlaySegmented" src="/placeholder.svg?height=300&width=300" alt="Overlay" class="overlay-image">
+                                            <img id="overlayOriginal" src="" alt="Original">
+                                            <img id="overlaySegmented" src="" alt="Overlay" class="overlay-image">
                                         </div>
                                     </div>
                                 </div>
@@ -281,11 +281,11 @@
                                 <div class="detection-legend">
                                     <div class="legend-item">
                                         <div class="legend-color detected"></div>
-                                        <span>Confidence Level</span>
+                                        <span>Detected Areas</span>
                                     </div>
                                     <div class="legend-item">
                                         <div class="legend-color confidence"></div>
-                                        <span>Detected Areas</span>
+                                        <span>Confidence Level</span>
                                     </div>
                                 </div>
                             </div>
@@ -301,6 +301,33 @@
                         <div class="recommendation-content">
                             <p id="recommendationText">Based on your skin type and eye color, we'll provide personalized makeup recommendations.</p>
                         </div>
+                    </div>
+
+                    <!-- New Feedback Section -->
+                    <div class="feedback-section" id="feedbackSection">
+                        <div class="feedback-header">
+                            <i class="fas fa-comment-dots"></i>
+                            <h3>Was this analysis helpful?</h3>
+                        </div>
+                        <div class="feedback-buttons">
+                            <button class="btn btn-success feedback-btn" id="likeBtn">
+                                <i class="fas fa-thumbs-up"></i>
+                                Yes, it was helpful!
+                            </button>
+                            <button class="btn btn-error feedback-btn" id="dislikeBtn">
+                                <i class="fas fa-thumbs-down"></i>
+                                No, not really.
+                            </button>
+                        </div>
+                        <div class="dislike-feedback-area" id="dislikeFeedbackArea" style="display:none;">
+                            <p>Tell us why:</p>
+                            <textarea id="dislikeReason" rows="3" placeholder="e.g., 'Recommendations were not accurate', 'Analysis was incorrect'"></textarea>
+                            <button class="btn btn-primary" id="submitDislikeFeedbackBtn">
+                                <i class="fas fa-paper-plane"></i>
+                                Submit Feedback
+                            </button>
+                        </div>
+                        <div class="feedback-message" id="feedbackMessage" style="display:none;"></div>
                     </div>
 
                     <div class="results-actions">
@@ -337,7 +364,7 @@
                         <p>Choose a clear photo of your face for the best recommendations</p>
                     </div>
                     
-                    <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}">
+                    <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}" style="text-align: center;">
                         {% csrf_token %}
                         <div class="upload-area">
                             <input type="file" accept="image/*" id="fileInput" name="photo" required>
@@ -416,7 +443,7 @@
                         </div>
                         <span class="brand-text">BeautyAI</span>
                     </div>
-                    <p>&copy; 2025 Webixia-houssaini. All rights reserved.</p>
+                    <p>&copy; 2025 houssaini slimen. All rights reserved.</p>
                 </div>
             </div>
         </footer>

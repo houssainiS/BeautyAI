@@ -139,6 +139,7 @@
 /* Base Styles */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 body {
@@ -1216,8 +1217,6 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-
-
 .legend-color.detected {
   background: var(--success-500);
 }
@@ -1286,6 +1285,88 @@ body {
 .results-actions {
   text-align: center;
   margin-top: var(--space-8);
+}
+
+/* Feedback Section */
+.feedback-section {
+  background: var(--gray-50);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-top: var(--space-8);
+  border: 1px solid var(--gray-200);
+  text-align: center;
+  display: none; /* Hidden by default, shown by JS */
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  color: var(--gray-800);
+}
+
+.feedback-header i {
+  font-size: var(--font-size-2xl);
+  color: var(--primary-500);
+}
+
+.feedback-header h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.feedback-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.feedback-btn {
+  min-width: 180px;
+}
+
+.dislike-feedback-area {
+  margin-top: var(--space-6);
+  text-align: left;
+}
+
+.dislike-feedback-area p {
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
+  margin-bottom: var(--space-3);
+}
+
+.dislike-feedback-area textarea {
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: var(--space-4);
+  transition: border-color var(--transition-fast);
+}
+
+.dislike-feedback-area textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2); /* primary-500 with 20% opacity */
+}
+
+.feedback-message {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  color: var(--success-700);
+  background-color: var(--success-100);
+  border: 1px solid var(--success-200);
+  display: none; /* Hidden by default */
 }
 
 /* Footer */
@@ -1414,6 +1495,13 @@ body {
 
   .recommendation-card {
     padding: var(--space-6);
+  }
+
+  .feedback-buttons {
+    flex-direction: column;
+  }
+  .feedback-btn {
+    width: 100%;
   }
 }
 
