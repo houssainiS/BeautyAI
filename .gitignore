@@ -13,4 +13,12 @@ __pycache__/
 venv/
 .env/
 
-vercel.json/  
+#big models 
+recommender/AImodels/best.pt
+recommender/AImodels/eye_color_model.pth
+recommender/AImodels/acne.pth
+recommender/AImodels/skin_condition_seg.pt
+recommender/AImodels/skin_model.pth
+
+#db
+db.sqlite3
