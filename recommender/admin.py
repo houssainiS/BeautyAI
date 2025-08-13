@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from .models import Visitor, FaceAnalysis , Feedback
+from .models import Visitor, FaceAnalysis , Feedback , AllowedOrigin
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
@@ -30,3 +30,9 @@ admin.site.index_title = "Welcome to Skin Analyzer Dashboard"
 
 # Remove Groups from admin
 admin.site.unregister(Group)
+
+#shopify urls table
+@admin.register(AllowedOrigin)
+class AllowedOriginAdmin(admin.ModelAdmin):
+    list_display = ("url", "created_at")
+    search_fields = ("url",)

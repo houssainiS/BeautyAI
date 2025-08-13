@@ -1,9 +1,19 @@
-from .models import Visitor
+from .models import Visitor, AllowedOrigin
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
+from django.conf import settings
 
 class VisitorTrackingMiddleware(MiddlewareMixin):
     def process_request(self, request):
+        # 🔹 Update CORS_ALLOWED_ORIGINS dynamically from DB
+        try:
+            settings.CORS_ALLOWED_ORIGINS = list(
+                AllowedOrigin.objects.values_list("url", flat=True)
+            )
+        except Exception:
+            pass
+
+        # 🔹 Existing visitor tracking logic
         session_key = request.session.session_key
         if not session_key:
             request.session.create()

@@ -42,3 +42,10 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.feedback_type} at {self.created_at}"
+
+class AllowedOrigin(models.Model):
+    url = models.URLField(unique=True, help_text="Allowed Shopify store URL")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.url

@@ -108,7 +108,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ###
-CORS_ALLOWED_ORIGINS = [
-    "https://first-extension.myshopify.com", # your store URL
-]
-CORS_ALLOW_CREDENTIALS = True 
+CORS_ALLOWED_ORIGINS = []
+CORS_ALLOW_CREDENTIALS = True
