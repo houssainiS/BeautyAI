@@ -8,9 +8,9 @@ import json
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
-from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_conditions  # <-- Added
+from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_conditions  # updated to return structured results
 
-from .models import FaceAnalysis , Feedback # Import your FaceAnalysis model
+from .models import FaceAnalysis, Feedback
 
 
 def home(request):
@@ -77,7 +77,7 @@ def upload_photo(request):
             yolo_annotated_base64 = base64.b64encode(buffered_annot.getvalue()).decode()
 
             # Run YOLOv8 segmentation model on cropped face
-            segmented_img, _ = segment_skin_conditions(cropped_face)
+            segmented_img, segmentation_results = segment_skin_conditions(cropped_face)
             buffered_seg = io.BytesIO()
             segmented_img.save(buffered_seg, format="JPEG")
             segmented_base64 = base64.b64encode(buffered_seg.getvalue()).decode()
@@ -109,7 +109,8 @@ def upload_photo(request):
                 "yolo_annotated": f"data:image/jpeg;base64,{yolo_annotated_base64}",
                 "left_eye_color": left_eye_color,
                 "right_eye_color": right_eye_color,
-                "segmentation_overlay": f"data:image/jpeg;base64,{segmented_base64}"
+                "segmentation_overlay": f"data:image/jpeg;base64,{segmented_base64}",
+                "segmentation_results": segmentation_results,  # <--- added
             })
 
         except Exception as e:
@@ -139,7 +140,7 @@ def get_device_type(request):
     return 'Desktop'
 
 
-#feedback
+# feedback
 @csrf_exempt
 def submit_feedback(request):
     if request.method == "POST":

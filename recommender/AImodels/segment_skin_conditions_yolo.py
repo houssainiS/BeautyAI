@@ -1,4 +1,4 @@
-# recommender/models/segment_skin_conditions_yolo.py
+# recommender/AImodels/segment_skin_conditions_yolo.py
 from ultralytics import YOLO
 import numpy as np
 import cv2
@@ -22,4 +22,16 @@ def segment_skin_conditions(image_pil):
     image_result_rgb = cv2.cvtColor(image_result, cv2.COLOR_BGR2RGB)
     image_pil_result = Image.fromarray(image_result_rgb)
 
-    return image_pil_result, results[0]
+    # Extract classes + confidence scores
+    segmentation_results = []
+    if hasattr(results[0], "boxes") and results[0].boxes is not None:
+        for box in results[0].boxes:
+            cls_id = int(box.cls[0].item())
+            conf = float(box.conf[0].item())
+            label = results[0].names[cls_id] if results[0].names else str(cls_id)
+            segmentation_results.append({
+                "label": label,
+                "confidence": round(conf, 4)
+            })
+
+    return image_pil_result, segmentation_results
