@@ -23,9 +23,6 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 #     ALLOWED_HOSTS = ["*"]  # allow all hosts (only for dev/debug, be careful!)
 ALLOWED_HOSTS = ["*"]
 
-
-print("🟢 ENV PORT:", os.environ.get("PORT")) #just to see gunicorn port
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -36,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'recommender',
     'corsheaders',
+    'shopify_integration',
 ]
 
 MIDDLEWARE = [
