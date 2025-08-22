@@ -72,7 +72,7 @@ WSGI_APPLICATION = 'makeupAI_hosted.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.postgresql_psycopg2"),
-        'NAME': os.getenv("DB_NAME", BASE_DIR / 'webixiaDB'),
+        'NAME': os.getenv("DB_NAME", "webixiaDB"),
         'USER': os.getenv("DB_USER", ""),
         'PASSWORD': os.getenv("DB_PASSWORD", ""),
         'HOST': os.getenv("DB_HOST", "localhost"),
