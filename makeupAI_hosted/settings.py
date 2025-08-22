@@ -71,13 +71,15 @@ WSGI_APPLICATION = 'makeupAI_hosted.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-        'NAME': os.getenv("DB_NAME", BASE_DIR / 'db.sqlite3'),
-        # For other engines like PostgreSQL, you can add more fields:
-        # 'USER': os.getenv("DB_USER"),
-        # 'PASSWORD': os.getenv("DB_PASSWORD"),
-        # 'HOST': os.getenv("DB_HOST", "localhost"),
-        # 'PORT': os.getenv("DB_PORT", "5432"),
+        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.postgresql_psycopg2"),
+        'NAME': os.getenv("DB_NAME", BASE_DIR / 'webixiaDB'),
+        'USER': os.getenv("DB_USER", ""),
+        'PASSWORD': os.getenv("DB_PASSWORD", ""),
+        'HOST': os.getenv("DB_HOST", "localhost"),
+        'PORT': ''
+        # 'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"), #for sqlite3
+        # 'NAME': os.getenv("DB_NAME", BASE_DIR / 'db.sqlite3'),
+
     }
 }
 
