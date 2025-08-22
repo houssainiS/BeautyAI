@@ -16,13 +16,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-insecure-key-for-dev")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 
-# allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
-# ALLOWED_HOSTS = allowed_hosts_env.split(",") if allowed_hosts_env else []
+allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
 
-# if "ALL" in ALLOWED_HOSTS:
-#     ALLOWED_HOSTS = ["*"]  # allow all hosts (only for dev/debug, be careful!)
-ALLOWED_HOSTS = ["*"]
 
+
+CSRF_TRUSTED_ORIGINS = ["https://beautyai.duckdns.org"]
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
