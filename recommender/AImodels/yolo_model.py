@@ -4,11 +4,16 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 
+# ----------------------
 # Load YOLOv8 Model Once
+# ----------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 YOLO_MODEL_PATH = os.path.join(BASE_DIR, "best.pt")
 yolo_model = YOLO(YOLO_MODEL_PATH)
 
+# ----------------------
+# Detect skin defects
+# ----------------------
 def detect_skin_defects_yolo(image: Image.Image, conf_threshold=0.3):
     """
     Detect skin defects using YOLOv8.
@@ -19,7 +24,7 @@ def detect_skin_defects_yolo(image: Image.Image, conf_threshold=0.3):
     # Convert PIL to OpenCV
     image_cv2 = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-    # Predict
+    # Predict using YOLOv8 (single image, no stream for memory efficiency)
     results = yolo_model.predict(source=image_cv2, conf=conf_threshold, stream=False)[0]
 
     detections = []
@@ -34,10 +39,10 @@ def detect_skin_defects_yolo(image: Image.Image, conf_threshold=0.3):
             detections.append({
                 "bbox": bbox,
                 "label": label,
-                "confidence": conf
+                "confidence": round(conf, 4)
             })
 
-            # Draw box on image
+            # Draw box and label on image
             cv2.rectangle(image_cv2, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
             cv2.putText(image_cv2, f"{label} {conf:.2f}", (bbox[0], bbox[1]-10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

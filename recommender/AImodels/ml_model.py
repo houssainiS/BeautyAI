@@ -1,3 +1,4 @@
+# recommender/AImodels/ml_model.py
 import os
 import torch
 import torch.nn as nn
@@ -31,7 +32,8 @@ class SkinCNN(nn.Module):
             nn.Linear(128, 3)
         )
     def forward(self, x):
-        return self.conv(x), self.fc(self.conv(x))
+        x_conv = self.conv(x)
+        return x_conv, self.fc(x_conv)
 
 class EyeColorResNet(nn.Module):
     def __init__(self, num_classes=6):
@@ -74,17 +76,17 @@ transform_acne = transforms.Compose([
 # ----------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-type_model = SkinCNN()
+type_model = SkinCNN().to(device)
 type_model.load_state_dict(torch.load(SKIN_TYPE_MODEL_PATH, map_location=device))
-type_model.to(device).eval()
+type_model.eval()
 
-eye_model = EyeColorResNet(num_classes=6)
+eye_model = EyeColorResNet(num_classes=6).to(device)
 eye_model.load_state_dict(torch.load(EYE_COLOR_MODEL_PATH, map_location=device))
-eye_model.to(device).eval()
+eye_model.eval()
 
-acne_model = AcneResNet(num_classes=5)
+acne_model = AcneResNet(num_classes=5).to(device)
 acne_model.load_state_dict(torch.load(ACNE_MODEL_PATH, map_location=device))
-acne_model.to(device).eval()
+acne_model.eval()
 
 # ----------------------
 # 🏷️ Class Labels
@@ -119,13 +121,14 @@ def predict(image: Image.Image) -> dict:
     except ValueError as e:
         return {"error": str(e)}
 
+    # Skin type
     input_type = transform_type(face_image).unsqueeze(0).to(device)
     with torch.no_grad():
         type_out = type_model(input_type)[1]
         type_probs = F.softmax(type_out, dim=1).cpu().numpy()[0]
         type_pred = skin_type_labels[int(type_probs.argmax())]
 
-    # Eye color logic with per-eye closed check
+    # Eye color
     if left_closed:
         left_eye_color = "Eyes Closed"
     else:
