@@ -21,7 +21,7 @@ mp_face_mesh_instance = mp_face_mesh.FaceMesh(
 def detect_and_crop_face(pil_image: Image.Image):
     """
     Detect face, check lighting and tilt, and check if eyes are closed.
-    Returns (cropped_face: PIL.Image, left_closed: bool, right_closed: bool, landmarks)
+    Returns (cropped_face: PIL.Image, left_closed: bool, right_closed: bool)
     Raises ValueError only if lighting is poor or no face found.
     """
     image = np.array(pil_image.convert("RGB"))
@@ -41,7 +41,6 @@ def detect_and_crop_face(pil_image: Image.Image):
     if brightness < 50:
         raise ValueError("Poor lighting detected. Please use a well-lit photo.")
 
-    # Run FaceMesh once
     results = mp_face_mesh_instance.process(image)
 
     if not results.multi_face_landmarks or len(results.multi_face_landmarks) != 1:
@@ -84,32 +83,39 @@ def detect_and_crop_face(pil_image: Image.Image):
     y_min, y_max = max(min(ys) - 20, 0), min(max(ys) + 20, h)
 
     face_crop = image[y_min:y_max, x_min:x_max]
-    return Image.fromarray(face_crop), left_closed, right_closed, landmarks
+    return Image.fromarray(face_crop), left_closed, right_closed
+
 
 # ----------------------
 # Crop eye from landmarks
 # ----------------------
-def crop_eye_from_landmarks(pil_image: Image.Image, landmarks, eye_indices: list) -> Image.Image:
+def _crop_eye(pil_image: Image.Image, eye_indices: list) -> Image.Image:
     image = np.array(pil_image.convert("RGB"))
     h, w, _ = image.shape
+    results = mp_face_mesh_instance.process(image)
 
+    if not results.multi_face_landmarks or len(results.multi_face_landmarks) != 1:
+        raise ValueError("Please upload a clear photo with exactly one face.")
+
+    landmarks = results.multi_face_landmarks[0].landmark
     eye_points = [(int(landmarks[i].x * w), int(landmarks[i].y * h)) for i in eye_indices]
     xs, ys = zip(*eye_points)
     x_min, x_max = max(min(xs) - 10, 0), min(max(xs) + 10, w)
     y_min, y_max = max(min(ys) - 10, 0), min(max(ys) + 10, h)
-
     eye_crop = image[y_min:y_max, x_min:x_max]
     return Image.fromarray(eye_crop)
+
 
 # ----------------------
 # Public crop eye functions
 # ----------------------
-def crop_left_eye(pil_image: Image.Image, landmarks) -> Image.Image:
-    return crop_eye_from_landmarks(pil_image, landmarks, eye_indices=[
+def crop_left_eye(pil_image: Image.Image) -> Image.Image:
+    return _crop_eye(pil_image, eye_indices=[
         33, 133, 160, 159, 158, 144, 153, 154, 155, 133
     ])
 
-def crop_right_eye(pil_image: Image.Image, landmarks) -> Image.Image:
-    return crop_eye_from_landmarks(pil_image, landmarks, eye_indices=[
+
+def crop_right_eye(pil_image: Image.Image) -> Image.Image:
+    return _crop_eye(pil_image, eye_indices=[
         362, 263, 387, 386, 385, 373, 380, 381, 382, 362
     ])
