@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models, transforms
 from PIL import Image
+import gc
 
 from recommender.AImodels.facemesh_model import detect_and_crop_face, crop_left_eye, crop_right_eye
 
@@ -99,61 +100,124 @@ acne_labels = ['0', '1', '2', '3', 'Clear']
 # 🔮 Prediction Functions
 # ----------------------
 def predict_acne(image: Image.Image) -> dict:
-    image = image.convert("RGB")
-    input_tensor = transform_acne(image).unsqueeze(0).to(device)
-    with torch.no_grad():
-        outputs = acne_model(input_tensor)
-        probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
-        pred_idx = probs.argmax()
-        confidence = probs[pred_idx]
-    return {
-        "acne_pred": acne_labels[pred_idx],
-        "acne_probs": probs.tolist(),
-        "acne_confidence": float(confidence)
-    }
+    input_tensor = None
+    outputs = None
+    probs = None
+    
+    try:
+        image = image.convert("RGB")
+        input_tensor = transform_acne(image).unsqueeze(0).to(device)
+        with torch.no_grad():
+            outputs = acne_model(input_tensor)
+            probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
+            pred_idx = probs.argmax()
+            confidence = probs[pred_idx]
+        
+        result = {
+            "acne_pred": acne_labels[pred_idx],
+            "acne_probs": probs.tolist(),
+            "acne_confidence": float(confidence)
+        }
+        
+        return result
+        
+    finally:
+        # Clean up all tensors and intermediate objects
+        if input_tensor is not None:
+            del input_tensor
+        if outputs is not None:
+            del outputs
+        if probs is not None:
+            del probs
+            
+        # Clear CUDA cache if using GPU
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            
+        # Force garbage collection
+        gc.collect()
 
 def predict(image: Image.Image) -> dict:
-    image = image.convert("RGB")
+    face_image = None
+    left_eye = None
+    right_eye = None
+    input_type = None
+    input_left_eye = None
+    input_right_eye = None
+    type_out = None
+    left_eye_out = None
+    right_eye_out = None
+    
     try:
-        face_image, left_closed, right_closed = detect_and_crop_face(image)
-        left_eye = crop_left_eye(image)
-        right_eye = crop_right_eye(image)
-    except ValueError as e:
-        return {"error": str(e)}
+        image = image.convert("RGB")
+        try:
+            face_image, left_closed, right_closed = detect_and_crop_face(image)
+            left_eye = crop_left_eye(image)
+            right_eye = crop_right_eye(image)
+        except ValueError as e:
+            return {"error": str(e)}
 
-    # Skin type
-    input_type = transform_type(face_image).unsqueeze(0).to(device)
-    with torch.no_grad():
-        type_out = type_model(input_type)[1]
-        type_probs = F.softmax(type_out, dim=1).cpu().numpy()[0]
-        type_pred = skin_type_labels[int(type_probs.argmax())]
-
-    # Eye color
-    if left_closed:
-        left_eye_color = "Eyes Closed"
-    else:
-        input_left_eye = transform_eye(left_eye).unsqueeze(0).to(device)
+        # Skin type
+        input_type = transform_type(face_image).unsqueeze(0).to(device)
         with torch.no_grad():
-            left_eye_out = torch.sigmoid(eye_model(input_left_eye)).cpu().numpy()[0]
-        left_eye_dict = dict(zip(eye_color_labels, [float(p) for p in left_eye_out]))
-        left_eye_color = max(left_eye_dict, key=left_eye_dict.get)
+            type_out = type_model(input_type)[1]
+            type_probs = F.softmax(type_out, dim=1).cpu().numpy()[0]
+            type_pred = skin_type_labels[int(type_probs.argmax())]
 
-    if right_closed:
-        right_eye_color = "Eyes Closed"
-    else:
-        input_right_eye = transform_eye(right_eye).unsqueeze(0).to(device)
-        with torch.no_grad():
-            right_eye_out = torch.sigmoid(eye_model(input_right_eye)).cpu().numpy()[0]
-        right_eye_dict = dict(zip(eye_color_labels, [float(p) for p in right_eye_out]))
-        right_eye_color = max(right_eye_dict, key=right_eye_dict.get)
+        # Eye color
+        if left_closed:
+            left_eye_color = "Eyes Closed"
+        else:
+            input_left_eye = transform_eye(left_eye).unsqueeze(0).to(device)
+            with torch.no_grad():
+                left_eye_out = torch.sigmoid(eye_model(input_left_eye)).cpu().numpy()[0]
+            left_eye_dict = dict(zip(eye_color_labels, [float(p) for p in left_eye_out]))
+            left_eye_color = max(left_eye_dict, key=left_eye_dict.get)
 
-    acne_result = predict_acne(face_image)
+        if right_closed:
+            right_eye_color = "Eyes Closed"
+        else:
+            input_right_eye = transform_eye(right_eye).unsqueeze(0).to(device)
+            with torch.no_grad():
+                right_eye_out = torch.sigmoid(eye_model(input_right_eye)).cpu().numpy()[0]
+            right_eye_dict = dict(zip(eye_color_labels, [float(p) for p in right_eye_out]))
+            right_eye_color = max(right_eye_dict, key=right_eye_dict.get)
 
-    return {
-        "type_pred": type_pred,
-        "type_probs": type_probs.tolist(),
-        "left_eye_color": left_eye_color,
-        "right_eye_color": right_eye_color,
-        "cropped_face": face_image,
-        **acne_result,
-    }
+        acne_result = predict_acne(face_image)
+
+        return {
+            "type_pred": type_pred,
+            "type_probs": type_probs.tolist(),
+            "left_eye_color": left_eye_color,
+            "right_eye_color": right_eye_color,
+            "cropped_face": face_image,
+            **acne_result,
+        }
+        
+    finally:
+        # Clean up all tensors and intermediate objects
+        if input_type is not None:
+            del input_type
+        if input_left_eye is not None:
+            del input_left_eye
+        if input_right_eye is not None:
+            del input_right_eye
+        if type_out is not None:
+            del type_out
+        if left_eye_out is not None:
+            del left_eye_out
+        if right_eye_out is not None:
+            del right_eye_out
+        if face_image is not None:
+            del face_image
+        if left_eye is not None:
+            del left_eye
+        if right_eye is not None:
+            del right_eye
+            
+        # Clear CUDA cache if using GPU
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            
+        # Force garbage collection
+        gc.collect()
