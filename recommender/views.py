@@ -5,6 +5,7 @@ from PIL import Image
 import base64
 import io
 import json
+import gc  # Added garbage collection import
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
@@ -193,8 +194,8 @@ def upload_photo(request):
                 device_type=device_type
             )
 
-            # ----- Return the analysis results -----
-            return JsonResponse({
+            # Prepare response data
+            response_data = {
                 "skin_type": skin_type.title(),
                 "acne_pred": acne_pred_label,  # <--- mapped label
                 "acne_confidence": round(acne_confidence, 4),
@@ -207,9 +208,19 @@ def upload_photo(request):
                 "segmentation_overlay": f"data:image/jpeg;base64,{segmented_base64}",
                 "segmentation_results": segmentation_results,  # <--- added
                 "tips": unique_tips  # <--- added
-            })
+            }
+
+            del image
+            del cropped_face
+            del segmented_img
+            del yolo_annotated_image
+            gc.collect()
+
+            # ----- Return the analysis results -----
+            return JsonResponse(response_data)
 
         except Exception as e:
+            gc.collect()
             # Return error message with 500 status code on exceptions
             return JsonResponse({"error": str(e)}, status=500)
 
