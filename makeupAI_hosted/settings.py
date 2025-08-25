@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'recommender',
     'corsheaders',
-    'shopify_integration',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +74,9 @@ DATABASES = {
         'USER': os.getenv("DB_USER", ""),
         'PASSWORD': os.getenv("DB_PASSWORD", ""),
         'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT': ''
+        'PORT': '',
+        "CONN_MAX_AGE": 30,  # don’t keep forever
+
         # 'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"), #for sqlite3
         # 'NAME': os.getenv("DB_NAME", BASE_DIR / 'db.sqlite3'),
 
