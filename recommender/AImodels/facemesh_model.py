@@ -17,12 +17,12 @@ mp_face_mesh_instance = mp_face_mesh.FaceMesh(
 )
 
 # ----------------------
-# Detect and crop face
+# Detect and crop face with landmarks caching
 # ----------------------
 def detect_and_crop_face(pil_image: Image.Image):
     """
     Detect face, check lighting and tilt, and check if eyes are closed.
-    Returns (cropped_face: PIL.Image, left_closed: bool, right_closed: bool)
+    Returns (cropped_face: PIL.Image, left_closed: bool, right_closed: bool, landmarks: list)
     Raises ValueError only if lighting is poor or no face found.
     """
     image = None
@@ -30,6 +30,7 @@ def detect_and_crop_face(pil_image: Image.Image):
     face_region = None
     results = None
     face_crop = None
+    cropped_face_result = None
     
     try:
         image = np.array(pil_image.convert("RGB"))
@@ -93,7 +94,7 @@ def detect_and_crop_face(pil_image: Image.Image):
         face_crop = image[y_min:y_max, x_min:x_max]
         cropped_face_result = Image.fromarray(face_crop)
         
-        return cropped_face_result, left_closed, right_closed
+        return cropped_face_result, left_closed, right_closed, landmarks, (w, h)
         
     finally:
         # Clean up all intermediate objects
@@ -113,7 +114,42 @@ def detect_and_crop_face(pil_image: Image.Image):
 
 
 # ----------------------
-# Crop eye from landmarks
+# Crop eye from cached landmarks - optimized version
+# ----------------------
+def _crop_eye_from_landmarks(pil_image: Image.Image, eye_indices: list, landmarks, image_dims) -> Image.Image:
+    """
+    Crop eye using pre-computed landmarks to avoid reprocessing.
+    """
+    image = None
+    eye_crop = None
+    eye_result = None
+    
+    try:
+        image = np.array(pil_image.convert("RGB"))
+        h, w = image_dims
+        
+        eye_points = [(int(landmarks[i].x * w), int(landmarks[i].y * h)) for i in eye_indices]
+        xs, ys = zip(*eye_points)
+        x_min, x_max = max(min(xs) - 10, 0), min(max(xs) + 10, w)
+        y_min, y_max = max(min(ys) - 10, 0), min(max(ys) + 10, h)
+        eye_crop = image[y_min:y_max, x_min:x_max]
+        eye_result = Image.fromarray(eye_crop)
+        
+        return eye_result
+        
+    finally:
+        # Clean up all intermediate objects
+        if image is not None:
+            del image
+        if eye_crop is not None:
+            del eye_crop
+            
+        # Force garbage collection
+        gc.collect()
+
+
+# ----------------------
+# Crop eye from landmarks (legacy version for backward compatibility)
 # ----------------------
 def _crop_eye(pil_image: Image.Image, eye_indices: list) -> Image.Image:
     image = None
@@ -152,7 +188,24 @@ def _crop_eye(pil_image: Image.Image, eye_indices: list) -> Image.Image:
 
 
 # ----------------------
-# Public crop eye functions
+# Public crop eye functions - optimized versions
+# ----------------------
+def crop_left_eye_from_landmarks(pil_image: Image.Image, landmarks, image_dims) -> Image.Image:
+    """Optimized version that reuses landmarks."""
+    return _crop_eye_from_landmarks(pil_image, [
+        33, 133, 160, 159, 158, 144, 153, 154, 155, 133
+    ], landmarks, image_dims)
+
+
+def crop_right_eye_from_landmarks(pil_image: Image.Image, landmarks, image_dims) -> Image.Image:
+    """Optimized version that reuses landmarks."""
+    return _crop_eye_from_landmarks(pil_image, [
+        362, 263, 387, 386, 385, 373, 380, 381, 382, 362
+    ], landmarks, image_dims)
+
+
+# ----------------------
+# Public crop eye functions - legacy versions for backward compatibility
 # ----------------------
 def crop_left_eye(pil_image: Image.Image) -> Image.Image:
     return _crop_eye(pil_image, eye_indices=[

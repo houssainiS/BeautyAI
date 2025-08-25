@@ -25,6 +25,7 @@ def detect_skin_defects_yolo(image: Image.Image, conf_threshold=0.3):
     """
     image_cv2 = None
     results = None
+    annotated_image = None
     
     try:
         # Convert PIL to OpenCV

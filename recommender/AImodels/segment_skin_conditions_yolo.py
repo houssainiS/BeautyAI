@@ -26,6 +26,7 @@ def segment_skin_conditions(image_pil: Image.Image, conf_threshold=0.3):
     image_bgr = None
     results = None
     image_result = None
+    image_pil_result = None
     
     try:
         # Convert PIL to OpenCV

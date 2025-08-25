@@ -7,7 +7,7 @@ from torchvision import models, transforms
 from PIL import Image
 import gc
 
-from recommender.AImodels.facemesh_model import detect_and_crop_face, crop_left_eye, crop_right_eye
+from recommender.AImodels.facemesh_model import detect_and_crop_face, crop_left_eye_from_landmarks, crop_right_eye_from_landmarks
 
 # ----------------------
 # 📍 Path Setup
@@ -147,13 +147,19 @@ def predict(image: Image.Image) -> dict:
     type_out = None
     left_eye_out = None
     right_eye_out = None
+    landmarks = None
+    image_dims = None
     
     try:
         image = image.convert("RGB")
         try:
-            face_image, left_closed, right_closed = detect_and_crop_face(image)
-            left_eye = crop_left_eye(image)
-            right_eye = crop_right_eye(image)
+            face_image, left_closed, right_closed, landmarks, image_dims = detect_and_crop_face(image)
+            
+            if not left_closed:
+                left_eye = crop_left_eye_from_landmarks(image, landmarks, image_dims)
+            if not right_closed:
+                right_eye = crop_right_eye_from_landmarks(image, landmarks, image_dims)
+                
         except ValueError as e:
             return {"error": str(e)}
 
@@ -173,6 +179,7 @@ def predict(image: Image.Image) -> dict:
                 left_eye_out = torch.sigmoid(eye_model(input_left_eye)).cpu().numpy()[0]
             left_eye_dict = dict(zip(eye_color_labels, [float(p) for p in left_eye_out]))
             left_eye_color = max(left_eye_dict, key=left_eye_dict.get)
+            left_eye.close()
 
         if right_closed:
             right_eye_color = "Eyes Closed"
@@ -182,6 +189,7 @@ def predict(image: Image.Image) -> dict:
                 right_eye_out = torch.sigmoid(eye_model(input_right_eye)).cpu().numpy()[0]
             right_eye_dict = dict(zip(eye_color_labels, [float(p) for p in right_eye_out]))
             right_eye_color = max(right_eye_dict, key=right_eye_dict.get)
+            right_eye.close()
 
         acne_result = predict_acne(face_image)
 
@@ -190,7 +198,7 @@ def predict(image: Image.Image) -> dict:
             "type_probs": type_probs.tolist(),
             "left_eye_color": left_eye_color,
             "right_eye_color": right_eye_color,
-            "cropped_face": face_image,
+            "cropped_face": face_image,  # Note: caller should close this
             **acne_result,
         }
         
@@ -208,12 +216,14 @@ def predict(image: Image.Image) -> dict:
             del left_eye_out
         if right_eye_out is not None:
             del right_eye_out
-        if face_image is not None:
-            del face_image
         if left_eye is not None:
             del left_eye
         if right_eye is not None:
             del right_eye
+        if landmarks is not None:
+            del landmarks
+        if image_dims is not None:
+            del image_dims
             
         # Clear CUDA cache if using GPU
         if torch.cuda.is_available():

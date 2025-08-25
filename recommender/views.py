@@ -34,6 +34,14 @@ def upload_photo(request):
     Also logs a FaceAnalysis record for each successful analysis to count usage.
     """
     if request.method == "POST":
+        image = None
+        cropped_face = None
+        yolo_annotated_image = None
+        segmented_img = None
+        buffered = None
+        buffered_annot = None
+        buffered_seg = None
+        
         try:
             # Load image from uploaded file or base64 string
             if 'photo' in request.FILES:
@@ -53,10 +61,11 @@ def upload_photo(request):
             skin_type = preds['type_pred'].lower()
             cropped_face = preds.get("cropped_face")
 
-            # Convert cropped face to base64 for JSON response
             buffered = io.BytesIO()
             cropped_face.save(buffered, format="JPEG")
             cropped_face_base64 = base64.b64encode(buffered.getvalue()).decode()
+            buffered.close()  # Close BytesIO buffer
+            buffered = None
 
             # Eye colors (top predictions or "Eyes Closed")
             left_eye_color = preds.get("left_eye_color", "Unknown")
@@ -85,16 +94,24 @@ def upload_photo(request):
             # Run YOLOv8 on cropped face to detect detailed skin defects
             yolo_boxes, yolo_annotated_image = detect_skin_defects_yolo(cropped_face)
 
-            # Convert YOLO annotated image to base64
             buffered_annot = io.BytesIO()
             yolo_annotated_image.save(buffered_annot, format="JPEG")
             yolo_annotated_base64 = base64.b64encode(buffered_annot.getvalue()).decode()
+            buffered_annot.close()  # Close BytesIO buffer
+            buffered_annot = None
+            yolo_annotated_image.close()  # Close PIL image
+            yolo_annotated_image = None
 
             # Run YOLOv8 segmentation model on cropped face
             segmented_img, segmentation_results = segment_skin_conditions(cropped_face)
+            
             buffered_seg = io.BytesIO()
             segmented_img.save(buffered_seg, format="JPEG")
             segmented_base64 = base64.b64encode(buffered_seg.getvalue()).decode()
+            buffered_seg.close()  # Close BytesIO buffer
+            buffered_seg = None
+            segmented_img.close()  # Close PIL image
+            segmented_img = None
 
             # ===== Generate Tips (using tips.py) =====
             tips = []
@@ -210,16 +227,37 @@ def upload_photo(request):
                 "tips": unique_tips  # <--- added
             }
 
-            del image
-            del cropped_face
-            del segmented_img
-            del yolo_annotated_image
+            if image:
+                image.close()
+            if cropped_face:
+                cropped_face.close()
+            
+            # Clean up variables
+            del image, cropped_face
+            if yolo_annotated_image:
+                del yolo_annotated_image
+            if segmented_img:
+                del segmented_img
             gc.collect()
 
             # ----- Return the analysis results -----
             return JsonResponse(response_data)
 
         except Exception as e:
+            if image:
+                image.close()
+            if cropped_face:
+                cropped_face.close()
+            if yolo_annotated_image:
+                yolo_annotated_image.close()
+            if segmented_img:
+                segmented_img.close()
+            if buffered:
+                buffered.close()
+            if buffered_annot:
+                buffered_annot.close()
+            if buffered_seg:
+                buffered_seg.close()
             gc.collect()
             # Return error message with 500 status code on exceptions
             return JsonResponse({"error": str(e)}, status=500)
