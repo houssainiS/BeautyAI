@@ -388,4 +388,4 @@ def start_auth(request):
     )
 
     # Optional: render a page while redirecting
-    return render(request, "shopify_redirect.html", {"auth_url": auth_url})
+    return render(request, "recommender/shopify_redirect.html", {"auth_url": auth_url})
