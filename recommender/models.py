@@ -49,3 +49,11 @@ class AllowedOrigin(models.Model):
 
     def __str__(self):
         return self.url
+    
+
+####webhook model#######
+
+class Shop(models.Model):
+    domain = models.CharField(max_length=255, unique=True)
+    access_token = models.TextField()
+    installed_at = models.DateTimeField(auto_now_add=True)

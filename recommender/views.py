@@ -311,3 +311,55 @@ def submit_feedback(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+
+
+##############webhooks############
+
+
+
+
+
+import requests
+from .models import Shop
+from .shopify_api import create_expiration_metafield
+from .webhooks import register_uninstall_webhook
+
+SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
+SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
+
+
+def oauth_callback(request):
+    shop = request.GET.get("shop")
+    code = request.GET.get("code")
+
+    if not shop or not code:
+        return JsonResponse({"error": "Missing shop or code"}, status=400)
+
+    response = requests.post(
+        f"https://{shop}/admin/oauth/access_token",
+        data={
+            "client_id": SHOPIFY_API_KEY,
+            "client_secret": SHOPIFY_API_SECRET,
+            "code": code
+        }
+    )
+
+    data = response.json()
+    if "access_token" not in data:
+        return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
+
+    access_token = data["access_token"]
+
+    # Save shop
+    Shop.objects.update_or_create(
+        domain=shop,
+        defaults={"access_token": access_token}
+    )
+
+    # Add expiration date metafield
+    create_expiration_metafield(shop, access_token)
+
+    # Register uninstall webhook
+    register_uninstall_webhook(shop, access_token)
+
+    return JsonResponse({"status": "App installed successfully"})
