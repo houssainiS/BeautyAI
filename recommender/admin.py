@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from .models import Visitor, FaceAnalysis , Feedback , AllowedOrigin
+from .models import Visitor, FaceAnalysis , Feedback , AllowedOrigin ,Shop
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
@@ -36,3 +36,12 @@ admin.site.unregister(Group)
 class AllowedOriginAdmin(admin.ModelAdmin):
     list_display = ("url", "created_at")
     search_fields = ("url",)
+
+
+
+###webhooks#####
+
+@admin.register(Shop)
+class ShopAdmin(admin.ModelAdmin):
+    list_display = ("domain", "access_token", "installed_at")
+    search_fields = ("domain",)
