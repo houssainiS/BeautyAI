@@ -369,8 +369,8 @@ def oauth_callback(request):
         print(f"[DEBUG] Shop saved: {shop_obj}, created={created}")
 
         # Add expiration date metafield
-        create_expiration_metafield(shop, access_token)
-        print("[DEBUG] Expiration metafield created")
+        # create_expiration_metafield(shop, access_token)
+        # print("[DEBUG] Expiration metafield created")
 
         # Register uninstall webhook
         register_uninstall_webhook(shop, access_token)
