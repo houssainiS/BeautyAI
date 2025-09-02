@@ -363,3 +363,29 @@ def oauth_callback(request):
     register_uninstall_webhook(shop, access_token)
 
     return JsonResponse({"status": "App installed successfully"})
+
+from django.conf import settings
+import urllib.parse
+
+def start_auth(request):
+    """
+    Starts the Shopify OAuth installation flow.
+    Merchant will be redirected to Shopify to approve the app.
+    """
+    shop = request.GET.get("shop")
+    if not shop:
+        return render(request, "error.html", {"message": "Missing shop parameter"})
+
+    redirect_uri = settings.BASE_URL + "/auth/callback/"  # e.g., https://beautyai.duckdns.org/auth/callback/
+    scopes = "read_products,write_products"
+
+    auth_url = (
+        f"https://{shop}/admin/oauth/authorize?"
+        f"client_id={SHOPIFY_API_KEY}&"
+        f"scope={scopes}&"
+        f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
+        f"state=12345&grant_options[]=per-user"
+    )
+
+    # Optional: render a page while redirecting
+    return render(request, "shopify_redirect.html", {"auth_url": auth_url})

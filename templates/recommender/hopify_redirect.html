@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Installing App...</title>
+  <script>
+    window.onload = function() {
+      window.location.href = "{{ auth_url }}";
+    };
+  </script>
+</head>
+<body>
+  <p>Redirecting to Shopify for installation...</p>
+  <a href="{{ auth_url }}">Click here if not redirected</a>
+</body>
+</html>
