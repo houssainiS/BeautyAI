@@ -332,18 +332,17 @@ SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
 SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
 
 def oauth_callback(request):
-    """
-    Handles the OAuth callback after merchant approves the app.
-    Saves the shop, registers webhook, and redirects to dashboard.
-    """
-    shop = request.GET.get("shop")
-    code = request.GET.get("code")
-
-    if not shop or not code:
-        return render(request, "error.html", {"message": "Missing shop or code"})
-
     try:
-        # Get access token
+        shop = request.GET.get("shop")
+        code = request.GET.get("code")
+        hmac_val = request.GET.get("hmac")
+
+        if not shop or not code:
+            print("[DEBUG] Missing shop or code in callback")
+            return JsonResponse({"error": "Missing shop or code"}, status=400)
+
+        print(f"[DEBUG] oauth_callback called for shop: {shop} with code: {code}")
+
         response = requests.post(
             f"https://{shop}/admin/oauth/access_token",
             data={
@@ -352,29 +351,39 @@ def oauth_callback(request):
                 "code": code
             }
         )
-        data = response.json()
-        access_token = data.get("access_token")
-        if not access_token:
-            return render(request, "error.html", {"message": f"OAuth failed: {data}"})
 
-        # Save or update shop in DB
-        Shop.objects.update_or_create(
+        data = response.json()
+        print(f"[DEBUG] OAuth token response: {data}")
+
+        if "access_token" not in data:
+            print("[DEBUG] No access_token in response")
+            return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
+
+        access_token = data["access_token"]
+
+        # Save shop
+        shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
             defaults={"access_token": access_token}
         )
+        print(f"[DEBUG] Shop saved: {shop_obj}, created={created}")
 
-        # Create expiration metafield
+        # Add expiration date metafield
         create_expiration_metafield(shop, access_token)
+        print("[DEBUG] Expiration metafield created")
 
         # Register uninstall webhook
         register_uninstall_webhook(shop, access_token)
+        print("[DEBUG] Uninstall webhook registered")
 
-        # Redirect to dashboard (or any page inside your embedded app)
-        return redirect(f"/dashboard/?shop={shop}")
+        return JsonResponse({"status": "App installed successfully"})
 
     except Exception as e:
         print(f"[ERROR] Exception in oauth_callback: {e}")
-        return render(request, "error.html", {"message": f"Server error: {e}"})
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
 
 
 def start_auth(request):
