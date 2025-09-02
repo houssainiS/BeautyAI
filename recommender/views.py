@@ -372,21 +372,31 @@ def start_auth(request):
     """
     Starts the Shopify OAuth installation flow.
     Redirects merchant to Shopify to approve the app.
+    Includes debug prints to track errors without turning DEBUG on globally.
     """
-    shop = request.GET.get("shop")
-    if not shop:
-        return render(request, "error.html", {"message": "Missing shop parameter"})
+    try:
+        shop = request.GET.get("shop")
+        if not shop:
+            print("[DEBUG] Missing 'shop' parameter in start_auth")
+            return render(request, "error.html", {"message": "Missing shop parameter"})
 
-    redirect_uri = settings.BASE_URL + "/auth/callback/"  # e.g., https://beautyai.duckdns.org/auth/callback/
-    scopes = "read_products,write_products"
+        redirect_uri = settings.BASE_URL + "/auth/callback/"
+        scopes = "read_products,write_products"
 
-    auth_url = (
-        f"https://{shop}/admin/oauth/authorize?"
-        f"client_id={SHOPIFY_API_KEY}&"
-        f"scope={scopes}&"
-        f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
-        f"state=12345&grant_options[]=per-user"
-    )
+        auth_url = (
+            f"https://{shop}/admin/oauth/authorize?"
+            f"client_id={SHOPIFY_API_KEY}&"
+            f"scope={scopes}&"
+            f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
+            f"state=12345&grant_options[]=per-user"
+        )
 
-    # Important: Redirect instead of rendering a template
-    return redirect(auth_url)
+        print(f"[DEBUG] start_auth called for shop: {shop}")
+        print(f"[DEBUG] redirecting to auth_url: {auth_url}")
+
+        # Redirect merchant directly to Shopify OAuth page
+        return redirect(auth_url)
+
+    except Exception as e:
+        print(f"[ERROR] Exception in start_auth: {e}")
+        return render(request, "error.html", {"message": f"Server error: {e}"})
