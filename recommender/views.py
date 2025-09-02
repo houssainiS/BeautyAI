@@ -320,53 +320,62 @@ def submit_feedback(request):
 
 
 import requests
+from django.shortcuts import redirect, render
+
 from .models import Shop
 from .shopify_api import create_expiration_metafield
 from .webhooks import register_uninstall_webhook
+from django.conf import settings
+import urllib.parse
 
 SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
 SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
 
-
 def oauth_callback(request):
+    """
+    Handles the OAuth callback after merchant approves the app.
+    Saves the shop, registers webhook, and redirects to dashboard.
+    """
     shop = request.GET.get("shop")
     code = request.GET.get("code")
 
     if not shop or not code:
-        return JsonResponse({"error": "Missing shop or code"}, status=400)
+        return render(request, "error.html", {"message": "Missing shop or code"})
 
-    response = requests.post(
-        f"https://{shop}/admin/oauth/access_token",
-        data={
-            "client_id": SHOPIFY_API_KEY,
-            "client_secret": SHOPIFY_API_SECRET,
-            "code": code
-        }
-    )
+    try:
+        # Get access token
+        response = requests.post(
+            f"https://{shop}/admin/oauth/access_token",
+            data={
+                "client_id": SHOPIFY_API_KEY,
+                "client_secret": SHOPIFY_API_SECRET,
+                "code": code
+            }
+        )
+        data = response.json()
+        access_token = data.get("access_token")
+        if not access_token:
+            return render(request, "error.html", {"message": f"OAuth failed: {data}"})
 
-    data = response.json()
-    if "access_token" not in data:
-        return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
+        # Save or update shop in DB
+        Shop.objects.update_or_create(
+            domain=shop,
+            defaults={"access_token": access_token}
+        )
 
-    access_token = data["access_token"]
+        # Create expiration metafield
+        create_expiration_metafield(shop, access_token)
 
-    # Save shop
-    Shop.objects.update_or_create(
-        domain=shop,
-        defaults={"access_token": access_token}
-    )
+        # Register uninstall webhook
+        register_uninstall_webhook(shop, access_token)
 
-    # Add expiration date metafield
-    create_expiration_metafield(shop, access_token)
+        # Redirect to dashboard (or any page inside your embedded app)
+        return redirect(f"/dashboard/?shop={shop}")
 
-    # Register uninstall webhook
-    register_uninstall_webhook(shop, access_token)
+    except Exception as e:
+        print(f"[ERROR] Exception in oauth_callback: {e}")
+        return render(request, "error.html", {"message": f"Server error: {e}"})
 
-    return JsonResponse({"status": "App installed successfully"})
-
-from django.conf import settings
-import urllib.parse
-from django.shortcuts import redirect
 
 def start_auth(request):
     """
