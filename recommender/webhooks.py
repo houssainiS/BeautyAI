@@ -5,9 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Shop
 
-# Replace this with your real Shopify API secret from your app settings
+# Your real Shopify API secret from the app settings
 SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
-
 
 def verify_webhook(data, hmac_header):
     """
@@ -21,7 +20,6 @@ def verify_webhook(data, hmac_header):
     calculated_hmac = base64.b64encode(digest).decode()
     return hmac.compare_digest(calculated_hmac, hmac_header)
 
-
 @csrf_exempt
 def app_uninstalled(request):
     """
@@ -32,7 +30,12 @@ def app_uninstalled(request):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
-    if not hmac_header or not verify_webhook(request.body, hmac_header):
+    if not hmac_header:
+        print("Webhook missing HMAC header")
+        return JsonResponse({"error": "Missing HMAC header"}, status=400)
+
+    if not verify_webhook(request.body, hmac_header):
+        print("Webhook HMAC verification failed")
         return JsonResponse({"error": "Invalid webhook"}, status=401)
 
     shop_domain = request.headers.get("X-Shopify-Shop-Domain")
@@ -40,9 +43,8 @@ def app_uninstalled(request):
         Shop.objects.filter(domain=shop_domain).delete()
         print(f"App uninstalled from {shop_domain}")
 
-    # MUST return 200 OK to Shopify
+    # Shopify requires a 200 OK response
     return JsonResponse({"status": "ok"}, status=200)
-
 
 def register_uninstall_webhook(shop, access_token):
     """
@@ -62,4 +64,7 @@ def register_uninstall_webhook(shop, access_token):
         }
     }
     response = requests.post(url, json=data, headers=headers)
-    print("Webhook registration response:", response.json())
+    try:
+        print("Webhook registration response:", response.json())
+    except Exception:
+        print("Failed to parse webhook registration response:", response.text)
