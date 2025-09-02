@@ -28,7 +28,7 @@ def verify_webhook(data, hmac_header):
 def app_uninstalled(request):
     """
     Handles Shopify 'app/uninstalled' webhook.
-    Deletes the shop from the database when the app is uninstalled.
+    Marks the shop as inactive instead of deleting it.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -44,8 +44,8 @@ def app_uninstalled(request):
 
     shop_domain = request.headers.get("X-Shopify-Shop-Domain")
     if shop_domain:
-        deleted_count = Shop.objects.filter(domain=shop_domain).delete()
-        print(f"[Webhook] App uninstalled from {shop_domain}, deleted {deleted_count[0]} record(s)")
+        updated_count = Shop.objects.filter(domain=shop_domain).update(is_active=False)
+        print(f"[Webhook] App uninstalled from {shop_domain}, marked inactive ({updated_count} record(s))")
 
     # Shopify requires a 200 OK response
     return JsonResponse({"status": "ok"}, status=200)

@@ -317,21 +317,23 @@ def submit_feedback(request):
 
 
 
-
-
 import requests
 from django.shortcuts import redirect, render
-
-from .models import Shop
-from .shopify_api import create_expiration_metafield
-from .webhooks import register_uninstall_webhook
 from django.conf import settings
 import urllib.parse
+
+from .models import Shop
+from .webhooks import register_uninstall_webhook
 
 SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
 SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
 
+
 def oauth_callback(request):
+    """
+    Handles Shopify OAuth callback.
+    Saves or reactivates the shop and registers the uninstall webhook.
+    """
     try:
         shop = request.GET.get("shop")
         code = request.GET.get("code")
@@ -343,6 +345,7 @@ def oauth_callback(request):
 
         print(f"[DEBUG] oauth_callback called for shop: {shop} with code: {code}")
 
+        # Exchange code for access token
         response = requests.post(
             f"https://{shop}/admin/oauth/access_token",
             data={
@@ -351,7 +354,6 @@ def oauth_callback(request):
                 "code": code
             }
         )
-
         data = response.json()
         print(f"[DEBUG] OAuth token response: {data}")
 
@@ -361,16 +363,15 @@ def oauth_callback(request):
 
         access_token = data["access_token"]
 
-        # Save shop
+        # Save or reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
-            defaults={"access_token": access_token}
+            defaults={
+                "access_token": access_token,
+                "is_active": True  # Reactivate shop if previously inactive
+            }
         )
-        print(f"[DEBUG] Shop saved: {shop_obj}, created={created}")
-
-        # Add expiration date metafield
-        # create_expiration_metafield(shop, access_token)
-        # print("[DEBUG] Expiration metafield created")
+        print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
         # Register uninstall webhook
         register_uninstall_webhook(shop, access_token)
@@ -383,7 +384,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
 
 
 def start_auth(request):
