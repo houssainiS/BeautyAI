@@ -6,7 +6,11 @@ from django.core.cache import cache
 
 class VisitorTrackingMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        # ✅ Cache CORS_ALLOWED_ORIGINS for 5 min instead of every request
+        # Skip middleware for webhooks and OAuth callback
+        if request.path.startswith("/webhooks/") or request.path.startswith("/auth/callback"):
+            return  # Do nothing for these paths
+
+        # Cache CORS_ALLOWED_ORIGINS for 5 min instead of every request
         cors_urls = cache.get("allowed_origins")
         if cors_urls is None:
             try:
@@ -16,11 +20,11 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
                 cors_urls = []
         settings.CORS_ALLOWED_ORIGINS = cors_urls
 
-        # ✅ Only create session if needed
+        # Only create session if needed (for visitor tracking)
         if not request.session.session_key and request.path.startswith("/analyze"):
             request.session.create()
 
-        # ✅ Log unique visitors per day (optional: throttle/batch this)
+        # Log unique visitors per day
         if request.session.session_key:
             ip = self.get_client_ip(request)
             device_type = self.get_device_type(request)
