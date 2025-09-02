@@ -37,6 +37,17 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
                     date=today
                 )
 
+    def process_response(self, request, response):
+        """
+        Add headers to allow Shopify embedded app in iframe.
+        """
+        # Only add headers for shopify iframe paths (optional: all except webhook)
+        if not request.path.startswith("/webhooks/"):
+            # Allow embedding in Shopify admin
+            response["X-Frame-Options"] = "ALLOWALL"
+            response["Content-Security-Policy"] = "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
+        return response
+
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:

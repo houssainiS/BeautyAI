@@ -112,7 +112,3 @@ CORS_ALLOWED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = True
 
 
-### because shopify webhook
-
-X_FRAME_OPTIONS = "ALLOWALL"
- 
