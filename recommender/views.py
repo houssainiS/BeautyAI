@@ -366,11 +366,12 @@ def oauth_callback(request):
 
 from django.conf import settings
 import urllib.parse
+from django.shortcuts import redirect
 
 def start_auth(request):
     """
     Starts the Shopify OAuth installation flow.
-    Merchant will be redirected to Shopify to approve the app.
+    Redirects merchant to Shopify to approve the app.
     """
     shop = request.GET.get("shop")
     if not shop:
@@ -387,5 +388,5 @@ def start_auth(request):
         f"state=12345&grant_options[]=per-user"
     )
 
-    # Optional: render a page while redirecting
-    return render(request, "recommender/home.html", {"auth_url": auth_url})
+    # Important: Redirect instead of rendering a template
+    return redirect(auth_url)
