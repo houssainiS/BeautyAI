@@ -333,11 +333,11 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop and registers the uninstall webhook.
+    Supports both offline and online tokens.
     """
     try:
         shop = request.GET.get("shop")
         code = request.GET.get("code")
-        hmac_val = request.GET.get("hmac")
 
         if not shop or not code:
             print("[DEBUG] Missing shop or code in callback")
@@ -361,20 +361,22 @@ def oauth_callback(request):
             print("[DEBUG] No access_token in response")
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        access_token = data["access_token"]
+        offline_token = data["access_token"]  # Permanent token
+        online_token = data.get("online_access_info", {}).get("access_token")  # Optional, short-lived
 
         # Save or reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
             defaults={
-                "access_token": access_token,
+                "offline_token": offline_token,
+                "online_token": online_token,
                 "is_active": True  # Reactivate shop if previously inactive
             }
         )
         print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
-        # Register uninstall webhook
-        register_uninstall_webhook(shop, access_token)
+        # Register uninstall webhook using offline token
+        register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
         return JsonResponse({"status": "App installed successfully"})
@@ -384,6 +386,7 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
 
 
 def start_auth(request):
