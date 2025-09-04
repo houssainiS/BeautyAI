@@ -352,7 +352,7 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop and registers the uninstall webhook.
-    Supports both offline and online tokens.
+    Supports offline tokens.
     Also creates the 'Expiration Date' metafield definition for products.
     """
     try:
@@ -380,7 +380,7 @@ def oauth_callback(request):
         if "access_token" not in data:
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        offline_token = data["access_token"]  # Permanent token
+        offline_token = data["access_token"]  # Permanent offline token
         online_token = data.get("online_access_info", {}).get("access_token")  # Optional short-lived
 
         # Save or reactivate shop
@@ -401,8 +401,8 @@ def oauth_callback(request):
         # Create 'Expiration Date' metafield definition for products
         try:
             from .webhooks import create_expiration_metafield_definition
-            create_expiration_metafield_definition(shop, offline_token)
-            print("[DEBUG] Expiration Date metafield created")
+            result = create_expiration_metafield_definition(shop, offline_token)
+            print(f"[DEBUG] Expiration Date metafield created: {result}")
         except Exception as meta_e:
             print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
 
@@ -414,7 +414,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
 
 
 def start_auth(request):
@@ -430,12 +429,13 @@ def start_auth(request):
         redirect_uri = settings.BASE_URL + "/auth/callback/"
         scopes = "read_products,write_products"
 
+        # ⚡ Important fix: remove `grant_options[]=per-user` to get offline token
         auth_url = (
             f"https://{shop}/admin/oauth/authorize?"
             f"client_id={SHOPIFY_API_KEY}&"
             f"scope={scopes}&"
             f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
-            f"state=12345&grant_options[]=per-user"
+            f"state=12345"
         )
 
         print(f"[DEBUG] start_auth called for shop: {shop}")
@@ -446,4 +446,5 @@ def start_auth(request):
     except Exception as e:
         print(f"[ERROR] Exception in start_auth: {e}")
         return render(request, "error.html", {"message": f"Server error: {e}"})
+
 
