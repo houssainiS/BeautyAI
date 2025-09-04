@@ -81,14 +81,16 @@ def create_expiration_metafield_definition(shop, access_token):
     """
     Creates a 'Expiration Date' metafield definition for products.
     Pinned = appears in the product editor (Custom fields block).
+    Prints full debug information.
     """
     import json
     import requests
 
-    url = f"https://{shop}/admin/api/2025-01/metafield_definitions.json"
+    url = f"https://{shop}/admin/api/2025-07/metafield_definitions.json"
     headers = {
         "X-Shopify-Access-Token": access_token,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept": "application/json"
     }
     payload = {
         "metafield_definition": {
@@ -105,24 +107,29 @@ def create_expiration_metafield_definition(shop, access_token):
     try:
         response = requests.post(url, json=payload, headers=headers)
         print(f"[DEBUG] Status code: {response.status_code}")
+        print(f"[DEBUG] Headers: {response.headers}")
         print(f"[DEBUG] Response text: {response.text}")
 
         try:
             data = response.json()
+            print(f"[DEBUG] JSON parsed: {json.dumps(data, indent=2)}")
         except ValueError:
             print("[ERROR] Response not JSON")
             data = {"error": "Response not JSON", "status_code": response.status_code, "text": response.text}
 
+        # If the request failed, log and optionally fallback to per-product metafields
         if response.status_code not in (200, 201):
-            print(f"[ERROR] Failed to create metafield: {data}")
+            print(f"[ERROR] Failed to create metafield definition: {data}")
+            # Optional: fallback logic could go here
         else:
-            print(f"[DEBUG] Metafield created successfully: {json.dumps(data, indent=2)}")
+            print(f"[DEBUG] Metafield definition created successfully!")
 
         return data
 
     except Exception as e:
-        print(f"[EXCEPTION] Error creating metafield: {e}")
+        print(f"[EXCEPTION] Error creating metafield definition: {e}")
         import traceback
         traceback.print_exc()
         return {"error": str(e)}
+
 
