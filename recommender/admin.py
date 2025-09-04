@@ -43,5 +43,7 @@ class AllowedOriginAdmin(admin.ModelAdmin):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    list_display = ("domain", "access_token", "installed_at")
+    list_display = ('domain', 'installed_at', 'is_active')
     search_fields = ("domain",)
+admin.site.register(Shop, ShopAdmin)
+    
