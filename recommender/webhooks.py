@@ -98,7 +98,7 @@ def create_expiration_metafield_definition(shop, access_token):
             "type": "date",
             "description": "The expiration date of the product",
             "owner_type": "Product",
-            "pinned": True  # 👈 makes it appear in Custom fields section
+            "pinned": True
         }
     }
 
@@ -107,7 +107,11 @@ def create_expiration_metafield_definition(shop, access_token):
         print(f"[DEBUG] Status code: {response.status_code}")
         print(f"[DEBUG] Response text: {response.text}")
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError:
+            print("[ERROR] Response not JSON")
+            data = {"error": "Response not JSON", "status_code": response.status_code, "text": response.text}
 
         if response.status_code not in (200, 201):
             print(f"[ERROR] Failed to create metafield: {data}")
@@ -121,3 +125,4 @@ def create_expiration_metafield_definition(shop, access_token):
         import traceback
         traceback.print_exc()
         return {"error": str(e)}
+
