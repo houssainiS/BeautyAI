@@ -379,7 +379,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
-        return JsonResponse({"status": "App installed successfully"})
+        return render(request, "recommender/shopify_install_page.html", {"shop": shop})
 
     except Exception as e:
         print(f"[ERROR] Exception in oauth_callback: {e}")

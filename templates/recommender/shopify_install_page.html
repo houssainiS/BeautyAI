@@ -1,15 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Installing App...</title>
-  <script>
-    window.onload = function() {
-      window.location.href = "{{ auth_url }}";
-    };
-  </script>
+    <meta charset="UTF-8">
+    <title>Welcome to BeautyAI!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            font-size: 18px;
+            color: #666;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-  <p>Redirecting to Shopify for installation...</p>
-  <a href="{{ auth_url }}">Click here if not redirected</a>
+    <h1>Welcome to BeautyAI!</h1>
+    <p>Thank you for installing our app. Start analyzing faces and recommending products now!</p>
+    <a class="button" href="https://beautyai.duckdns.org/" target="_blank">Go to Dashboard</a>
 </body>
 </html>
