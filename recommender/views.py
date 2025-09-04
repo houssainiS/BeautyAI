@@ -321,12 +321,31 @@ import requests
 from django.shortcuts import redirect, render
 from django.conf import settings
 import urllib.parse
+from django.http import JsonResponse
 
 from .models import Shop
 from .webhooks import register_uninstall_webhook
 
 SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
 SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
+
+
+def app_entry(request):
+    """
+    Main entry point for the embedded app.
+    Redirects to OAuth if the shop is not installed yet.
+    """
+    shop = request.GET.get("shop")
+    if not shop:
+        return render(request, "error.html", {"message": "Missing shop parameter"})
+
+    try:
+        shop_obj = Shop.objects.get(domain=shop, is_active=True)
+        # Shop already installed → show install page (or any custom page)
+        return render(request, "recommender/shopify_install_page.html", {"shop": shop})
+    except Shop.DoesNotExist:
+        # Shop not installed yet → start OAuth flow
+        return redirect(f"/start_auth/?shop={shop}")
 
 
 def oauth_callback(request):
@@ -358,11 +377,10 @@ def oauth_callback(request):
         print(f"[DEBUG] OAuth token response: {data}")
 
         if "access_token" not in data:
-            print("[DEBUG] No access_token in response")
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
         offline_token = data["access_token"]  # Permanent token
-        online_token = data.get("online_access_info", {}).get("access_token")  # Optional, short-lived
+        online_token = data.get("online_access_info", {}).get("access_token")  # Optional
 
         # Save or reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
@@ -370,7 +388,7 @@ def oauth_callback(request):
             defaults={
                 "offline_token": offline_token,
                 "online_token": online_token,
-                "is_active": True  # Reactivate shop if previously inactive
+                "is_active": True
             }
         )
         print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
@@ -379,6 +397,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
+        # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
 
     except Exception as e:
@@ -388,17 +407,14 @@ def oauth_callback(request):
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
 
 
-
 def start_auth(request):
     """
     Starts the Shopify OAuth installation flow.
     Redirects merchant to Shopify to approve the app.
-    Includes debug prints to track errors without turning DEBUG on globally.
     """
     try:
         shop = request.GET.get("shop")
         if not shop:
-            print("[DEBUG] Missing 'shop' parameter in start_auth")
             return render(request, "error.html", {"message": "Missing shop parameter"})
 
         redirect_uri = settings.BASE_URL + "/auth/callback/"
@@ -415,9 +431,9 @@ def start_auth(request):
         print(f"[DEBUG] start_auth called for shop: {shop}")
         print(f"[DEBUG] redirecting to auth_url: {auth_url}")
 
-        # Redirect merchant directly to Shopify OAuth page
         return redirect(auth_url)
 
     except Exception as e:
         print(f"[ERROR] Exception in start_auth: {e}")
         return render(request, "error.html", {"message": f"Server error: {e}"})
+
