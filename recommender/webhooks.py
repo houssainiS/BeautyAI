@@ -75,3 +75,29 @@ def register_uninstall_webhook(shop, access_token):
     except Exception as e:
         print("[Webhook Registration] Failed to register webhook:", str(e))
         print("[Webhook Registration] Raw response text:", getattr(response, "text", "No response text"))
+
+
+def create_expiration_metafield_definition(shop, access_token):
+    """
+    Creates a 'Expiration Date' metafield definition for products.
+    """
+    url = f"https://{shop}/admin/api/2025-07/metafield_definitions.json"
+    headers = {
+        "X-Shopify-Access-Token": access_token,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "metafield_definition": {
+            "name": "Expiration Date",
+            "namespace": "custom",
+            "key": "expiration_date",
+            "type": "date",
+            "description": "The expiration date of the product",
+            "owner_type": "Product",
+            "visible_to_storefront_api": True
+        }
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    print(f"[DEBUG] Metafield definition response: {response.status_code} {response.text}")
+    return response.json()

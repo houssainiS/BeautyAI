@@ -353,6 +353,7 @@ def oauth_callback(request):
     Handles Shopify OAuth callback.
     Saves or reactivates the shop and registers the uninstall webhook.
     Supports both offline and online tokens.
+    Also creates the 'Expiration Date' metafield definition for products.
     """
     try:
         shop = request.GET.get("shop")
@@ -380,7 +381,7 @@ def oauth_callback(request):
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
         offline_token = data["access_token"]  # Permanent token
-        online_token = data.get("online_access_info", {}).get("access_token")  # Optional
+        online_token = data.get("online_access_info", {}).get("access_token")  # Optional short-lived
 
         # Save or reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
@@ -393,9 +394,17 @@ def oauth_callback(request):
         )
         print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
-        # Register uninstall webhook using offline token
+        # Register uninstall webhook
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
+
+        # Create 'Expiration Date' metafield definition for products
+        try:
+            from .webhooks import create_expiration_metafield_definition
+            create_expiration_metafield_definition(shop, offline_token)
+            print("[DEBUG] Expiration Date metafield created")
+        except Exception as meta_e:
+            print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
@@ -405,6 +414,7 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
 
 
 def start_auth(request):
