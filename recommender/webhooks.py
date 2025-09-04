@@ -80,8 +80,12 @@ def register_uninstall_webhook(shop, access_token):
 def create_expiration_metafield_definition(shop, access_token):
     """
     Creates a 'Expiration Date' metafield definition for products.
+    Pinned = appears in the product editor (Custom fields block).
     """
-    url = f"https://{shop}/admin/api/2025-07/metafield_definitions.json"
+    import json
+    import requests
+
+    url = f"https://{shop}/admin/api/2025-01/metafield_definitions.json"
     headers = {
         "X-Shopify-Access-Token": access_token,
         "Content-Type": "application/json"
@@ -94,10 +98,26 @@ def create_expiration_metafield_definition(shop, access_token):
             "type": "date",
             "description": "The expiration date of the product",
             "owner_type": "Product",
-            "visible_to_storefront_api": True
+            "pinned": True  # 👈 makes it appear in Custom fields section
         }
     }
 
-    response = requests.post(url, json=payload, headers=headers)
-    print(f"[DEBUG] Metafield definition response: {response.status_code} {response.text}")
-    return response.json()
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        print(f"[DEBUG] Status code: {response.status_code}")
+        print(f"[DEBUG] Response text: {response.text}")
+
+        data = response.json()
+
+        if response.status_code not in (200, 201):
+            print(f"[ERROR] Failed to create metafield: {data}")
+        else:
+            print(f"[DEBUG] Metafield created successfully: {json.dumps(data, indent=2)}")
+
+        return data
+
+    except Exception as e:
+        print(f"[EXCEPTION] Error creating metafield: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
