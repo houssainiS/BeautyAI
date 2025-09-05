@@ -79,35 +79,52 @@ def register_uninstall_webhook(shop, access_token):
 
 def create_expiration_metafield_definition(shop, access_token):
     """
-    Creates a 'Expiration Date' metafield definition for products.
+    Creates a 'Expiration Date' metafield definition for products using Shopify GraphQL API.
     Pinned = appears in the product editor (Custom fields block).
-    Prints full debug information.
     """
+
     import json
     import requests
 
-    url = f"https://{shop}/admin/api/2025-07/metafield_definitions.json"
+    url = f"https://{shop}/admin/api/2025-07/graphql.json"
     headers = {
         "X-Shopify-Access-Token": access_token,
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
-    payload = {
-        "metafield_definition": {
-            "name": "Expiration Date",
-            "namespace": "custom",
-            "key": "expiration_date",
-            "type": "date",
-            "description": "The expiration date of the product",
-            "owner_type": "Product",
-            "pinned": True
+
+    # GraphQL mutation for metafield definition
+    query = """
+    mutation {
+      metafieldDefinitionCreate(definition: {
+        name: "Expiration Date"
+        namespace: "custom"
+        key: "expiration_date"
+        type: "single_line_text_field"
+        description: "The expiration date of the product"
+        ownerType: PRODUCT
+        pinned: true
+      }) {
+        createdDefinition {
+          id
+          name
+          namespace
+          key
+          type {
+            name
+          }
         }
+        userErrors {
+          field
+          message
+        }
+      }
     }
+    """
 
     try:
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json={"query": query}, headers=headers)
         print(f"[DEBUG] Status code: {response.status_code}")
-        print(f"[DEBUG] Headers: {response.headers}")
         print(f"[DEBUG] Response text: {response.text}")
 
         try:
@@ -117,12 +134,10 @@ def create_expiration_metafield_definition(shop, access_token):
             print("[ERROR] Response not JSON")
             data = {"error": "Response not JSON", "status_code": response.status_code, "text": response.text}
 
-        # If the request failed, log and optionally fallback to per-product metafields
-        if response.status_code not in (200, 201):
+        if response.status_code != 200 or "errors" in data:
             print(f"[ERROR] Failed to create metafield definition: {data}")
-            # Optional: fallback logic could go here
         else:
-            print(f"[DEBUG] Metafield definition created successfully!")
+            print(f"[SUCCESS] Metafield definition created successfully!")
 
         return data
 
@@ -131,5 +146,6 @@ def create_expiration_metafield_definition(shop, access_token):
         import traceback
         traceback.print_exc()
         return {"error": str(e)}
+
 
 
