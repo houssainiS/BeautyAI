@@ -316,6 +316,7 @@ def submit_feedback(request):
 ##############webhooks############
 
 
+
 import requests
 from django.shortcuts import redirect, render
 from django.conf import settings
@@ -350,8 +351,8 @@ def app_entry(request):
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves or reactivates the shop, registers the uninstall webhook,
-    and ensures the 'Expiration Date' metafield definition exists for products.
+    Saves or reactivates the shop and registers the uninstall webhook.
+    Also creates the 'Expiration Date' metafield definition for products.
     """
     try:
         shop = request.GET.get("shop")
@@ -396,7 +397,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
-        # --- Ensure 'Expiration Date' metafield exists (GraphQL, pinned) ---
+        # --- Create 'Expiration Date' metafield definition (GraphQL) ---
         try:
             graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
             headers = {
@@ -404,64 +405,35 @@ def oauth_callback(request):
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             }
-
-            # 1️⃣ Check if metafield already exists
-            check_query = """
-            {
-              metafieldDefinitions(first: 50, ownerType: PRODUCT) {
-                edges {
-                  node {
-                    id
-                    namespace
-                    key
-                  }
+            query = """
+            mutation {
+              metafieldDefinitionCreate(definition: {
+                name: "Expiration Date"
+                namespace: "custom"
+                key: "expiration_date"
+                type: "date"
+                description: "The expiration date of the product"
+                ownerType: PRODUCT
+              }) {
+                createdDefinition {
+                  id
+                  name
+                  namespace
+                  key
+                  type { name }
+                }
+                userErrors {
+                  field
+                  message
                 }
               }
             }
             """
-            check_response = requests.post(graphql_url, headers=headers, json={"query": check_query})
-            check_data = check_response.json()
-            exists = any(
-                node["node"]["namespace"] == "custom" and node["node"]["key"] == "expiration_date"
-                for node in check_data.get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
-            )
-
-            if exists:
-                print("[DEBUG] 'Expiration Date' metafield already exists, skipping creation.")
-            else:
-                # 2️⃣ Create metafield if it doesn't exist
-                create_query = """
-                mutation {
-                  metafieldDefinitionCreate(definition: {
-                    name: "Expiration Date"
-                    namespace: "custom"
-                    key: "expiration_date"
-                    type: "date"
-                    description: "The expiration date of the product"
-                    ownerType: PRODUCT
-                    pinned: true
-                  }) {
-                    createdDefinition {
-                      id
-                      name
-                      namespace
-                      key
-                      type { name }
-                      pinned
-                    }
-                    userErrors {
-                      field
-                      message
-                    }
-                  }
-                }
-                """
-                create_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-                print(f"[DEBUG] Create metafield Status: {create_response.status_code}")
-                print(f"[DEBUG] Create metafield Response: {create_response.text}")
-
+            gql_response = requests.post(graphql_url, headers=headers, json={"query": query})
+            print(f"[DEBUG] GraphQL Status: {gql_response.status_code}")
+            print(f"[DEBUG] GraphQL Response: {gql_response.text}")
         except Exception as meta_e:
-            print(f"[WARNING] Failed to ensure expiration_date metafield: {meta_e}")
+            print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
