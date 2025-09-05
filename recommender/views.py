@@ -316,6 +316,7 @@ def submit_feedback(request):
 ##############webhooks############
 
 
+import os
 import requests
 from django.shortcuts import redirect, render
 from django.conf import settings
@@ -325,8 +326,10 @@ from django.http import JsonResponse
 from .models import Shop
 from .webhooks import register_uninstall_webhook
 
-SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
-SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
+# Load from environment variables with fallback
+SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY", "fallback-key-for-dev")
+SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
+
 
 
 def app_entry(request):
