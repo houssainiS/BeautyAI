@@ -316,7 +316,6 @@ def submit_feedback(request):
 ##############webhooks############
 
 
-
 import requests
 from django.shortcuts import redirect, render
 from django.conf import settings
@@ -341,7 +340,7 @@ def app_entry(request):
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
-        # Shop already installed → show install page (or any custom page)
+        # Shop already installed → show install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
     except Shop.DoesNotExist:
         # Shop not installed yet → start OAuth flow
@@ -352,7 +351,6 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop and registers the uninstall webhook.
-    Supports offline tokens.
     Also creates the 'Expiration Date' metafield definition for products.
     """
     try:
@@ -371,8 +369,8 @@ def oauth_callback(request):
             data={
                 "client_id": SHOPIFY_API_KEY,
                 "client_secret": SHOPIFY_API_SECRET,
-                "code": code
-            }
+                "code": code,
+            },
         )
         data = response.json()
         print(f"[DEBUG] OAuth token response: {data}")
@@ -389,8 +387,8 @@ def oauth_callback(request):
             defaults={
                 "offline_token": offline_token,
                 "online_token": online_token,
-                "is_active": True
-            }
+                "is_active": True,
+            },
         )
         print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
@@ -398,11 +396,41 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
-        # Create 'Expiration Date' metafield definition for products
+        # --- Create 'Expiration Date' metafield definition (GraphQL) ---
         try:
-            from .webhooks import create_expiration_metafield_definition
-            result = create_expiration_metafield_definition(shop, offline_token)
-            print(f"[DEBUG] Expiration Date metafield created: {result}")
+            graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
+            headers = {
+                "X-Shopify-Access-Token": offline_token,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            query = """
+            mutation {
+              metafieldDefinitionCreate(definition: {
+                name: "Expiration Date"
+                namespace: "custom"
+                key: "expiration_date"
+                type: "date"
+                description: "The expiration date of the product"
+                ownerType: PRODUCT
+              }) {
+                createdDefinition {
+                  id
+                  name
+                  namespace
+                  key
+                  type { name }
+                }
+                userErrors {
+                  field
+                  message
+                }
+              }
+            }
+            """
+            gql_response = requests.post(graphql_url, headers=headers, json={"query": query})
+            print(f"[DEBUG] GraphQL Status: {gql_response.status_code}")
+            print(f"[DEBUG] GraphQL Response: {gql_response.text}")
         except Exception as meta_e:
             print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
 
@@ -429,7 +457,7 @@ def start_auth(request):
         redirect_uri = settings.BASE_URL + "/auth/callback/"
         scopes = "read_products,write_products,read_metafields,write_metafields"
 
-        # ⚡ Important fix: remove `grant_options[]=per-user` to get offline token
+        # No grant_options[]=per-user → we get offline token
         auth_url = (
             f"https://{shop}/admin/oauth/authorize?"
             f"client_id={SHOPIFY_API_KEY}&"
@@ -446,5 +474,3 @@ def start_auth(request):
     except Exception as e:
         print(f"[ERROR] Exception in start_auth: {e}")
         return render(request, "error.html", {"message": f"Server error: {e}"})
-
-
