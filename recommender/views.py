@@ -351,7 +351,7 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop and registers the uninstall webhook.
-    Also creates the 'Expiration Date' metafield definition for products.
+    Also creates the 'Expiration Date' metafield definition for products (pinned to product editor).
     """
     try:
         shop = request.GET.get("shop")
@@ -396,7 +396,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
-        # --- Create 'Expiration Date' metafield definition (GraphQL) ---
+        # --- Create 'Expiration Date' metafield definition (GraphQL, pinned) ---
         try:
             graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
             headers = {
@@ -413,6 +413,7 @@ def oauth_callback(request):
                 type: "date"
                 description: "The expiration date of the product"
                 ownerType: PRODUCT
+                pinned: true
               }) {
                 createdDefinition {
                   id
@@ -420,6 +421,7 @@ def oauth_callback(request):
                   namespace
                   key
                   type { name }
+                  pinned
                 }
                 userErrors {
                   field
@@ -442,7 +444,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
 
 def start_auth(request):
     """
