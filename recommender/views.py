@@ -326,7 +326,7 @@ from .models import Shop
 from .webhooks import register_uninstall_webhook
 
 SHOPIFY_API_KEY = "d7d31726e1d03bf022e016021f595095"
-SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3"
+SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
 
 
 def app_entry(request):
@@ -350,8 +350,8 @@ def app_entry(request):
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves or reactivates the shop and registers the uninstall webhook.
-    Also creates + pins the 'Expiration Date' metafield definition for products.
+    Saves or reactivates the shop, registers the uninstall webhook,
+    creates the 'Expiration Date' metafield, and pins it automatically.
     """
     try:
         shop = request.GET.get("shop")
@@ -396,14 +396,16 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
         print("[DEBUG] Uninstall webhook registered")
 
-        # --- Create 'Expiration Date' metafield definition (GraphQL) ---
+        # --- GraphQL headers ---
+        graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
+        headers = {
+            "X-Shopify-Access-Token": offline_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        # --- Create 'Expiration Date' metafield definition ---
         try:
-            graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
-            headers = {
-                "X-Shopify-Access-Token": offline_token,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            }
             create_query = """
             mutation {
               metafieldDefinitionCreate(definition: {
@@ -429,36 +431,57 @@ def oauth_callback(request):
             }
             """
             gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-            result = gql_response.json()
-            print(f"[DEBUG] Metafield creation response: {result}")
-
-            metafield_id = None
-            if "data" in result and "metafieldDefinitionCreate" in result["data"]:
-                metafield_id = result["data"]["metafieldDefinitionCreate"]["createdDefinition"]["id"]
-
-            # --- Pin the metafield automatically ---
-            if metafield_id:
-                pin_query = f"""
-                mutation {{
-                  metafieldDefinitionPin(definitionId: "{metafield_id}", ownerType: PRODUCT) {{
-                    pinnedDefinition {{
-                      id
-                      name
-                    }}
-                    userErrors {{
-                      field
-                      message
-                    }}
-                  }}
-                }}
-                """
-                pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query})
-                print(f"[DEBUG] Metafield pin response: {pin_response.json()}")
-            else:
-                print("[WARNING] No metafield ID returned, skipping pinning.")
-
+            print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
+            print(f"[DEBUG] GraphQL create Response: {gql_response.text}")
         except Exception as meta_e:
-            print(f"[WARNING] Failed to create/pin expiration_date metafield: {meta_e}")
+            print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
+
+        # --- Pin the metafield automatically ---
+        try:
+            # Step 1: Get the definition ID
+            definition_query = """
+            {
+              metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "expiration_date") {
+                edges {
+                  node {
+                    id
+                    name
+                    namespace
+                    key
+                  }
+                }
+              }
+            }
+            """
+            print("\n🔍 Fetching definition ID for pinning...")
+            def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
+            def_data = def_response.json()
+            print("📥 Definition fetch response:", def_data)
+
+            definition_id = def_data["data"]["metafieldDefinitions"]["edges"][0]["node"]["id"]
+
+            # Step 2: Pin definition
+            pin_query = """
+            mutation metafieldDefinitionPin($definitionId: ID!) {
+              metafieldDefinitionPin(definitionId: $definitionId) {
+                pinnedDefinition {
+                  id
+                  name
+                  namespace
+                  key
+                }
+                userErrors {
+                  field
+                  message
+                }
+              }
+            }
+            """
+            variables = {"definitionId": definition_id}
+            pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
+            print("📥 Pin response:", pin_response.json())
+        except Exception as pin_e:
+            print(f"[WARNING] Failed to pin expiration_date metafield: {pin_e}")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
