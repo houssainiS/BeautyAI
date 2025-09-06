@@ -2,39 +2,333 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Welcome to BeautyAI!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautyAI - Successfully Installed</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f9f9f9;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            /* Updated to Shopify's clean background color */
+            background: #f6f6f7;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        h1 {
-            color: #333;
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            /* Updated to Shopify's subtle shadow style */
+            box-shadow: 0 1px 0 rgba(22, 29, 37, 0.05);
+            border: 1px solid #e1e3e5;
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
         }
-        p {
-            font-size: 18px;
-            color: #666;
-        }
-        .button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
+
+        .header {
+            /* Replaced purple gradient with Shopify green */
+            background: #00a651;
             color: white;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
         }
-        .button:hover {
-            background-color: #45a049;
+
+        /* Removed decorative pattern overlay for cleaner Shopify look */
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-message h2 {
+            font-size: 24px;
+            /* Updated to Shopify's text color */
+            color: #202223;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .welcome-message p {
+            font-size: 16px;
+            /* Updated to Shopify's secondary text color */
+            color: #6d7175;
+            line-height: 1.6;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .feature {
+            /* Updated to Shopify's card background */
+            background: #fafbfb;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            /* Updated to Shopify's border color */
+            border: 1px solid #e1e3e5;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-1px);
+            /* Updated hover shadow to match Shopify style */
+            box-shadow: 0 2px 4px rgba(22, 29, 37, 0.1);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            /* Replaced purple gradient with Shopify green */
+            background: #00a651;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            /* Updated to Shopify's heading color */
+            color: #202223;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .feature p {
+            font-size: 14px;
+            /* Updated to Shopify's secondary text color */
+            color: #6d7175;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            /* Added Shopify button height */
+            min-height: 36px;
+        }
+
+        .btn-primary {
+            /* Updated to Shopify's primary button color */
+            background: #008060;
+            color: white;
+            border: 1px solid #008060;
+        }
+
+        .btn-primary:hover {
+            /* Updated hover state to Shopify's darker green */
+            background: #004c3f;
+            border-color: #004c3f;
+        }
+
+        .btn-secondary {
+            background: white;
+            /* Updated to Shopify's secondary text color */
+            color: #323232;
+            /* Updated border to Shopify's border color */
+            border: 1px solid #c9cccf;
+        }
+
+        .btn-secondary:hover {
+            /* Updated hover state to Shopify's light gray */
+            background: #f6f6f7;
+            border-color: #8c9196;
+        }
+
+        .footer {
+            /* Updated to Shopify's footer background */
+            background: #fafbfb;
+            padding: 24px 30px;
+            text-align: center;
+            /* Updated border to Shopify's border color */
+            border-top: 1px solid #e1e3e5;
+        }
+
+        .footer p {
+            font-size: 14px;
+            /* Updated to Shopify's secondary text color */
+            color: #6d7175;
+        }
+
+        .footer a {
+            /* Updated links to Shopify's green */
+            color: #008060;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to BeautyAI!</h1>
-    <p>Thank you for installing our app. Start analyzing faces and recommending products now!</p>
-    <a class="button" href="https://beautyai.duckdns.org/" target="_blank">Go to Dashboard</a>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+            </div>
+            <h1>BeautyAI</h1>
+            <p class="subtitle">Successfully Installed!</p>
+        </div>
+
+        <div class="content">
+            <div class="welcome-message">
+                <h2>Welcome to the Future of Beauty</h2>
+                <p>Thank you for installing BeautyAI! Your customers can now experience personalized beauty recommendations powered by advanced AI technology. Get ready to transform your beauty business.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <h3>AI Face Analysis</h3>
+                    <p>Advanced facial recognition technology analyzes skin tone, features, and preferences</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Smart Recommendations</h3>
+                    <p>Personalized product suggestions that match your customers' unique beauty needs</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
+                        </svg>
+                    </div>
+                    <h3>Boost Sales</h3>
+                    <p>Increase conversion rates with targeted beauty recommendations and enhanced customer experience</p>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="https://beautyai.duckdns.org/" target="_blank" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                    </svg>
+                    Visit BeautyAI Dashboard
+                </a>
+                <a href="#" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="#" target="_blank">Webixia</a> • Need help? <a href="#" target="_blank">Contact Support</a></p>
+        </div>
+    </div>
 </body>
 </html>
