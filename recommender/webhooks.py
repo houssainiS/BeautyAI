@@ -7,8 +7,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Shop
 
-# Shopify API secret from app settings
-SHOPIFY_API_SECRET = "bea4550804b2d95776ecc77dd992fd3f"
+import os
+
+SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
+
 
 
 def verify_webhook(data, hmac_header):
