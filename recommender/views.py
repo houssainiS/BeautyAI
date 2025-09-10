@@ -518,7 +518,7 @@ def start_auth(request):
             return render(request, "error.html", {"message": "Missing shop parameter"})
 
         redirect_uri = settings.BASE_URL + "/auth/callback/"
-        scopes = "read_products,write_products,read_metafields,write_metafields"
+        scopes = "read_products,write_products,read_metafields,write_metafields,write_content"
 
         # No grant_options[]=per-user → we get offline token
         auth_url = (
