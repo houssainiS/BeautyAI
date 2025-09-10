@@ -325,6 +325,7 @@ from django.http import JsonResponse
 
 from .models import Shop
 from .webhooks import register_uninstall_webhook
+from .shopify_navigation import create_page, add_link_to_main_menu  # import our helper functions
 
 # Load from environment variables with fallback
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY", "fallback-key-for-dev")
@@ -354,7 +355,8 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop, registers the uninstall webhook,
-    creates the 'Expiration Date' metafield, and pins it automatically.
+    creates the 'Expiration Date' metafield, pins it automatically,
+    and creates a page with a link in navigation.
     """
     try:
         shop = request.GET.get("shop")
@@ -485,6 +487,15 @@ def oauth_callback(request):
             print("📥 Pin response:", pin_response.json())
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin expiration_date metafield: {pin_e}")
+
+        # --- Create page and add link to navigation ---
+        try:
+            page = create_page(shop, offline_token, title="Face Analyzer", body_html="<h1>Face Analyzer</h1>")
+            if page:
+                add_link_to_main_menu(shop, offline_token, page_id=page["id"], link_title="Face Analyzer")
+                print("[DEBUG] Face Analyzer page and navigation link created successfully")
+        except Exception as nav_e:
+            print(f"[WARNING] Failed to create page or navigation link: {nav_e}")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
