@@ -354,8 +354,8 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves or reactivates the shop, registers the uninstall webhook,
-    creates the 'Expiration Date' metafield, pins it automatically,
-    and creates a page during installation.
+    creates the 'Product Usage Duration (in days)' metafield,
+    pins it automatically, and creates a page during installation.
     """
     try:
         shop = request.GET.get("shop")
@@ -408,16 +408,16 @@ def oauth_callback(request):
             "Accept": "application/json",
         }
 
-        # --- Create 'Expiration Date' metafield definition ---
+        # --- Create 'Product Usage Duration (in days)' metafield definition ---
         try:
             create_query = """
             mutation {
               metafieldDefinitionCreate(definition: {
-                name: "Expiration Date"
+                name: "Product Usage Duration (in days)"
                 namespace: "custom"
-                key: "expiration_date"
-                type: "date"
-                description: "The expiration date of the product"
+                key: "usage_duration"
+                type: "number_integer"
+                description: "How many days will use the product."
                 ownerType: PRODUCT
               }) {
                 createdDefinition {
@@ -438,14 +438,14 @@ def oauth_callback(request):
             print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
             print(f"[DEBUG] GraphQL create Response: {gql_response.text}")
         except Exception as meta_e:
-            print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
+            print(f"[WARNING] Failed to create usage_duration metafield: {meta_e}")
 
         # --- Pin the metafield automatically ---
         try:
             # Step 1: Get the definition ID
             definition_query = """
             {
-              metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "expiration_date") {
+              metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
                 edges {
                   node {
                     id
@@ -485,7 +485,7 @@ def oauth_callback(request):
             pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
             print("📥 Pin response:", pin_response.json())
         except Exception as pin_e:
-            print(f"[WARNING] Failed to pin expiration_date metafield: {pin_e}")
+            print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
         # --- Create page only (navigation link removed) ---
         try:
