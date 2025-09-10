@@ -325,7 +325,7 @@ from django.http import JsonResponse
 
 from .models import Shop
 from .webhooks import register_uninstall_webhook
-from .shopify_navigation import create_page, add_link_to_main_menu  # import our helper functions
+from .shopify_navigation import create_page  # only import the function that works
 
 # Load from environment variables with fallback
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY", "fallback-key-for-dev")
@@ -356,7 +356,7 @@ def oauth_callback(request):
     Handles Shopify OAuth callback.
     Saves or reactivates the shop, registers the uninstall webhook,
     creates the 'Expiration Date' metafield, pins it automatically,
-    and creates a page with a link in navigation.
+    and creates a page during installation.
     """
     try:
         shop = request.GET.get("shop")
@@ -365,8 +365,6 @@ def oauth_callback(request):
         if not shop or not code:
             print("[DEBUG] Missing shop or code in callback")
             return JsonResponse({"error": "Missing shop or code"}, status=400)
-
-        print(f"[DEBUG] oauth_callback called for shop: {shop} with code: {code}")
 
         # Exchange code for access token
         response = requests.post(
@@ -378,124 +376,30 @@ def oauth_callback(request):
             },
         )
         data = response.json()
-        print(f"[DEBUG] OAuth token response: {data}")
 
         if "access_token" not in data:
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        offline_token = data["access_token"]  # Permanent offline token
-        online_token = data.get("online_access_info", {}).get("access_token")  # Optional short-lived
+        offline_token = data["access_token"]
 
         # Save or reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
             defaults={
                 "offline_token": offline_token,
-                "online_token": online_token,
                 "is_active": True,
             },
         )
-        print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
         # Register uninstall webhook
         register_uninstall_webhook(shop, offline_token)
-        print("[DEBUG] Uninstall webhook registered")
 
-        # --- GraphQL headers ---
-        graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
-        headers = {
-            "X-Shopify-Access-Token": offline_token,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
-        # --- Create 'Expiration Date' metafield definition ---
-        try:
-            create_query = """
-            mutation {
-              metafieldDefinitionCreate(definition: {
-                name: "Expiration Date"
-                namespace: "custom"
-                key: "expiration_date"
-                type: "date"
-                description: "The expiration date of the product"
-                ownerType: PRODUCT
-              }) {
-                createdDefinition {
-                  id
-                  name
-                  namespace
-                  key
-                  type { name }
-                }
-                userErrors {
-                  field
-                  message
-                }
-              }
-            }
-            """
-            gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-            print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
-            print(f"[DEBUG] GraphQL create Response: {gql_response.text}")
-        except Exception as meta_e:
-            print(f"[WARNING] Failed to create expiration_date metafield: {meta_e}")
-
-        # --- Pin the metafield automatically ---
-        try:
-            # Step 1: Get the definition ID
-            definition_query = """
-            {
-              metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "expiration_date") {
-                edges {
-                  node {
-                    id
-                    name
-                    namespace
-                    key
-                  }
-                }
-              }
-            }
-            """
-            print("\n🔍 Fetching definition ID for pinning...")
-            def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
-            def_data = def_response.json()
-            print("📥 Definition fetch response:", def_data)
-
-            definition_id = def_data["data"]["metafieldDefinitions"]["edges"][0]["node"]["id"]
-
-            # Step 2: Pin definition
-            pin_query = """
-            mutation metafieldDefinitionPin($definitionId: ID!) {
-              metafieldDefinitionPin(definitionId: $definitionId) {
-                pinnedDefinition {
-                  id
-                  name
-                  namespace
-                  key
-                }
-                userErrors {
-                  field
-                  message
-                }
-              }
-            }
-            """
-            variables = {"definitionId": definition_id}
-            pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
-            print("📥 Pin response:", pin_response.json())
-        except Exception as pin_e:
-            print(f"[WARNING] Failed to pin expiration_date metafield: {pin_e}")
-
-        # --- Create page and add link to navigation ---
-        try:
-            page = create_page(shop, offline_token, title="Face Analyzer", body_html="<h1>Face Analyzer</h1>")
-            if page:
-                add_link_to_main_menu(shop, offline_token, page_id=page["id"], link_title="Face Analyzer")
-                print("[DEBUG] Face Analyzer page and navigation link created successfully")
-        except Exception as nav_e:
-            print(f"[WARNING] Failed to create page or navigation link: {nav_e}")
+        # --- Create page only (navigation link removed for now) ---
+        page = create_page(shop, offline_token, title="Face Analyzer", body="<h1>Face Analyzer</h1>")
+        if page:
+            print(f"[DEBUG] Page created successfully: {page['title']} ({page['handle']})")
+        else:
+            print("[WARNING] Failed to create page during installation")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
@@ -518,9 +422,9 @@ def start_auth(request):
             return render(request, "error.html", {"message": "Missing shop parameter"})
 
         redirect_uri = settings.BASE_URL + "/auth/callback/"
+        
         scopes = "read_products,write_products,read_metafields,write_metafields,write_content,write_online_store_pages,read_online_store_pages,read_online_store_navigation,write_online_store_navigation"
 
-        # No grant_options[]=per-user → we get offline token
         auth_url = (
             f"https://{shop}/admin/oauth/authorize?"
             f"client_id={SHOPIFY_API_KEY}&"
@@ -528,9 +432,6 @@ def start_auth(request):
             f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
             f"state=12345"
         )
-
-        print(f"[DEBUG] start_auth called for shop: {shop}")
-        print(f"[DEBUG] redirecting to auth_url: {auth_url}")
 
         return redirect(auth_url)
 
