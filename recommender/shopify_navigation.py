@@ -13,8 +13,10 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
         "Content-Type": "application/json",
     }
 
-    # --- Step 1: Create the page ---
-    query = """
+    # -------------------------
+    # STEP 1: Create the page
+    # -------------------------
+    query_create_page = """
     mutation {
       pageCreate(page: {
         title: "%s",
@@ -33,8 +35,7 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
     }
     """ % (title, body.replace('"', '\\"'))
 
-    response = requests.post(url, headers=headers, json={"query": query})
-
+    response = requests.post(url, headers=headers, json={"query": query_create_page})
     try:
         data = response.json()
     except json.JSONDecodeError:
@@ -50,8 +51,31 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
 
     print(f"[SUCCESS] Page created: {page_data['title']} ({page_data['handle']})")
 
-    # --- Step 2: Fetch main menu ---
-    menus_query = """
+    # -------------------------
+    # STEP 2: Fetch all pages
+    # -------------------------
+    query_pages = """
+    {
+      pages(first: 50) {
+        edges {
+          node {
+            id
+            title
+            handle
+          }
+        }
+      }
+    }
+    """
+    response_pages = requests.post(url, headers=headers, json={"query": query_pages})
+    pages_data = response_pages.json()
+    page_map = {node["node"]["title"]: node["node"]["id"] for node in pages_data.get("data", {}).get("pages", {}).get("edges", [])}
+    print("Page map:", page_map)
+
+    # -------------------------
+    # STEP 3: Fetch main menu
+    # -------------------------
+    query_menus = """
     {
       menus(first: 10) {
         edges {
@@ -63,18 +87,22 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
               title
               type
               url
+              items {
+                id
+                title
+              }
             }
           }
         }
       }
     }
     """
-    menus_resp = requests.post(url, headers=headers, json={"query": menus_query})
-    menus_data = menus_resp.json()
-    
+    response_menus = requests.post(url, headers=headers, json={"query": query_menus})
+    menus_data = response_menus.json()
+
     main_menu = None
     for edge in menus_data.get("data", {}).get("menus", {}).get("edges", []):
-        if edge["node"]["title"].lower() == "main menu":
+        if edge["node"]["title"] == "Main menu":
             main_menu = edge["node"]
             break
 
@@ -82,29 +110,44 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
         print("[WARNING] Main menu not found. Skipping navigation link creation.")
         return page_data
 
-    # --- Step 3: Prepare menu items for update ---
-    menu_items = []
+    print("Main menu found:", main_menu["id"])
+
+    # -------------------------
+    # STEP 4: Build updated menu items
+    # -------------------------
+    updated_items = []
     for item in main_menu["items"]:
-        menu_items.append({
-            "id": item.get("id"),
+        updated_item = {
+            "id": item["id"],
             "title": item["title"],
             "type": item["type"],
-            "url": item.get("url"),
+            "url": item["url"],
+            "items": []
+        }
+        # Add resourceId for existing PAGE items
+        if item["type"] == "PAGE" and item["title"] in page_map:
+            updated_item["resourceId"] = page_map[item["title"]]
+        updated_items.append(updated_item)
+
+    # Add new page
+    if title in page_map:
+        updated_items.append({
+            "id": None,
+            "title": title,
+            "type": "PAGE",
+            "url": f"/pages/{page_map[title].split('/')[-1]}",
+            "resourceId": page_map[title],
             "items": []
         })
 
-    # Add new page link
-    menu_items.append({
-        "id": None,
-        "title": page_data["title"],
-        "type": "PAGE",
-        "url": f"/pages/{page_data['handle']}",
-        "resourceId": page_data["id"],
-        "items": []
-    })
+    print("Valid menu items for update:")
+    for it in updated_items:
+        print(it)
 
-    # --- Step 4: Update menu ---
-    update_query = """
+    # -------------------------
+    # STEP 5: Update menu
+    # -------------------------
+    mutation_update_menu = """
     mutation UpdateMenu($id: ID!, $title: String!, $handle: String!, $items: [MenuItemUpdateInput!]!) {
       menuUpdate(id: $id, title: $title, handle: $handle, items: $items) {
         menu {
@@ -113,6 +156,10 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
           items {
             id
             title
+            items {
+              id
+              title
+            }
           }
         }
         userErrors {
@@ -122,14 +169,17 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
       }
     }
     """
+
     variables = {
         "id": main_menu["id"],
         "title": main_menu["title"],
-        "handle": main_menu["title"].lower().replace(" ", "-"),
-        "items": menu_items
+        "handle": "main-menu",
+        "items": updated_items
     }
-    update_resp = requests.post(url, headers=headers, json={"query": update_query, "variables": variables})
+
+    update_resp = requests.post(url, headers=headers, json={"query": mutation_update_menu, "variables": variables})
     update_data = update_resp.json()
+
     if update_data.get("data", {}).get("menuUpdate", {}).get("userErrors"):
         print("[WARNING] Menu update errors:", update_data["data"]["menuUpdate"]["userErrors"])
     else:

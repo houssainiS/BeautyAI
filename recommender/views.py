@@ -355,7 +355,7 @@ def oauth_callback(request):
     Handles Shopify OAuth callback.
     Saves or reactivates the shop, registers the uninstall webhook,
     creates the 'Product Usage Duration (in days)' metafield,
-    pins it automatically, and creates a page during installation.
+    pins it automatically, and creates a page with navigation link during installation.
     """
     try:
         shop = request.GET.get("shop")
@@ -487,15 +487,15 @@ def oauth_callback(request):
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
-        # --- Create page only (navigation link removed) ---
+        # --- Create page and add navigation link ---
         try:
             page = create_page(shop, offline_token, title="Face Analyzer", body="<h1>Face Analyzer</h1>")
             if page:
-                print(f"[DEBUG] Page created successfully: {page['title']} ({page['handle']})")
+                print(f"[DEBUG] Page created and navigation link added: {page['title']} ({page['handle']})")
             else:
-                print("[WARNING] Failed to create page during installation")
+                print("[WARNING] Failed to create page or add navigation link during installation")
         except Exception as nav_e:
-            print(f"[WARNING] Failed to create page: {nav_e}")
+            print(f"[WARNING] Failed to create page/navigation link: {nav_e}")
 
         # Show welcome/install page
         return render(request, "recommender/shopify_install_page.html", {"shop": shop})
