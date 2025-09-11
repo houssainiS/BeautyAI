@@ -30,8 +30,9 @@ def build_theme_editor_link(shop, api_key, block_type, theme_id, page_handle):
     """
     Build a Shopify Theme Editor deep link with Add App Block popup.
     """
+    store_handle = shop.split(".myshopify.com")[0]  # Strip domain suffix
     return (
-        f"https://admin.shopify.com/store/{shop}/themes/{theme_id}/editor"
+        f"https://admin.shopify.com/store/{store_handle}/themes/{theme_id}/editor"
         f"?addAppBlockId={api_key}/{block_type}"
         f"&footer=true"
         f"&previewPath=/pages/{page_handle}"
@@ -170,7 +171,7 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
                 "id": None,
                 "title": title,
                 "type": "PAGE",
-                "url": f"/pages/{page_map[title].split('/')[-1]}",
+                "url": f"/pages/{page_data['handle']}",  # use handle instead of numeric ID
                 "resourceId": page_map[title],
                 "items": []
             })
