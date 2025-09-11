@@ -333,24 +333,35 @@ SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
 
 
 def app_entry(request):
-    """
-    Main entry point for the embedded app.
-    Redirects to OAuth if the shop is not installed yet.
-    """
     shop = request.GET.get("shop")
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
-        # Shop already installed → show install page
+        # If deep link is missing, generate it once (optional)
+        if not shop_obj.theme_editor_link:
+            from .shopify_navigation import create_page
+            page_content = PageContent.objects.first()
+            if not page_content:
+                page_content = PageContent(title="Face Analyzer", body="<h1>Face Analyzer</h1>")
+            _, deep_link = create_page(
+                shop,
+                shop_obj.offline_token,
+                title=page_content.title,
+                body=page_content.body,
+                api_key=SHOPIFY_API_KEY,
+                block_type="test"
+            )
+            shop_obj.theme_editor_link = deep_link
+            shop_obj.save()
+
         return render(
             request,
             "recommender/shopify_install_page.html",
             {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link}
         )
     except Shop.DoesNotExist:
-        # Shop not installed yet → start OAuth flow
         return redirect(f"/start_auth/?shop={shop}")
 
 
