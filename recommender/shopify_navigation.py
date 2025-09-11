@@ -1,7 +1,23 @@
 import requests
 import json
 
-def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>"):
+def create_page(shop, token, title="Face Analyzer", body = """
+<style>
+  h1.page-title {
+    display: none; /* Hide Shopify's default page title */
+  }
+</style>
+
+<div style="text-align:center; margin-top:50px;">
+  <h1 style="font-size: 32px; color: #2c3e50; margin-bottom: 20px;">
+     Face Analyzer 
+  </h1>
+  <p style="font-size: 18px; color: #555;">
+    Analyze your face instantly with AI insights
+  </p>
+</div>
+"""
+):
     """
     Create a page in the Shopify store using GraphQL Admin API.
     Also adds the page to the main menu.
