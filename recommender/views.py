@@ -489,7 +489,22 @@ def oauth_callback(request):
 
         # --- Create page and add navigation link ---
         try:
-            page = create_page(shop, offline_token, title="Face Analyzer", body="<h1>Face Analyzer</h1>")
+            page = create_page(shop, offline_token, title="Face Analyzer", body="""
+<style>
+  h1.page-title {
+    display: none; /* Hide Shopify's default page title */
+  }
+</style>
+
+<div style="text-align:center; margin-top:50px;">
+  <h1 style="font-size: 32px; color: #2c3e50; margin-bottom: 20px;">
+     Face Analyzer 
+  </h1>
+  <p style="font-size: 18px; color: #555;">
+    Analyze your face instantly with AI insights
+  </p>
+</div>
+""")
             if page:
                 print(f"[DEBUG] Page created and navigation link added: {page['title']} ({page['handle']})")
             else:
