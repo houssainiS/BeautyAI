@@ -323,7 +323,7 @@ from django.conf import settings
 import urllib.parse
 from django.http import JsonResponse
 
-from .models import Shop ,PageContent
+from .models import Shop, PageContent
 from .webhooks import register_uninstall_webhook
 from .shopify_navigation import create_page  # only import the working function
 
@@ -344,7 +344,11 @@ def app_entry(request):
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
         # Shop already installed → show install page
-        return render(request, "recommender/shopify_install_page.html", {"shop": shop})
+        return render(
+            request,
+            "recommender/shopify_install_page.html",
+            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link}
+        )
     except Shop.DoesNotExist:
         # Shop not installed yet → start OAuth flow
         return redirect(f"/start_auth/?shop={shop}")
@@ -353,10 +357,10 @@ def app_entry(request):
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves or reactivates the shop, registers the uninstall webhook,
-    creates the 'Product Usage Duration (in days)' metafield,
-    pins it automatically, and creates a page with navigation link during installation.
-    Page content is now fetched from the database for dynamic updates.
+    Saves/reactivates the shop, registers uninstall webhook,
+    creates and pins the 'Product Usage Duration' metafield,
+    creates page with navigation link, and passes Theme Editor link
+    to the installation page.
     """
     try:
         shop = request.GET.get("shop")
@@ -383,10 +387,10 @@ def oauth_callback(request):
         if "access_token" not in data:
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        offline_token = data["access_token"]  # Permanent offline token
-        online_token = data.get("online_access_info", {}).get("access_token")  # Optional short-lived
+        offline_token = data["access_token"]
+        online_token = data.get("online_access_info", {}).get("access_token")
 
-        # Save or reactivate shop
+        # Save/reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
             defaults={
@@ -409,7 +413,7 @@ def oauth_callback(request):
             "Accept": "application/json",
         }
 
-        # --- Create 'Product Usage Duration (in days)' metafield definition ---
+        # --- Create & pin 'Product Usage Duration (in days)' metafield ---
         try:
             create_query = """
             mutation {
@@ -421,17 +425,8 @@ def oauth_callback(request):
                 description: "How many days will use the product."
                 ownerType: PRODUCT
               }) {
-                createdDefinition {
-                  id
-                  name
-                  namespace
-                  key
-                  type { name }
-                }
-                userErrors {
-                  field
-                  message
-                }
+                createdDefinition { id name namespace key type { name } }
+                userErrors { field message }
               }
             }
             """
@@ -441,42 +436,23 @@ def oauth_callback(request):
         except Exception as meta_e:
             print(f"[WARNING] Failed to create usage_duration metafield: {meta_e}")
 
-        # --- Pin the metafield automatically ---
         try:
             definition_query = """
             {
               metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
-                edges {
-                  node {
-                    id
-                    name
-                    namespace
-                    key
-                  }
-                }
+                edges { node { id name namespace key } }
               }
             }
             """
-            print("\n🔍 Fetching definition ID for pinning...")
             def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
             def_data = def_response.json()
-            print("📥 Definition fetch response:", def_data)
-
             definition_id = def_data["data"]["metafieldDefinitions"]["edges"][0]["node"]["id"]
 
             pin_query = """
             mutation metafieldDefinitionPin($definitionId: ID!) {
               metafieldDefinitionPin(definitionId: $definitionId) {
-                pinnedDefinition {
-                  id
-                  name
-                  namespace
-                  key
-                }
-                userErrors {
-                  field
-                  message
-                }
+                pinnedDefinition { id name namespace key }
+                userErrors { field message }
               }
             }
             """
@@ -486,42 +462,50 @@ def oauth_callback(request):
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
-        # --- Create page and add navigation link using DB content ---
+        # --- Create page, add nav link, and get Theme Editor deep link ---
         try:
-            from .models import PageContent
-
             page_content = PageContent.objects.first()
             if not page_content:
-                print("[WARNING] No PageContent found, using fallback content")
+                print("[WARNING] No PageContent found, using fallback")
                 page_content = PageContent(
                     title="Face Analyzer",
-                    body="""
-  <h1>Face Analyzer</h1>
-"""
+                    body="<h1>Face Analyzer</h1>"
                 )
 
-            page = create_page(
+            page, deep_link = create_page(
                 shop,
                 offline_token,
                 title=page_content.title,
-                body=page_content.body
+                body=page_content.body,
+                api_key=SHOPIFY_API_KEY,
+                block_type="test"
             )
+
+            # Save deep link in Shop model for template
+            shop_obj.theme_editor_link = deep_link
+            shop_obj.save()
 
             if page:
                 print(f"[DEBUG] Page created and navigation link added: {page['title']} ({page['handle']})")
+                print(f"[DEBUG] Theme Editor deep link: {deep_link}")
             else:
-                print("[WARNING] Failed to create page or add navigation link during installation")
+                print("[WARNING] Failed to create page or add navigation link")
         except Exception as nav_e:
             print(f"[WARNING] Failed to create page/navigation link: {nav_e}")
 
-        # Show welcome/install page
-        return render(request, "recommender/shopify_install_page.html", {"shop": shop})
+        # Render installation page with deep link
+        return render(
+            request,
+            "recommender/shopify_install_page.html",
+            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link}
+        )
 
     except Exception as e:
         print(f"[ERROR] Exception in oauth_callback: {e}")
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
 
 def start_auth(request):
     """
@@ -534,9 +518,12 @@ def start_auth(request):
             return render(request, "error.html", {"message": "Missing shop parameter"})
 
         redirect_uri = settings.BASE_URL + "/auth/callback/"
-        scopes = "read_products,write_products,read_metafields,write_metafields,write_content,write_online_store_pages,read_online_store_pages,read_online_store_navigation,write_online_store_navigation,read_themes,write_themes"
+        scopes = (
+            "read_products,write_products,read_metafields,write_metafields,write_content,"
+            "write_online_store_pages,read_online_store_pages,read_online_store_navigation,"
+            "write_online_store_navigation,read_themes,write_themes"
+        )
 
-        # No grant_options[]=per-user → we get offline token
         auth_url = (
             f"https://{shop}/admin/oauth/authorize?"
             f"client_id={SHOPIFY_API_KEY}&"

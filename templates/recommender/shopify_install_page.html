@@ -270,6 +270,15 @@
             </div>
             <h1>BeautyAI</h1>
             <p class="subtitle">Successfully Installed!</p>
+             <!-- Shopify Theme Editor Button -->
+    {% if theme_editor_link %}
+    <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-primary" style="margin-top: 20px;">
+        Open Theme Editor & Add App Block
+    </a>
+    {% else %}
+    <p style="margin-top: 20px; color: #e74c3c;">Theme Editor link not available. Please refresh the page.</p>
+    {% endif %}
+
         </div>
 
         <div class="content">
