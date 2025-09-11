@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from .models import Visitor, FaceAnalysis , Feedback , AllowedOrigin ,Shop
+from .models import Visitor, FaceAnalysis , Feedback , AllowedOrigin ,Shop , PageContent
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
@@ -46,4 +46,8 @@ class ShopAdmin(admin.ModelAdmin):
     list_display = ('domain', 'installed_at', 'is_active')
     search_fields = ("domain",)
 
-    
+
+@admin.register(PageContent)
+class PageContentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'updated_at')  # show these columns in admin list
+    ordering = ('-updated_at',)  # newest first
