@@ -323,7 +323,7 @@ from django.conf import settings
 import urllib.parse
 from django.http import JsonResponse
 
-from .models import Shop
+from .models import Shop ,PageContent
 from .webhooks import register_uninstall_webhook
 from .shopify_navigation import create_page  # only import the working function
 
@@ -356,6 +356,7 @@ def oauth_callback(request):
     Saves or reactivates the shop, registers the uninstall webhook,
     creates the 'Product Usage Duration (in days)' metafield,
     pins it automatically, and creates a page with navigation link during installation.
+    Page content is now fetched from the database for dynamic updates.
     """
     try:
         shop = request.GET.get("shop")
@@ -442,7 +443,6 @@ def oauth_callback(request):
 
         # --- Pin the metafield automatically ---
         try:
-            # Step 1: Get the definition ID
             definition_query = """
             {
               metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
@@ -464,7 +464,6 @@ def oauth_callback(request):
 
             definition_id = def_data["data"]["metafieldDefinitions"]["edges"][0]["node"]["id"]
 
-            # Step 2: Pin definition
             pin_query = """
             mutation metafieldDefinitionPin($definitionId: ID!) {
               metafieldDefinitionPin(definitionId: $definitionId) {
@@ -487,24 +486,27 @@ def oauth_callback(request):
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
-        # --- Create page and add navigation link ---
+        # --- Create page and add navigation link using DB content ---
         try:
-            page = create_page(shop, offline_token, title="Face Analyzer", body="""
-<style>
-  h1.page-title {
-    display: none; /* Hide Shopify's default page title */
-  }
-</style>
+            from .models import PageContent
 
-<div style="text-align:center; margin-top:50px;">
-  <h1 style="font-size: 32px; color: #2c3e50; margin-bottom: 20px;">
-     Face Analyzer 
-  </h1>
-  <p style="font-size: 18px; color: #555;">
-    Analyze your face instantly with AI insights
-  </p>
-</div>
-""")
+            page_content = PageContent.objects.first()
+            if not page_content:
+                print("[WARNING] No PageContent found, using fallback content")
+                page_content = PageContent(
+                    title="Face Analyzer",
+                    body="""
+  <h1>Face Analyzer</h1>
+"""
+                )
+
+            page = create_page(
+                shop,
+                offline_token,
+                title=page_content.title,
+                body=page_content.body
+            )
+
             if page:
                 print(f"[DEBUG] Page created and navigation link added: {page['title']} ({page['handle']})")
             else:
@@ -520,7 +522,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
 
 def start_auth(request):
     """
