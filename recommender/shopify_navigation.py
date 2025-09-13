@@ -2,7 +2,9 @@ import requests
 import json
 
 def get_published_theme_id(shop, token):
-    """Fetch the main published theme ID for the shop."""
+    """
+    Fetch the main published theme ID for the shop.
+    """
     url = f"https://{shop}/admin/api/2025-07/graphql.json"
     headers = {"X-Shopify-Access-Token": token, "Content-Type": "application/json"}
     query = """
@@ -25,8 +27,10 @@ def get_published_theme_id(shop, token):
     return None
 
 def build_theme_editor_link(shop, api_key, block_type, theme_id, page_handle):
-    """Build a Shopify Theme Editor deep link with Add App Block popup."""
-    store_handle = shop.split(".myshopify.com")[0]
+    """
+    Build a Shopify Theme Editor deep link with Add App Block popup.
+    """
+    store_handle = shop.split(".myshopify.com")[0]  # Strip domain suffix
     return (
         f"https://admin.shopify.com/store/{store_handle}/themes/{theme_id}/editor"
         f"?addAppBlockId={api_key}/{block_type}"
@@ -36,15 +40,19 @@ def build_theme_editor_link(shop, api_key, block_type, theme_id, page_handle):
 
 def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>", api_key=None, block_type="test"):
     """
-    Create a page in Shopify and add it to the main menu.
-    Checks for existing page and menu link to prevent duplicates.
-    Returns: (page_data, deep_link) or (None, None)
+    Create a page in the Shopify store using GraphQL Admin API.
+    Also adds the page to the main menu and returns the page object.
+    Additionally returns the Theme Editor deep link for adding the app block.
+    Returns: (page_data, deep_link) or (None, None) on failure
     """
     url = f"https://{shop}/admin/api/2025-07/graphql.json"
-    headers = {"X-Shopify-Access-Token": token, "Content-Type": "application/json"}
+    headers = {
+        "X-Shopify-Access-Token": token,
+        "Content-Type": "application/json",
+    }
 
     # -------------------------
-    # STEP 1: Fetch existing pages to check duplicates
+    # STEP 0: Check if page exists
     # -------------------------
     query_pages = """
     {
@@ -68,7 +76,7 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
         print(f"✅ Page already exists: {page_data['title']} (/{page_data['handle']})")
     else:
         # -------------------------
-        # STEP 2: Create page
+        # STEP 1: Create page
         # -------------------------
         query_create_page = """
         mutation {
@@ -97,6 +105,14 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
             print(f"[WARNING] Failed to create page. Errors: {json.dumps(user_errors, indent=2)}")
             return None, None
         print(f"[SUCCESS] Page created: {page_data['title']} ({page_data['handle']})")
+
+    # -------------------------
+    # STEP 2: Fetch all pages
+    # -------------------------
+    response_pages = requests.post(url, headers=headers, json={"query": query_pages})
+    pages_data = response_pages.json()
+    page_map = {node["node"]["title"]: node["node"]["id"] for node in pages_data.get("data", {}).get("pages", {}).get("edges", [])}
+    print("Page map:", page_map)
 
     # -------------------------
     # STEP 3: Fetch main menu
@@ -133,59 +149,44 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
             break
 
     if not main_menu:
-        # -------------------------
-        # CREATE MAIN MENU IF MISSING
-        # -------------------------
-        mutation_create_menu = """
-        mutation {
-          menuCreate(input: {title: "Main menu", handle: "main-menu"}) {
-            menu {
-              id
-              title
-              handle
-              items {
-                id
-                title
-              }
-            }
-            userErrors {
-              field
-              message
-            }
-          }
-        }
-        """
-        create_resp = requests.post(url, headers=headers, json={"query": mutation_create_menu})
-        create_data = create_resp.json()
-        if create_data.get("data", {}).get("menuCreate", {}).get("menu"):
-            main_menu = create_data["data"]["menuCreate"]["menu"]
-            print(f"[SUCCESS] Main menu created: {main_menu['title']} (id: {main_menu['id']})")
-        else:
-            print("[ERROR] Failed to create main menu:", create_data)
-            return page_data, None
+        print("[WARNING] Main menu not found. Skipping navigation link creation.")
     else:
-        print(f"👉 Using menu: {main_menu['title']} (id: {main_menu['id']})")
+        print("Main menu found:", main_menu["id"])
 
-    # -------------------------
-    # STEP 4: Check if navigation link exists
-    # -------------------------
-    link_exists = False
-    for item in main_menu["items"]:
-        if item["title"].lower() == title.lower():
-            link_exists = True
-            break
+        # -------------------------
+        # STEP 4: Build updated menu items
+        # -------------------------
+        updated_items = []
+        for item in main_menu["items"]:
+            updated_item = {
+                "id": item["id"],
+                "title": item["title"],
+                "type": item["type"],
+                "url": item["url"],
+                "items": []
+            }
+            if item["type"] == "PAGE" and item["title"] in page_map:
+                updated_item["resourceId"] = page_map[item["title"]]
+            updated_items.append(updated_item)
 
-    if link_exists:
-        print(f"✅ Navigation link already exists: {title}")
-    else:
-        updated_items = main_menu["items"] + [{
-            "id": None,
-            "title": title,
-            "type": "PAGE",
-            "url": f"/pages/{page_data['handle']}",
-            "resourceId": page_data['id'],
-            "items": []
-        }]
+        # Add new page
+        if title in page_map:
+            updated_items.append({
+                "id": None,
+                "title": title,
+                "type": "PAGE",
+                "url": f"/pages/{page_data['handle']}",  # use handle instead of numeric ID
+                "resourceId": page_map[title],
+                "items": []
+            })
+
+        print("Valid menu items for update:")
+        for it in updated_items:
+            print(it)
+
+        # -------------------------
+        # STEP 5: Update menu
+        # -------------------------
         mutation_update_menu = """
         mutation UpdateMenu($id: ID!, $title: String!, $handle: String!, $items: [MenuItemUpdateInput!]!) {
           menuUpdate(id: $id, title: $title, handle: $handle, items: $items) {
@@ -208,21 +209,24 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
           }
         }
         """
+
         variables = {
             "id": main_menu["id"],
             "title": main_menu["title"],
             "handle": "main-menu",
             "items": updated_items
         }
+
         update_resp = requests.post(url, headers=headers, json={"query": mutation_update_menu, "variables": variables})
         update_data = update_resp.json()
+
         if update_data.get("data", {}).get("menuUpdate", {}).get("userErrors"):
             print("[WARNING] Menu update errors:", update_data["data"]["menuUpdate"]["userErrors"])
         else:
-            print(f"[SUCCESS] Navigation link added to main menu: {title}")
+            print(f"[SUCCESS] Navigation link added to main menu: {page_data['title']}")
 
     # -------------------------
-    # STEP 5: Build Theme Editor deep link
+    # STEP 6: Build Theme Editor deep link
     # -------------------------
     theme_id = get_published_theme_id(shop, token)
     deep_link = None
