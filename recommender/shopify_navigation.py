@@ -133,64 +133,93 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
             break
 
     if not main_menu:
-        print("[WARNING] Main menu not found. Skipping navigation link creation.")
+        # -------------------------
+        # CREATE MAIN MENU IF MISSING
+        # -------------------------
+        mutation_create_menu = """
+        mutation {
+          menuCreate(input: {title: "Main menu", handle: "main-menu"}) {
+            menu {
+              id
+              title
+              handle
+              items {
+                id
+                title
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+        """
+        create_resp = requests.post(url, headers=headers, json={"query": mutation_create_menu})
+        create_data = create_resp.json()
+        if create_data.get("data", {}).get("menuCreate", {}).get("menu"):
+            main_menu = create_data["data"]["menuCreate"]["menu"]
+            print(f"[SUCCESS] Main menu created: {main_menu['title']} (id: {main_menu['id']})")
+        else:
+            print("[ERROR] Failed to create main menu:", create_data)
+            return page_data, None
     else:
         print(f"👉 Using menu: {main_menu['title']} (id: {main_menu['id']})")
 
-        # -------------------------
-        # STEP 4: Check if link exists
-        # -------------------------
-        link_exists = False
-        for item in main_menu["items"]:
-            if item["title"].lower() == title.lower():
-                link_exists = True
-                break
+    # -------------------------
+    # STEP 4: Check if navigation link exists
+    # -------------------------
+    link_exists = False
+    for item in main_menu["items"]:
+        if item["title"].lower() == title.lower():
+            link_exists = True
+            break
 
-        if link_exists:
-            print(f"✅ Navigation link already exists: {title}")
-        else:
-            updated_items = main_menu["items"] + [{
-                "id": None,
-                "title": title,
-                "type": "PAGE",
-                "url": f"/pages/{page_data['handle']}",
-                "resourceId": page_data['id'],
-                "items": []
-            }]
-            mutation_update_menu = """
-            mutation UpdateMenu($id: ID!, $title: String!, $handle: String!, $items: [MenuItemUpdateInput!]!) {
-              menuUpdate(id: $id, title: $title, handle: $handle, items: $items) {
-                menu {
+    if link_exists:
+        print(f"✅ Navigation link already exists: {title}")
+    else:
+        updated_items = main_menu["items"] + [{
+            "id": None,
+            "title": title,
+            "type": "PAGE",
+            "url": f"/pages/{page_data['handle']}",
+            "resourceId": page_data['id'],
+            "items": []
+        }]
+        mutation_update_menu = """
+        mutation UpdateMenu($id: ID!, $title: String!, $handle: String!, $items: [MenuItemUpdateInput!]!) {
+          menuUpdate(id: $id, title: $title, handle: $handle, items: $items) {
+            menu {
+              id
+              handle
+              items {
+                id
+                title
+                items {
                   id
-                  handle
-                  items {
-                    id
-                    title
-                    items {
-                      id
-                      title
-                    }
-                  }
-                }
-                userErrors {
-                  field
-                  message
+                  title
                 }
               }
             }
-            """
-            variables = {
-                "id": main_menu["id"],
-                "title": main_menu["title"],
-                "handle": "main-menu",
-                "items": updated_items
+            userErrors {
+              field
+              message
             }
-            update_resp = requests.post(url, headers=headers, json={"query": mutation_update_menu, "variables": variables})
-            update_data = update_resp.json()
-            if update_data.get("data", {}).get("menuUpdate", {}).get("userErrors"):
-                print("[WARNING] Menu update errors:", update_data["data"]["menuUpdate"]["userErrors"])
-            else:
-                print(f"[SUCCESS] Navigation link added to main menu: {title}")
+          }
+        }
+        """
+        variables = {
+            "id": main_menu["id"],
+            "title": main_menu["title"],
+            "handle": "main-menu",
+            "items": updated_items
+        }
+        update_resp = requests.post(url, headers=headers, json={"query": mutation_update_menu, "variables": variables})
+        update_data = update_resp.json()
+        if update_data.get("data", {}).get("menuUpdate", {}).get("userErrors"):
+            print("[WARNING] Menu update errors:", update_data["data"]["menuUpdate"]["userErrors"])
+        else:
+            print(f"[SUCCESS] Navigation link added to main menu: {title}")
 
     # -------------------------
     # STEP 5: Build Theme Editor deep link
