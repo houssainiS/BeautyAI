@@ -46,13 +46,48 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
     Returns: (page_data, deep_link) or (None, None) on failure
     """
     url = f"https://{shop}/admin/api/2025-07/graphql.json"
-    headers = {
-        "X-Shopify-Access-Token": token,
-        "Content-Type": "application/json",
-    }
+    headers = {"X-Shopify-Access-Token": token, "Content-Type": "application/json"}
 
     # -------------------------
-    # STEP 0: Check if page exists
+    # STEP 1: Create the page
+    # -------------------------
+    query_create_page = """
+    mutation {
+      pageCreate(page: {
+        title: "%s",
+        body: "%s"
+      }) {
+        page {
+          id
+          title
+          handle
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+    """ % (title, body.replace('"', '\\"'))
+
+    response = requests.post(url, headers=headers, json={"query": query_create_page})
+    try:
+        data = response.json()
+    except json.JSONDecodeError:
+        print("[ERROR] Response not valid JSON:", response.text)
+        return None, None
+
+    page_data = data.get("data", {}).get("pageCreate", {}).get("page")
+    user_errors = data.get("data", {}).get("pageCreate", {}).get("userErrors")
+
+    if not page_data:
+        print(f"[WARNING] Failed to create page. Errors: {json.dumps(user_errors, indent=2)}")
+        return None, None
+
+    print(f"[SUCCESS] Page created: {page_data['title']} ({page_data['handle']})")
+
+    # -------------------------
+    # STEP 2: Fetch all pages
     # -------------------------
     query_pages = """
     {
@@ -67,48 +102,6 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
       }
     }
     """
-    response_pages = requests.post(url, headers=headers, json={"query": query_pages})
-    pages_data = response_pages.json()
-    page_map = {node["node"]["title"].lower(): node["node"] for node in pages_data.get("data", {}).get("pages", {}).get("edges", [])}
-
-    if title.lower() in page_map:
-        page_data = page_map[title.lower()]
-        print(f"✅ Page already exists: {page_data['title']} (/{page_data['handle']})")
-    else:
-        # -------------------------
-        # STEP 1: Create page
-        # -------------------------
-        query_create_page = """
-        mutation {
-          pageCreate(page: {
-            title: "%s",
-            body: "%s"
-          }) {
-            page {
-              id
-              title
-              handle
-            }
-            userErrors {
-              field
-              message
-            }
-          }
-        }
-        """ % (title, body.replace('"', '\\"'))
-
-        response = requests.post(url, headers=headers, json={"query": query_create_page})
-        data = response.json()
-        page_data = data.get("data", {}).get("pageCreate", {}).get("page")
-        user_errors = data.get("data", {}).get("pageCreate", {}).get("userErrors")
-        if not page_data:
-            print(f"[WARNING] Failed to create page. Errors: {json.dumps(user_errors, indent=2)}")
-            return None, None
-        print(f"[SUCCESS] Page created: {page_data['title']} ({page_data['handle']})")
-
-    # -------------------------
-    # STEP 2: Fetch all pages
-    # -------------------------
     response_pages = requests.post(url, headers=headers, json={"query": query_pages})
     pages_data = response_pages.json()
     page_map = {node["node"]["title"]: node["node"]["id"] for node in pages_data.get("data", {}).get("pages", {}).get("edges", [])}
