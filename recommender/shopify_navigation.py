@@ -148,7 +148,7 @@ def create_page(shop, token, title="Face Analyzer", body="<h1>Face Analyzer</h1>
         print("Main menu found:", main_menu["id"])
 
         # -------------------------
-        # STEP 3: Build updated menu items with duplication check
+        # STEP 3: Build updated menu items with duplication check 
         # -------------------------
         updated_items = []
         existing_titles = set()
