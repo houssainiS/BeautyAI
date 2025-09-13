@@ -9,9 +9,9 @@ import gc  # Added garbage collection import
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
-from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_conditions  # updated to return structured results
+from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_conditions  
 
-# NEW: import tips dictionaries
+#import tips dictionaries
 from recommender.tips import SKIN_TYPE_TIPS, EYE_COLOR_TIPS, ACNE_TIPS, SEGMENTATION_TIPS, YOLO_TIPS
 
 from .models import FaceAnalysis, Feedback

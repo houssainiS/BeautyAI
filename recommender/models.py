@@ -51,7 +51,7 @@ class AllowedOrigin(models.Model):
         return self.url
     
 
-####webhook model#######
+####webhook models#######
 
 from django.db import models
 
