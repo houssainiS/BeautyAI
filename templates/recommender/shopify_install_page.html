@@ -281,6 +281,19 @@
 
         </div>
 
+<!-- Button 2: Create Page + Add Nav Link -->
+<a href="/create_page/?shop={{ shop }}" class="btn btn-secondary">
+    Create Page + Add Nav Link
+</a>
+
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
         <div class="content">
             <div class="welcome-message">
                 <h2>Welcome to the Future of Beauty</h2>

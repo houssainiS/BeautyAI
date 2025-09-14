@@ -322,6 +322,7 @@ from django.shortcuts import redirect, render
 from django.conf import settings
 import urllib.parse
 from django.http import JsonResponse
+from django.contrib import messages
 
 from .models import Shop, PageContent
 from .webhooks import register_uninstall_webhook
@@ -339,27 +340,11 @@ def app_entry(request):
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
-        # If deep link is missing, generate it once (optional)
-        if not shop_obj.theme_editor_link:
-            from .shopify_navigation import create_page
-            page_content = PageContent.objects.first()
-            if not page_content:
-                page_content = PageContent(title="Face Analyzer", body="<h1>Face Analyzer</h1>")
-            _, deep_link = create_page(
-                shop,
-                shop_obj.offline_token,
-                title=page_content.title,
-                body=page_content.body,
-                api_key=SHOPIFY_API_KEY,
-                block_type="test"
-            )
-            shop_obj.theme_editor_link = deep_link
-            shop_obj.save()
 
         return render(
             request,
             "recommender/shopify_install_page.html",
-            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link}
+            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link},
         )
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
@@ -369,9 +354,7 @@ def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves/reactivates the shop, registers uninstall webhook,
-    creates and pins the 'Product Usage Duration' metafield,
-    creates page with navigation link, and passes Theme Editor link
-    to the installation page.
+    and creates/pins the 'Product Usage Duration' metafield.
     """
     try:
         shop = request.GET.get("shop")
@@ -473,49 +456,56 @@ def oauth_callback(request):
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
-        # --- Create page, add nav link, and get Theme Editor deep link ---
-        try:
-            page_content = PageContent.objects.first()
-            if not page_content:
-                print("[WARNING] No PageContent found, using fallback")
-                page_content = PageContent(
-                    title="Face Analyzer",
-                    body="<h1>Face Analyzer</h1>"
-                )
-
-            page, deep_link = create_page(
-                shop,
-                offline_token,
-                title=page_content.title,
-                body=page_content.body,
-                api_key=SHOPIFY_API_KEY,
-                block_type="test"
-            )
-
-            # Save deep link in Shop model for template
-            shop_obj.theme_editor_link = deep_link
-            shop_obj.save()
-
-            if page:
-                print(f"[DEBUG] Page created and navigation link added: {page['title']} ({page['handle']})")
-                print(f"[DEBUG] Theme Editor deep link: {deep_link}")
-            else:
-                print("[WARNING] Failed to create page or add navigation link")
-        except Exception as nav_e:
-            print(f"[WARNING] Failed to create page/navigation link: {nav_e}")
-
-        # Render installation page with deep link
+        # Do NOT auto-create page anymore — merchant will choose via button
         return render(
             request,
             "recommender/shopify_install_page.html",
-            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link}
+            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link},
         )
 
     except Exception as e:
         print(f"[ERROR] Exception in oauth_callback: {e}")
         import traceback
+
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
+
+def create_shopify_page(request):
+    """
+    Creates the Face Analyzer page and navigation link manually
+    when merchant clicks the button.
+    """
+    shop = request.GET.get("shop")
+    if not shop:
+        return render(request, "error.html", {"message": "Missing shop parameter"})
+
+    try:
+        shop_obj = Shop.objects.get(domain=shop, is_active=True)
+        page_content = PageContent.objects.first()
+        if not page_content:
+            page_content = PageContent(title="Face Analyzer", body="<h1>Face Analyzer</h1>")
+
+        page, deep_link = create_page(
+            shop,
+            shop_obj.offline_token,
+            title=page_content.title,
+            body=page_content.body,
+            api_key=SHOPIFY_API_KEY,
+            block_type="test",
+        )
+
+        if page:
+            shop_obj.theme_editor_link = deep_link
+            shop_obj.save()
+            messages.success(request, "✅ Page created and added to menu successfully.")
+        else:
+            messages.error(request, "⚠️ Failed to create page or add to menu.")
+
+        return redirect(f"/app_entry/?shop={shop}")
+
+    except Shop.DoesNotExist:
+        return redirect(f"/start_auth/?shop={shop}")
 
 
 def start_auth(request):
