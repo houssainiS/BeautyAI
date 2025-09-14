@@ -338,16 +338,24 @@ def app_entry(request):
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
+    # Check if page creation flag was passed
+    page_created = request.GET.get("page_created") == "1"
+
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
 
         return render(
             request,
             "recommender/shopify_install_page.html",
-            {"shop": shop, "theme_editor_link": shop_obj.theme_editor_link},
+            {
+                "shop": shop,
+                "theme_editor_link": shop_obj.theme_editor_link,
+                "page_created": page_created,
+            },
         )
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
+
 
 
 def oauth_callback(request):
@@ -502,7 +510,7 @@ def create_shopify_page(request):
         else:
             messages.error(request, "⚠️ Failed to create page or add to menu.")
 
-        return redirect(f"/app_entry/?shop={shop}")
+        return redirect(f"/app_entry/?shop={shop}&page_created=1")
 
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")

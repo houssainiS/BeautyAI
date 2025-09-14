@@ -270,29 +270,40 @@
             </div>
             <h1>BeautyAI</h1>
             <p class="subtitle">Successfully Installed!</p>
-             <!-- Shopify Theme Editor Button -->
-    {% if theme_editor_link %}
-    <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-primary" style="margin-top: 20px;">
-        Open Theme Editor & Add App Block
-    </a>
-    {% else %}
-    <p style="margin-top: 20px; color: #e74c3c;">Theme Editor link not available. Please refresh the page.</p>
-    {% endif %}
 
+            <!-- Shopify Theme Editor Button -->
+            {% if theme_editor_link %}
+            <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-primary" style="margin-top: 20px;">
+                Open Theme Editor & Add App Block
+            </a>
+            {% else %}
+            <p style="margin-top: 20px; color: #e74c3c;">Theme Editor link not available. Please refresh the page.</p>
+            {% endif %}
         </div>
 
-<!-- Button 2: Create Page + Add Nav Link -->
-<a href="/create_page/?shop={{ shop }}" class="btn btn-secondary">
-    Create Page + Add Nav Link
-</a>
+        <!-- Button: Create Page + Add Nav Link -->
+        <a href="/create_page/?shop={{ shop }}" class="btn btn-secondary">
+            {% if page_created %}
+                ✅ Page + Nav Link Already Created
+            {% else %}
+                ➕ Create Page + Add Nav Link
+            {% endif %}
+        </a>
 
-{% if messages %}
-  <ul>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+        <!-- Show message when page created -->
+        {% if page_created %}
+        <div style="margin-top: 15px; padding: 12px; background: #e8f7ed; border: 1px solid #27ae60; border-radius: 6px; color: #2e7d32;">
+            ✅ Your "Face Analyzer" page and navigation link have been created successfully.
+        </div>
+        {% endif %}
+
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
         <div class="content">
             <div class="welcome-message">
@@ -353,4 +364,5 @@
         </div>
     </div>
 </body>
+
 </html>
