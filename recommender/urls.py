@@ -11,5 +11,5 @@ urlpatterns = [
     path("auth/callback/", views.oauth_callback, name="oauth_callback"),
     path("webhooks/app_uninstalled/", webhooks.app_uninstalled, name="app_uninstalled"),
     path("create_page/", views.create_shopify_page, name="create_shopify_page"),
-
+    path("documentation/", views.documentation, name="documentation"),
 ]
