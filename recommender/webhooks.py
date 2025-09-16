@@ -29,7 +29,6 @@ def app_uninstalled(request):
     """
     Handles Shopify 'app/uninstalled' webhook.
     Marks the shop as inactive and deletes its saved metafield definition.
-    Product data remains untouched.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -53,6 +52,7 @@ def app_uninstalled(request):
             print(f"[Webhook] No shop record found for {shop_domain}")
             return JsonResponse({"status": "ok"}, status=200)
 
+        # Shopify GraphQL endpoint
         graphql_url = f"https://{shop_domain}/admin/api/2025-07/graphql.json"
         headers = {
             "X-Shopify-Access-Token": shop_obj.offline_token,
@@ -66,7 +66,7 @@ def app_uninstalled(request):
             query = """
             {
               metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
-                edges { node { id name namespace key } }
+                edges { node { id } }
               }
             }
             """
