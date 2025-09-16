@@ -363,6 +363,7 @@ def oauth_callback(request):
     Handles Shopify OAuth callback.
     Saves/reactivates the shop, registers uninstall webhook,
     and creates/pins the 'Product Usage Duration' metafield.
+    Checks for existing definition to avoid creating duplicates.
     """
     try:
         shop = request.GET.get("shop")
@@ -415,29 +416,8 @@ def oauth_callback(request):
             "Accept": "application/json",
         }
 
-        # --- Create & pin 'Product Usage Duration (in days)' metafield ---
-        try:
-            create_query = """
-            mutation {
-              metafieldDefinitionCreate(definition: {
-                name: "Product Usage Duration (in days)"
-                namespace: "custom"
-                key: "usage_duration"
-                type: "number_integer"
-                description: "How many days will use the product."
-                ownerType: PRODUCT
-              }) {
-                createdDefinition { id name namespace key type { name } }
-                userErrors { field message }
-              }
-            }
-            """
-            gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-            print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
-            print(f"[DEBUG] GraphQL create Response: {gql_response.text}")
-        except Exception as meta_e:
-            print(f"[WARNING] Failed to create usage_duration metafield: {meta_e}")
-
+        # --- Check for existing metafield definition ---
+        definition_id = None
         try:
             definition_query = """
             {
@@ -448,23 +428,64 @@ def oauth_callback(request):
             """
             def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
             def_data = def_response.json()
-            definition_id = def_data["data"]["metafieldDefinitions"]["edges"][0]["node"]["id"]
 
-            pin_query = """
-            mutation metafieldDefinitionPin($definitionId: ID!) {
-              metafieldDefinitionPin(definitionId: $definitionId) {
-                pinnedDefinition { id name namespace key }
-                userErrors { field message }
-              }
-            }
-            """
-            variables = {"definitionId": definition_id}
-            pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
-            print("📥 Pin response:", pin_response.json())
-        except Exception as pin_e:
-            print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
+            edges = def_data.get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
+            if edges:
+                # Definition already exists, reuse
+                definition_id = edges[0]["node"]["id"]
+                print(f"[DEBUG] Existing definition found: {definition_id}")
+            else:
+                # Create new metafield definition
+                create_query = """
+                mutation {
+                  metafieldDefinitionCreate(definition: {
+                    name: "Product Usage Duration (in days)"
+                    namespace: "custom"
+                    key: "usage_duration"
+                    type: "number_integer"
+                    description: "How many days will use the product."
+                    ownerType: PRODUCT
+                  }) {
+                    createdDefinition { id name namespace key type { name } }
+                    userErrors { field message }
+                  }
+                }
+                """
+                gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
+                create_data = gql_response.json()
+                print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
+                print(f"[DEBUG] GraphQL create Response: {create_data}")
 
-        # Do NOT auto-create page anymore — merchant will choose via button
+                definition_id = create_data.get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
+                if definition_id:
+                    print(f"[DEBUG] New definition created: {definition_id}")
+                else:
+                    print("[WARNING] Failed to create new metafield definition")
+        except Exception as e:
+            print(f"[WARNING] Error checking/creating metafield definition: {e}")
+
+        # --- Pin the definition if we have an ID ---
+        if definition_id:
+            try:
+                # Save to DB for later uninstall cleanup
+                shop_obj.metafield_definition_id = definition_id
+                shop_obj.save(update_fields=["metafield_definition_id"])
+
+                pin_query = """
+                mutation metafieldDefinitionPin($definitionId: ID!) {
+                  metafieldDefinitionPin(definitionId: $definitionId) {
+                    pinnedDefinition { id name namespace key }
+                    userErrors { field message }
+                  }
+                }
+                """
+                variables = {"definitionId": definition_id}
+                pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
+                print("📥 Pin response:", pin_response.json())
+            except Exception as pin_e:
+                print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
+
+        # Render install page
         return render(
             request,
             "recommender/shopify_install_page.html",
@@ -474,9 +495,9 @@ def oauth_callback(request):
     except Exception as e:
         print(f"[ERROR] Exception in oauth_callback: {e}")
         import traceback
-
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
 
 
 def create_shopify_page(request):

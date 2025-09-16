@@ -12,7 +12,6 @@ import os
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
 
 
-
 def verify_webhook(data, hmac_header):
     """
     Verifies Shopify webhook HMAC to ensure request authenticity.
@@ -30,7 +29,8 @@ def verify_webhook(data, hmac_header):
 def app_uninstalled(request):
     """
     Handles Shopify 'app/uninstalled' webhook.
-    Marks the shop as inactive instead of deleting it.
+    Marks the shop as inactive and deletes its saved metafield definition.
+    Product data remains untouched.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -46,8 +46,44 @@ def app_uninstalled(request):
 
     shop_domain = request.headers.get("X-Shopify-Shop-Domain")
     if shop_domain:
-        updated_count = Shop.objects.filter(domain=shop_domain).update(is_active=False)
-        print(f"[Webhook] App uninstalled from {shop_domain}, marked inactive ({updated_count} record(s))")
+        try:
+            shop_obj = Shop.objects.filter(domain=shop_domain).first()
+            if shop_obj:
+                # Delete saved metafield definition if exists
+                if shop_obj.metafield_definition_id and shop_obj.offline_token:
+                    graphql_url = f"https://{shop_domain}/admin/api/2025-07/graphql.json"
+                    headers = {
+                        "X-Shopify-Access-Token": shop_obj.offline_token,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    }
+                    delete_query = """
+                    mutation metafieldDefinitionDelete($id: ID!) {
+                      metafieldDefinitionDelete(id: $id) {
+                        deletedDefinitionId
+                        userErrors { field message }
+                      }
+                    }
+                    """
+                    variables = {"id": shop_obj.metafield_definition_id}
+                    try:
+                        resp = requests.post(
+                            graphql_url,
+                            headers=headers,
+                            json={"query": delete_query, "variables": variables},
+                        )
+                        print("[Webhook] Metafield definition delete response:", resp.json())
+                    except Exception as del_e:
+                        print("[Webhook] Failed to delete metafield definition:", del_e)
+
+                # Mark shop inactive
+                shop_obj.is_active = False
+                shop_obj.save(update_fields=["is_active"])
+                print(f"[Webhook] App uninstalled from {shop_domain}, marked inactive")
+            else:
+                print(f"[Webhook] No shop record found for {shop_domain}")
+        except Exception as e:
+            print(f"[Webhook] Exception handling uninstall for {shop_domain}: {e}")
 
     # Shopify requires a 200 OK response
     return JsonResponse({"status": "ok"}, status=200)

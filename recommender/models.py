@@ -62,9 +62,11 @@ class Shop(models.Model):
     installed_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)  # Track active/inactive status
     theme_editor_link = models.URLField(blank=True, null=True)  # Store Theme Editor deep link
+    metafield_definition_id = models.CharField(max_length=255, blank=True, null=True)  # 👈 Store definition ID
 
     def __str__(self):
         return self.domain
+
 
 
 class PageContent(models.Model):
