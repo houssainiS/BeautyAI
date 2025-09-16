@@ -12,4 +12,5 @@ urlpatterns = [
     path("webhooks/app_uninstalled/", webhooks.app_uninstalled, name="app_uninstalled"),
     path("create_page/", views.create_shopify_page, name="create_shopify_page"),
     path("documentation/", views.documentation, name="documentation"),
+    path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
 ]

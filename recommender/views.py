@@ -570,9 +570,18 @@ def start_auth(request):
     except Exception as e:
         print(f"[ERROR] Exception in start_auth: {e}")
         return render(request, "error.html", {"message": f"Server error: {e}"})
+    
+
+### docs & policies
 
 def documentation(request):
     """
     Render the documentation.
     """
     return render(request, "recommender/documentation.html")
+
+def privacy_policy(request):
+    """
+    Render the privacy_policy.
+    """
+    return render(request, "recommender/privacy_policy.html")
