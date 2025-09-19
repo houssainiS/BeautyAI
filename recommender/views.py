@@ -585,3 +585,6 @@ def privacy_policy(request):
     Render the privacy_policy.
     """
     return render(request, "recommender/privacy-policy.html")
+
+
+#reseted to the last working commit
