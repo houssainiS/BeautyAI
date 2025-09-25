@@ -363,7 +363,7 @@ def oauth_callback(request):
     Handles Shopify OAuth callback.
     Saves/reactivates the shop, registers uninstall webhook,
     and creates/pins the 'Product Usage Duration' metafield.
-    Uses metafieldsSet (app-data metafield) per Shopify docs.
+    Checks for existing definition to avoid creating duplicates.
     """
     try:
         shop = request.GET.get("shop")
@@ -416,55 +416,74 @@ def oauth_callback(request):
             "Accept": "application/json",
         }
 
-        # --- Step 1: Get App Installation ID ---
-        app_query = """
-        {
-          currentAppInstallation {
-            id
-          }
-        }
-        """
-        app_resp = requests.post(graphql_url, headers=headers, json={"query": app_query})
-        app_data = app_resp.json()
-        print("[DEBUG] App installation response:", app_data)
-
-        app_installation_id = app_data.get("data", {}).get("currentAppInstallation", {}).get("id")
-
-        # --- Step 2: Create the app-data metafield (no default value) ---
-        if app_installation_id:
-            metafield_mutation = """
-            mutation CreateAppDataMetafield($metafieldsSetInput: [MetafieldsSetInput!]!) {
-              metafieldsSet(metafields: $metafieldsSetInput) {
-                metafields {
-                  id
-                  namespace
-                  key
-                }
-                userErrors {
-                  field
-                  message
-                }
+        # --- Check for existing metafield definition ---
+        definition_id = None
+        try:
+            definition_query = """
+            {
+              metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
+                edges { node { id name namespace key } }
               }
             }
             """
-            variables = {
-                "metafieldsSetInput": [
-                    {
-                        "namespace": "custom",
-                        "key": "usage_duration",
-                        "type": "number_integer",
-                        "ownerId": app_installation_id,
-                    }
-                ]
-            }
-            meta_resp = requests.post(
-                graphql_url,
-                headers=headers,
-                json={"query": metafield_mutation, "variables": variables},
-            )
-            print("[DEBUG] metafieldsSet response:", meta_resp.json())
-        else:
-            print("[WARNING] Could not fetch app installation ID. Skipping metafield creation.")
+            def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
+            def_data = def_response.json()
+
+            edges = def_data.get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
+            if edges:
+                # Definition already exists, reuse
+                definition_id = edges[0]["node"]["id"]
+                print(f"[DEBUG] Existing definition found: {definition_id}")
+            else:
+                # Create new metafield definition
+                create_query = """
+                mutation {
+                  metafieldDefinitionCreate(definition: {
+                    name: "Product Usage Duration (in days)"
+                    namespace: "custom"
+                    key: "usage_duration"
+                    type: "number_integer"
+                    description: "How many days will use the product."
+                    ownerType: PRODUCT
+                  }) {
+                    createdDefinition { id name namespace key type { name } }
+                    userErrors { field message }
+                  }
+                }
+                """
+                gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
+                create_data = gql_response.json()
+                print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
+                print(f"[DEBUG] GraphQL create Response: {create_data}")
+
+                definition_id = create_data.get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
+                if definition_id:
+                    print(f"[DEBUG] New definition created: {definition_id}")
+                else:
+                    print("[WARNING] Failed to create new metafield definition")
+        except Exception as e:
+            print(f"[WARNING] Error checking/creating metafield definition: {e}")
+
+        # --- Pin the definition if we have an ID ---
+        if definition_id:
+            try:
+                # Save to DB for later uninstall cleanup
+                shop_obj.metafield_definition_id = definition_id
+                shop_obj.save(update_fields=["metafield_definition_id"])
+
+                pin_query = """
+                mutation metafieldDefinitionPin($definitionId: ID!) {
+                  metafieldDefinitionPin(definitionId: $definitionId) {
+                    pinnedDefinition { id name namespace key }
+                    userErrors { field message }
+                  }
+                }
+                """
+                variables = {"definitionId": definition_id}
+                pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
+                print("📥 Pin response:", pin_response.json())
+            except Exception as pin_e:
+                print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
         # Render install page
         return render(
@@ -478,7 +497,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
 
 
 def create_shopify_page(request):
