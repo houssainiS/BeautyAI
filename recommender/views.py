@@ -422,7 +422,7 @@ def oauth_callback(request):
             definition_query = """
             {
               metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
-                edges { node { id name namespace key } }
+                edges { node { id name namespace key access } }
               }
             }
             """
@@ -435,7 +435,7 @@ def oauth_callback(request):
                 definition_id = edges[0]["node"]["id"]
                 print(f"[DEBUG] Existing definition found: {definition_id}")
             else:
-                # Create new metafield definition
+                # ✅ Create new metafield definition with APP_ONLY access
                 create_query = """
                 mutation {
                   metafieldDefinitionCreate(definition: {
@@ -445,8 +445,9 @@ def oauth_callback(request):
                     type: "number_integer"
                     description: "How many days will use the product."
                     ownerType: PRODUCT
+                    access: APP_ONLY
                   }) {
-                    createdDefinition { id name namespace key type { name } }
+                    createdDefinition { id name namespace key access }
                     userErrors { field message }
                   }
                 }
@@ -458,7 +459,7 @@ def oauth_callback(request):
 
                 definition_id = create_data.get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
                 if definition_id:
-                    print(f"[DEBUG] New definition created: {definition_id}")
+                    print(f"[DEBUG] New APP_ONLY definition created: {definition_id}")
                 else:
                     print("[WARNING] Failed to create new metafield definition")
         except Exception as e:
@@ -467,7 +468,7 @@ def oauth_callback(request):
         # --- Pin the definition if we have an ID ---
         if definition_id:
             try:
-                # Save to DB for later uninstall cleanup
+                # Save to DB for later uninstall cleanup (optional, won't be needed for APP_ONLY)
                 shop_obj.metafield_definition_id = definition_id
                 shop_obj.save(update_fields=["metafield_definition_id"])
 
