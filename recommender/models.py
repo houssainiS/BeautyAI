@@ -76,3 +76,19 @@ class PageContent(models.Model):
 
     def __str__(self):
         return self.title
+
+
+#### notifciation system ####
+from django.utils import timezone
+
+class Purchase(models.Model):
+    email = models.EmailField()
+    order_id = models.CharField(max_length=255, null=True, blank=True)
+    product_id = models.CharField(max_length=255)
+    product_name = models.CharField(max_length=255)
+    purchase_date = models.DateTimeField(default=timezone.now)
+    usage_duration_days = models.IntegerField(default=0)
+    notified = models.BooleanField(default=False)
+
+    def expiry_date(self):
+        return self.purchase_date + timezone.timedelta(days=self.usage_duration_days)

@@ -315,7 +315,6 @@ def submit_feedback(request):
 
 ##############webhooks############
 
-
 import os
 import requests
 from django.shortcuts import redirect, render
@@ -323,9 +322,10 @@ from django.conf import settings
 import urllib.parse
 from django.http import JsonResponse
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import Shop, PageContent
-from .webhooks import register_uninstall_webhook
+from .models import Shop, PageContent, Purchase
+from .webhooks import register_uninstall_webhook, fetch_usage_duration
 from .shopify_navigation import create_page  # only import the working function
 
 # Load from environment variables with fallback
@@ -357,23 +357,18 @@ def app_entry(request):
         return redirect(f"/start_auth/?shop={shop}")
 
 
-
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves/reactivates the shop, registers uninstall webhook,
+    Saves/reactivates the shop, registers uninstall webhook and orders/paid webhook,
     and creates/pins the 'Product Usage Duration' metafield.
-    Checks for existing definition to avoid creating duplicates.
     """
     try:
         shop = request.GET.get("shop")
         code = request.GET.get("code")
 
         if not shop or not code:
-            print("[DEBUG] Missing shop or code in callback")
             return JsonResponse({"error": "Missing shop or code"}, status=400)
-
-        print(f"[DEBUG] oauth_callback called for shop: {shop} with code: {code}")
 
         # Exchange code for access token
         response = requests.post(
@@ -385,13 +380,11 @@ def oauth_callback(request):
             },
         )
         data = response.json()
-        print(f"[DEBUG] OAuth token response: {data}")
-
-        if "access_token" not in data:
-            return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
-
-        offline_token = data["access_token"]
+        offline_token = data.get("access_token")
         online_token = data.get("online_access_info", {}).get("access_token")
+
+        if not offline_token:
+            return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
         # Save/reactivate shop
         shop_obj, created = Shop.objects.update_or_create(
@@ -402,11 +395,12 @@ def oauth_callback(request):
                 "is_active": True,
             },
         )
-        print(f"[DEBUG] Shop saved/reactivated: {shop_obj}, created={created}")
 
         # Register uninstall webhook
         register_uninstall_webhook(shop, offline_token)
-        print("[DEBUG] Uninstall webhook registered")
+
+        # --- Register orders/paid webhook for notification system ---
+        register_orders_paid_webhook(shop, offline_token)
 
         # --- GraphQL headers ---
         graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
@@ -427,15 +421,10 @@ def oauth_callback(request):
             }
             """
             def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
-            def_data = def_response.json()
-
-            edges = def_data.get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
+            edges = def_response.json().get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
             if edges:
-                # Definition already exists, reuse
                 definition_id = edges[0]["node"]["id"]
-                print(f"[DEBUG] Existing definition found: {definition_id}")
             else:
-                # Create new metafield definition
                 create_query = """
                 mutation {
                   metafieldDefinitionCreate(definition: {
@@ -452,22 +441,13 @@ def oauth_callback(request):
                 }
                 """
                 gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-                create_data = gql_response.json()
-                print(f"[DEBUG] GraphQL create Status: {gql_response.status_code}")
-                print(f"[DEBUG] GraphQL create Response: {create_data}")
-
-                definition_id = create_data.get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
-                if definition_id:
-                    print(f"[DEBUG] New definition created: {definition_id}")
-                else:
-                    print("[WARNING] Failed to create new metafield definition")
+                definition_id = gql_response.json().get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
         except Exception as e:
             print(f"[WARNING] Error checking/creating metafield definition: {e}")
 
-        # --- Pin the definition if we have an ID ---
+        # Pin the metafield definition
         if definition_id:
             try:
-                # Save to DB for later uninstall cleanup
                 shop_obj.metafield_definition_id = definition_id
                 shop_obj.save(update_fields=["metafield_definition_id"])
 
@@ -479,9 +459,7 @@ def oauth_callback(request):
                   }
                 }
                 """
-                variables = {"definitionId": definition_id}
-                pin_response = requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": variables})
-                print("📥 Pin response:", pin_response.json())
+                requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": {"definitionId": definition_id}})
             except Exception as pin_e:
                 print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
@@ -561,15 +539,12 @@ def start_auth(request):
             f"state=12345"
         )
 
-        print(f"[DEBUG] start_auth called for shop: {shop}")
-        print(f"[DEBUG] redirecting to auth_url: {auth_url}")
-
         return redirect(auth_url)
 
     except Exception as e:
         print(f"[ERROR] Exception in start_auth: {e}")
         return render(request, "error.html", {"message": f"Server error: {e}"})
-    
+
 
 ### docs & policies
 
@@ -579,6 +554,7 @@ def documentation(request):
     """
     return render(request, "recommender/documentation.html")
 
+
 def privacy_policy(request):
     """
     Render the privacy_policy.
@@ -586,4 +562,77 @@ def privacy_policy(request):
     return render(request, "recommender/privacy-policy.html")
 
 
-#reseted to the last working commit
+# =========================
+# 📌 New: Orders/Paid Webhook Registration & Endpoint
+# =========================
+
+def register_orders_paid_webhook(shop_domain, access_token):
+    """
+    Registers the 'orders/paid' webhook for a shop.
+    """
+    url = f"https://{shop_domain}/admin/api/2023-10/webhooks.json"
+    headers = {
+        "X-Shopify-Access-Token": access_token,
+        "Content-Type": "application/json"
+    }
+    data = {
+        "webhook": {
+            "topic": "orders/paid",
+            "address": f"{settings.BASE_URL}/webhooks/order_paid/",
+            "format": "json"
+        }
+    }
+
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        print("[Orders/Paid Webhook Registration] Response:", response.json())
+    except Exception as e:
+        print("[Orders/Paid Webhook Registration] Failed:", str(e))
+        print("[Orders/Paid Webhook Registration] Raw response:", getattr(response, "text", "No response"))
+
+from django.utils import timezone
+
+@csrf_exempt
+def order_paid_webhook(request):
+    """
+    Endpoint to receive Shopify 'orders/paid' webhook.
+    Saves customer email, product info, and usage duration for notifications.
+    """
+    from .webhooks import verify_webhook  # import here to avoid circular import
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+    if not hmac_header or not verify_webhook(request.body, hmac_header):
+        return JsonResponse({"error": "Invalid webhook"}, status=401)
+
+    try:
+        data = json.loads(request.body)
+        shop_domain = request.headers.get("X-Shopify-Shop-Domain")
+        shop = Shop.objects.filter(domain=shop_domain).first()
+        if not shop:
+            return JsonResponse({"error": "Shop not found"}, status=404)
+
+        email = data.get("email")
+        order_id = data.get("id")
+        line_items = data.get("line_items", [])
+
+        for item in line_items:
+            product_id = item.get("product_id")
+            product_name = item.get("title")
+            usage_days = fetch_usage_duration(product_id, shop_domain)
+
+            Purchase.objects.create(
+                email=email,
+                order_id=str(order_id),
+                product_id=str(product_id),
+                product_name=product_name,
+                purchase_date=timezone.now(),
+                usage_duration_days=usage_days,
+            )
+
+    except Exception as e:
+        print("[Orders/Paid Webhook] Exception:", e)
+        return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"status": "ok"}, status=200)
