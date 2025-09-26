@@ -528,7 +528,7 @@ def start_auth(request):
         scopes = (
             "read_products,write_products,read_metafields,write_metafields,write_content,"
             "write_online_store_pages,read_online_store_pages,read_online_store_navigation,"
-            "write_online_store_navigation,read_themes,write_themes"
+            "write_online_store_navigation,read_themes,write_themes,read_orders,write_orders"
         )
 
         auth_url = (

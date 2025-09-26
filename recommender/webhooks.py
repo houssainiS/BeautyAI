@@ -137,8 +137,8 @@ def register_uninstall_webhook(shop, access_token):
 # ==========================================================
 # 📌 Orders/Updated Webhook Registration & Endpoint
 # ==========================================================
-from django.conf import settings   # ✅ add this at the top
-from django.utils import timezone  # ✅ required for saving purchases
+from django.conf import settings   
+from django.utils import timezone  
 
 
 
@@ -173,7 +173,7 @@ def fetch_usage_duration(product_id, shop_domain):
 
 def register_orders_updated_webhook(shop_domain, access_token):
     """
-    Registers the 'orders/updated' webhook for a shop.
+    Registers the 'orders/updated' webhook for a shop with detailed debugging.
     """
     url = f"https://{shop_domain}/admin/api/2025-07/webhooks.json"
     headers = {
@@ -183,17 +183,34 @@ def register_orders_updated_webhook(shop_domain, access_token):
     data = {
         "webhook": {
             "topic": "orders/updated",
-            "address": f"{settings.BASE_URL}/webhooks/order_updated/",  # ✅ needs BASE_URL in settings.py
+            "address": f"{settings.BASE_URL}/webhooks/order_updated/",
             "format": "json"
         }
     }
 
     try:
         response = requests.post(url, json=data, headers=headers)
-        print("[Orders/Updated Webhook Registration] Response:", response.json())
-    except Exception as e:
-        print("[Orders/Updated Webhook Registration] Failed:", str(e))
-        print("[Orders/Updated Webhook Registration] Raw response:", getattr(response, "text", "No response"))
+
+        # Print status code
+        print("[Webhook Registration] HTTP Status Code:", response.status_code)
+
+        # Try parsing JSON safely
+        try:
+            resp_json = response.json()
+            print("[Webhook Registration] Response JSON:", resp_json)
+            if "errors" in resp_json:
+                print("[Webhook Registration] Shopify returned errors:", resp_json["errors"])
+            elif "webhook" in resp_json:
+                print("[Webhook Registration] Webhook successfully registered:", resp_json["webhook"])
+            else:
+                print("[Webhook Registration] Unexpected response format")
+        except ValueError as json_err:
+            print("[Webhook Registration] Failed to parse JSON:", json_err)
+            print("[Webhook Registration] Raw response text:", response.text)
+
+    except requests.RequestException as req_err:
+        print("[Webhook Registration] Request failed:", req_err)
+        print("[Webhook Registration] Raw response text:", getattr(response, "text", "No response"))
 
 
 @csrf_exempt
@@ -201,23 +218,45 @@ def order_updated(request):
     """
     Endpoint to receive Shopify 'orders/updated' webhook.
     Only saves purchase when financial_status == 'paid'.
+    Includes detailed debugging.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
+    # --- DEBUG: Log all headers ---
+    print("[Webhook Debug] Headers:", dict(request.headers))
+
+    # --- DEBUG: Log raw body safely ---
+    try:
+        body_text = request.body.decode()
+        print("[Webhook Debug] Raw body:", body_text)
+    except Exception as decode_err:
+        print("[Webhook Debug] Failed to decode body:", decode_err)
+        body_text = ""
+
     hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
     if not hmac_header or not verify_webhook(request.body, hmac_header):
+        print("[Webhook Debug] Invalid HMAC or missing header")
         return JsonResponse({"error": "Invalid webhook"}, status=401)
 
     try:
-        data = json.loads(request.body)
+        data = {}
+        if body_text:
+            try:
+                data = json.loads(body_text)
+            except json.JSONDecodeError as json_err:
+                print("[Webhook Debug] Failed to parse JSON:", json_err)
+
         shop_domain = request.headers.get("X-Shopify-Shop-Domain")
         shop = Shop.objects.filter(domain=shop_domain).first()
         if not shop:
+            print(f"[Webhook Debug] Shop not found: {shop_domain}")
             return JsonResponse({"error": "Shop not found"}, status=404)
 
-        # ✅ Only continue if the order is paid
-        if data.get("financial_status") != "paid":
+        financial_status = data.get("financial_status")
+        # Only continue if the order is paid
+        if financial_status != "paid":
+            print(f"[Webhook Debug] Order ignored, financial_status={financial_status}")
             return JsonResponse({"status": "ignored"}, status=200)
 
         email = data.get("email")
@@ -243,6 +282,8 @@ def order_updated(request):
 
     except Exception as e:
         print("[Orders/Updated Webhook] Exception:", e)
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"status": "ok"}, status=200)
