@@ -140,12 +140,10 @@ def register_uninstall_webhook(shop, access_token):
 from django.conf import settings
 from django.utils import timezone
 
-
-
-
 # -------------------------------
 # Fetch usage duration metafield
 # -------------------------------
+
 def fetch_usage_duration(product_id, shop_domain):
     """
     Fetch usage_duration metafield for a product via GraphQL.
@@ -182,6 +180,7 @@ def fetch_usage_duration(product_id, shop_domain):
 # -------------------------------
 # Register orders/updated webhook
 # -------------------------------
+
 def register_orders_updated_webhook(shop_domain, access_token):
     """
     Registers the 'orders/updated' webhook for a shop with detailed debugging.
@@ -226,6 +225,7 @@ def register_orders_updated_webhook(shop_domain, access_token):
 # -------------------------------
 # Handle order_updated webhook
 # -------------------------------
+
 @csrf_exempt
 def order_updated(request):
     """
