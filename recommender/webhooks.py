@@ -137,14 +137,18 @@ def register_uninstall_webhook(shop, access_token):
 # ==========================================================
 # 📌 Orders/Updated Webhook Registration & Endpoint
 # ==========================================================
-from django.conf import settings   
-from django.utils import timezone  
+from django.conf import settings
+from django.utils import timezone
 
 
 
+
+# -------------------------------
+# Fetch usage duration metafield
+# -------------------------------
 def fetch_usage_duration(product_id, shop_domain):
     """
-    Fetch usage_duration metafield for a product.
+    Fetch usage_duration metafield for a product via GraphQL.
     """
     try:
         shop = Shop.objects.get(domain=shop_domain)
@@ -163,7 +167,11 @@ def fetch_usage_duration(product_id, shop_domain):
         }
         """
         variables = {"id": f"gid://shopify/Product/{product_id}"}
-        resp = requests.post(graphql_url, headers=headers, json={"query": query, "variables": variables})
+        resp = requests.post(
+            graphql_url,
+            headers=headers,
+            json={"query": query, "variables": variables}
+        )
         value = resp.json().get("data", {}).get("product", {}).get("metafield", {}).get("value")
         return int(value) if value else 0
     except Exception as e:
@@ -171,6 +179,9 @@ def fetch_usage_duration(product_id, shop_domain):
         return 0
 
 
+# -------------------------------
+# Register orders/updated webhook
+# -------------------------------
 def register_orders_updated_webhook(shop_domain, access_token):
     """
     Registers the 'orders/updated' webhook for a shop with detailed debugging.
@@ -182,7 +193,7 @@ def register_orders_updated_webhook(shop_domain, access_token):
     }
     data = {
         "webhook": {
-            "topic": "orders/updated",
+            "topic": "orders/updated",  # ✅ supported topic
             "address": f"{settings.BASE_URL}/webhooks/order_updated/",
             "format": "json"
         }
@@ -210,9 +221,11 @@ def register_orders_updated_webhook(shop_domain, access_token):
 
     except requests.RequestException as req_err:
         print("[Webhook Registration] Request failed:", req_err)
-        print("[Webhook Registration] Raw response text:", getattr(response, "text", "No response"))
 
 
+# -------------------------------
+# Handle order_updated webhook
+# -------------------------------
 @csrf_exempt
 def order_updated(request):
     """
@@ -234,12 +247,14 @@ def order_updated(request):
         print("[Webhook Debug] Failed to decode body:", decode_err)
         body_text = ""
 
+    # --- Verify HMAC ---
     hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
     if not hmac_header or not verify_webhook(request.body, hmac_header):
         print("[Webhook Debug] Invalid HMAC or missing header")
         return JsonResponse({"error": "Invalid webhook"}, status=401)
 
     try:
+        # Parse JSON
         data = {}
         if body_text:
             try:
@@ -247,18 +262,20 @@ def order_updated(request):
             except json.JSONDecodeError as json_err:
                 print("[Webhook Debug] Failed to parse JSON:", json_err)
 
+        # Get shop
         shop_domain = request.headers.get("X-Shopify-Shop-Domain")
         shop = Shop.objects.filter(domain=shop_domain).first()
         if not shop:
             print(f"[Webhook Debug] Shop not found: {shop_domain}")
             return JsonResponse({"error": "Shop not found"}, status=404)
 
+        # Check financial_status
         financial_status = data.get("financial_status")
-        # Only continue if the order is paid
         if financial_status != "paid":
             print(f"[Webhook Debug] Order ignored, financial_status={financial_status}")
             return JsonResponse({"status": "ignored"}, status=200)
 
+        # Extract order info
         email = data.get("email")
         order_id = data.get("id")
         line_items = data.get("line_items", [])
