@@ -325,7 +325,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Shop, PageContent, Purchase
-from .webhooks import register_uninstall_webhook, fetch_usage_duration
+from .webhooks import register_uninstall_webhook, fetch_usage_duration , register_orders_updated_webhook
 from .shopify_navigation import create_page  # only import the working function
 
 # Load from environment variables with fallback
@@ -400,7 +400,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
 
         # --- Register orders/paid webhook for notification system ---
-        register_orders_paid_webhook(shop, offline_token)
+        register_orders_updated_webhook(shop, offline_token)
 
         # --- GraphQL headers ---
         graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
@@ -562,77 +562,3 @@ def privacy_policy(request):
     return render(request, "recommender/privacy-policy.html")
 
 
-# =========================
-# 📌 New: Orders/Paid Webhook Registration & Endpoint
-# =========================
-
-def register_orders_paid_webhook(shop_domain, access_token):
-    """
-    Registers the 'orders/paid' webhook for a shop.
-    """
-    url = f"https://{shop_domain}/admin/api/2023-10/webhooks.json"
-    headers = {
-        "X-Shopify-Access-Token": access_token,
-        "Content-Type": "application/json"
-    }
-    data = {
-        "webhook": {
-            "topic": "orders/paid",
-            "address": f"{settings.BASE_URL}/webhooks/order_paid/",
-            "format": "json"
-        }
-    }
-
-    try:
-        response = requests.post(url, json=data, headers=headers)
-        print("[Orders/Paid Webhook Registration] Response:", response.json())
-    except Exception as e:
-        print("[Orders/Paid Webhook Registration] Failed:", str(e))
-        print("[Orders/Paid Webhook Registration] Raw response:", getattr(response, "text", "No response"))
-
-from django.utils import timezone
-
-@csrf_exempt
-def order_paid_webhook(request):
-    """
-    Endpoint to receive Shopify 'orders/paid' webhook.
-    Saves customer email, product info, and usage duration for notifications.
-    """
-    from .webhooks import verify_webhook  # import here to avoid circular import
-    if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-
-    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
-    if not hmac_header or not verify_webhook(request.body, hmac_header):
-        return JsonResponse({"error": "Invalid webhook"}, status=401)
-
-    try:
-        data = json.loads(request.body)
-        shop_domain = request.headers.get("X-Shopify-Shop-Domain")
-        shop = Shop.objects.filter(domain=shop_domain).first()
-        if not shop:
-            return JsonResponse({"error": "Shop not found"}, status=404)
-
-        email = data.get("email")
-        order_id = data.get("id")
-        line_items = data.get("line_items", [])
-
-        for item in line_items:
-            product_id = item.get("product_id")
-            product_name = item.get("title")
-            usage_days = fetch_usage_duration(product_id, shop_domain)
-
-            Purchase.objects.create(
-                email=email,
-                order_id=str(order_id),
-                product_id=str(product_id),
-                product_name=product_name,
-                purchase_date=timezone.now(),
-                usage_duration_days=usage_days,
-            )
-
-    except Exception as e:
-        print("[Orders/Paid Webhook] Exception:", e)
-        return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"status": "ok"}, status=200)

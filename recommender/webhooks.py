@@ -135,8 +135,12 @@ def register_uninstall_webhook(shop, access_token):
 
 
 # ==========================================================
-# 📌 New: orders/paid webhook for notifications
+# 📌 Orders/Updated Webhook Registration & Endpoint
 # ==========================================================
+from django.conf import settings   # ✅ add this at the top
+from django.utils import timezone  # ✅ required for saving purchases
+
+
 
 def fetch_usage_duration(product_id, shop_domain):
     """
@@ -167,11 +171,36 @@ def fetch_usage_duration(product_id, shop_domain):
         return 0
 
 
-@csrf_exempt
-def order_paid(request):
+def register_orders_updated_webhook(shop_domain, access_token):
     """
-    Handles Shopify 'orders/paid' webhook.
-    Stores customer email, product, and usage duration for notifications.
+    Registers the 'orders/updated' webhook for a shop.
+    """
+    url = f"https://{shop_domain}/admin/api/2025-07/webhooks.json"
+    headers = {
+        "X-Shopify-Access-Token": access_token,
+        "Content-Type": "application/json"
+    }
+    data = {
+        "webhook": {
+            "topic": "orders/updated",
+            "address": f"{settings.BASE_URL}/webhooks/order_updated/",  # ✅ needs BASE_URL in settings.py
+            "format": "json"
+        }
+    }
+
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        print("[Orders/Updated Webhook Registration] Response:", response.json())
+    except Exception as e:
+        print("[Orders/Updated Webhook Registration] Failed:", str(e))
+        print("[Orders/Updated Webhook Registration] Raw response:", getattr(response, "text", "No response"))
+
+
+@csrf_exempt
+def order_updated(request):
+    """
+    Endpoint to receive Shopify 'orders/updated' webhook.
+    Only saves purchase when financial_status == 'paid'.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -186,6 +215,10 @@ def order_paid(request):
         shop = Shop.objects.filter(domain=shop_domain).first()
         if not shop:
             return JsonResponse({"error": "Shop not found"}, status=404)
+
+        # ✅ Only continue if the order is paid
+        if data.get("financial_status") != "paid":
+            return JsonResponse({"status": "ignored"}, status=200)
 
         email = data.get("email")
         order_id = data.get("id")
@@ -209,7 +242,7 @@ def order_paid(request):
             print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) for {email}")
 
     except Exception as e:
-        print("[Webhook] Exception:", e)
+        print("[Orders/Updated Webhook] Exception:", e)
         return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"status": "ok"}, status=200)

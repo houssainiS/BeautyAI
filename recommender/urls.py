@@ -13,5 +13,5 @@ urlpatterns = [
     path("create_page/", views.create_shopify_page, name="create_shopify_page"),
     path("documentation/", views.documentation, name="documentation"),
     path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
-    path("webhooks/order_paid/", views.order_paid_webhook, name="order_paid_webhook"), 
+    path("webhooks/order_updated/", webhooks.order_updated, name="order_updated_webhook"), 
 ]
