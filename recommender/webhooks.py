@@ -277,10 +277,11 @@ def order_updated(request):
 
         # Extract order info
         email = data.get("email")
+        phone = data.get("phone")
         order_id = data.get("id")
         line_items = data.get("line_items", [])
 
-        print(f"[Webhook] Paid order {order_id} from {email} in {shop_domain}")
+        print(f"[Webhook] Paid order {order_id} from email={email}, phone={phone} in {shop_domain}")
 
         for item in line_items:
             product_id = item.get("product_id")
@@ -289,13 +290,14 @@ def order_updated(request):
 
             Purchase.objects.create(
                 email=email,
+                phone=phone,
                 order_id=str(order_id),
                 product_id=str(product_id),
                 product_name=product_name,
                 purchase_date=timezone.now(),
                 usage_duration_days=usage_days,
             )
-            print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) for {email}")
+            print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) for email={email}, phone={phone}")
 
     except Exception as e:
         print("[Orders/Updated Webhook] Exception:", e)

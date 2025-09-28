@@ -82,7 +82,8 @@ class PageContent(models.Model):
 from django.utils import timezone
 
 class Purchase(models.Model):
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
     order_id = models.CharField(max_length=255, null=True, blank=True)
     product_id = models.CharField(max_length=255)
     product_name = models.CharField(max_length=255)
@@ -92,3 +93,4 @@ class Purchase(models.Model):
 
     def expiry_date(self):
         return self.purchase_date + timezone.timedelta(days=self.usage_duration_days)
+
