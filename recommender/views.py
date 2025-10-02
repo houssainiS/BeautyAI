@@ -5,7 +5,7 @@ from PIL import Image
 import base64
 import io
 import json
-import gc  # Added garbage collection import
+import gc  # garbage collection import
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
@@ -119,11 +119,13 @@ def upload_photo(request):
 
             ip = get_client_ip(request)
             device_type = get_device_type(request)
+            domain = get_domain(request)
 
             FaceAnalysis.objects.create(
                 session_key=session_key,
                 ip_address=ip,
-                device_type=device_type
+                device_type=device_type,
+                domain=domain
             )
 
             # Response data (NO backend tips anymore)
@@ -194,6 +196,9 @@ def get_device_type(request):
         return 'Tablet'
     return 'Desktop'
 
+# Helper function to get Shopify domain from request
+def get_domain(request):
+    return request.POST.get("shop", "") or request.META.get("HTTP_ORIGIN", "")
 
 # feedback
 @csrf_exempt
