@@ -92,6 +92,7 @@ class Purchase(models.Model):
     purchase_date = models.DateTimeField(default=timezone.now)
     usage_duration_days = models.IntegerField(default=0)
     notified = models.BooleanField(default=False)
+    domain = models.CharField(max_length=255, null=True, blank=True)
 
     def expiry_date(self):
         return self.purchase_date + timezone.timedelta(days=self.usage_duration_days)

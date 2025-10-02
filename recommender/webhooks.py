@@ -296,8 +296,10 @@ def order_updated(request):
                 product_name=product_name,
                 purchase_date=timezone.now(),
                 usage_duration_days=usage_days,
+                domain=shop_domain,
             )
-            print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) for email={email}, phone={phone}")
+            print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) "
+                  f"for email={email}, phone={phone}, domain={shop_domain}")
 
     except Exception as e:
         print("[Orders/Updated Webhook] Exception:", e)

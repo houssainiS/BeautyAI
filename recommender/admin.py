@@ -11,9 +11,9 @@ class VisitorAdmin(admin.ModelAdmin):
 
 @admin.register(FaceAnalysis)
 class FaceAnalysisAdmin(admin.ModelAdmin):
-    list_display = ('ip_address', 'device_type', 'timestamp')
+    list_display = ('ip_address', 'device_type', 'domain', 'timestamp')
     list_filter = ('device_type', 'timestamp')
-    search_fields = ('ip_address',)
+    search_fields = ('ip_address', 'domain')
 
 
 @admin.register(Feedback)
@@ -62,7 +62,9 @@ class PurchaseAdmin(admin.ModelAdmin):
         "usage_duration_days",
         "notified",
         "expiry_date",
+        "domain",
     )
     list_filter = ("notified", "purchase_date")
-    search_fields = ("email", "product_name", "order_id")
+    search_fields = ("email", "product_name", "order_id", "domain")
     readonly_fields = ("expiry_date",)
+    
