@@ -362,6 +362,23 @@
     </a>
   {% endif %}
 </div>
+<!-- Delete Metafield Button -->
+<div class="action-buttons" style="margin-top: 15px;">
+  {% if metafield_deleted %}
+    <p style="color: red; font-weight: 500;">
+      🗑️ Metafield deleted successfully!
+    </p>
+  {% else %}
+    <a
+      href="{% url 'delete_metafield' %}?shop={{ shop }}"
+      class="btn btn-outline-danger"
+      style="color: #bf0711; border-color: #bf0711;"
+    >
+      Delete Metafield
+    </a>
+  {% endif %}
+</div>
+
 
 
         <div class="content">

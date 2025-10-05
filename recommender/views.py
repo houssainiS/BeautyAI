@@ -253,9 +253,10 @@ def app_entry(request):
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
-    # Check if page creation flag was passed
+    # Check if page creation or metafield flags were passed
     page_created = request.GET.get("page_created") == "1"
     metafield_created = request.GET.get("metafield_created") == "1"
+    metafield_deleted = request.GET.get("metafield_deleted") == "1"
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
@@ -268,6 +269,7 @@ def app_entry(request):
                 "theme_editor_link": shop_obj.theme_editor_link,
                 "page_created": page_created,
                 "metafield_created": metafield_created,
+                "metafield_deleted": metafield_deleted,
             },
         )
     except Shop.DoesNotExist:
@@ -339,6 +341,70 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
     return definition_id
+
+
+def delete_metafield(request):
+    """
+    Deletes the metafield definition manually when the user clicks 'Delete Metafield'.
+    """
+    shop = request.GET.get("shop")
+    if not shop:
+        return render(request, "error.html", {"message": "Missing shop parameter"})
+
+    try:
+        shop_obj = Shop.objects.get(domain=shop, is_active=True)
+        access_token = shop_obj.offline_token
+        metafield_id = shop_obj.metafield_definition_id
+
+        if not access_token or not metafield_id:
+            messages.error(request, "⚠️ Missing metafield or access token.")
+            return redirect(f"/app_entry/?shop={shop}")
+
+        graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
+        headers = {
+            "X-Shopify-Access-Token": access_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        delete_mutation = """
+        mutation metafieldDefinitionDelete($id: ID!) {
+          metafieldDefinitionDelete(id: $id) {
+            deletedDefinitionId
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+        """
+
+        payload = {"query": delete_mutation, "variables": {"id": metafield_id}}
+        response = requests.post(graphql_url, headers=headers, json=payload)
+        data = response.json()
+
+        errors = data.get("data", {}).get("metafieldDefinitionDelete", {}).get("userErrors", [])
+        deleted_id = data.get("data", {}).get("metafieldDefinitionDelete", {}).get("deletedDefinitionId")
+
+        if errors:
+            print("[Shopify Error]", errors)
+            messages.error(request, "⚠️ Shopify returned an error while deleting metafield.")
+        elif deleted_id:
+            shop_obj.metafield_definition_id = None
+            shop_obj.save(update_fields=["metafield_definition_id"])
+            messages.success(request, "🗑️ Metafield deleted successfully!")
+            return redirect(f"/app_entry/?shop={shop}&metafield_deleted=1")
+        else:
+            messages.warning(request, "⚠️ No metafield was deleted. Check ID or permissions.")
+
+        return redirect(f"/app_entry/?shop={shop}")
+
+    except Shop.DoesNotExist:
+        return redirect(f"/start_auth/?shop={shop}")
+    except Exception as e:
+        print(f"[ERROR] Exception in delete_metafield: {e}")
+        messages.error(request, f"⚠️ Error deleting metafield: {e}")
+        return redirect(f"/app_entry/?shop={shop}")
 
 
 def oauth_callback(request):
