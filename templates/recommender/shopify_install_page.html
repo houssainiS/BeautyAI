@@ -346,6 +346,23 @@
             </div>
             {% endif %}
         </div>
+        <!-- Create Metafield Button -->
+<div class="action-buttons" style="margin-top: 20px;">
+  {% if shop_obj.metafield_definition_id %}
+    <p style="color: green; font-weight: 500;">
+      ✅ Metafield already created.
+    </p>
+  {% else %}
+    <a
+      href="{% url 'create_metafield' %}?shop={{ shop }}"
+      class="btn btn-primary"
+      style="background-color: #008060; border-color: #008060;"
+    >
+      Create Metafield
+    </a>
+  {% endif %}
+</div>
+
 
         <div class="content">
             <div class="welcome-message">

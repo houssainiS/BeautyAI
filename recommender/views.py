@@ -255,6 +255,7 @@ def app_entry(request):
 
     # Check if page creation flag was passed
     page_created = request.GET.get("page_created") == "1"
+    metafield_created = request.GET.get("metafield_created") == "1"
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
@@ -266,6 +267,7 @@ def app_entry(request):
                 "shop": shop,
                 "theme_editor_link": shop_obj.theme_editor_link,
                 "page_created": page_created,
+                "metafield_created": metafield_created,
             },
         )
     except Shop.DoesNotExist:
@@ -342,8 +344,8 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves/reactivates the shop, registers uninstall webhook and orders/paid webhook,
-    and creates/pins the 'Product Usage Duration' metafield.
+    Saves/reactivates the shop and registers webhooks.
+    Metafield creation is now manual (triggered by user).
     """
     try:
         shop = request.GET.get("shop")
@@ -384,10 +386,7 @@ def oauth_callback(request):
         # --- Register orders/paid webhook for notification system ---
         register_orders_updated_webhook(shop, offline_token)
 
-        # --- Create or get metafield definition ---
-        create_or_get_metafield_definition(shop, offline_token, shop_obj)
-
-        # Render install page
+        # Render install page (metafield creation now manual)
         return render(
             request,
             "recommender/shopify_install_page.html",
@@ -399,6 +398,39 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
+
+
+def create_metafield(request):
+    """
+    Manually creates or retrieves the 'usage_duration' metafield definition
+    when the merchant clicks the 'Create Metafield' button.
+    """
+    shop = request.GET.get("shop")
+    if not shop:
+        return render(request, "error.html", {"message": "Missing shop parameter"})
+
+    try:
+        shop_obj = Shop.objects.get(domain=shop, is_active=True)
+
+        if not shop_obj.offline_token:
+            messages.error(request, "⚠️ Missing offline token. Please reinstall the app.")
+            return redirect(f"/app_entry/?shop={shop}")
+
+        definition_id = create_or_get_metafield_definition(shop, shop_obj.offline_token, shop_obj)
+
+        if definition_id:
+            messages.success(request, "✅ Metafield created or already exists.")
+            return redirect(f"/app_entry/?shop={shop}&metafield_created=1")
+        else:
+            messages.error(request, "⚠️ Failed to create metafield.")
+            return redirect(f"/app_entry/?shop={shop}")
+
+    except Shop.DoesNotExist:
+        return redirect(f"/start_auth/?shop={shop}")
+    except Exception as e:
+        print(f"[ERROR] Exception in create_metafield: {e}")
+        messages.error(request, f"⚠️ Error: {e}")
+        return redirect(f"/app_entry/?shop={shop}")
 
 
 def create_shopify_page(request):

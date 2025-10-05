@@ -14,4 +14,6 @@ urlpatterns = [
     path("documentation/", views.documentation, name="documentation"),
     path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
     path("webhooks/order_updated/", webhooks.order_updated, name="order_updated_webhook"), 
+    path("create_metafield/", views.create_metafield, name="create_metafield"),
+
 ]
