@@ -14,7 +14,7 @@ from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_condi
 
 
 
-from .models import FaceAnalysis, Feedback
+from .models import FaceAnalysis, Feedback , Visitor
 
 
 def home(request):
@@ -582,3 +582,79 @@ def privacy_policy(request):
     Render the privacy_policy.
     """
     return render(request, "recommender/privacy-policy.html")
+
+
+
+############# dashboard #############
+from django.db.models import Count
+from datetime import timedelta
+from django.utils import timezone
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def dashboard(request):
+    today = timezone.now().date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+
+    # Get filter from GET params (domain filter)
+    domain_filter = request.GET.get('domain', '')
+
+    # Filter FaceAnalysis by domain if search is used
+    analysis_qs = FaceAnalysis.objects.all()
+    if domain_filter:
+        analysis_qs = analysis_qs.filter(domain__icontains=domain_filter)
+
+    # ---- Stats ----
+    stats = {
+        "main_visitors": Visitor.objects.count(),  # Main page visitors only
+        "analysis_today": FaceAnalysis.objects.filter(timestamp__date=today).count(),
+        "analysis_week": FaceAnalysis.objects.filter(timestamp__date__gte=week_ago).count(),
+        "analysis_month": FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).count(),
+        "likes": Feedback.objects.filter(feedback_type="like").count(),
+        "dislikes": Feedback.objects.filter(feedback_type="dislike").count(),
+        "total_purchases": Purchase.objects.count(),
+        "purchases_notified": Purchase.objects.filter(notified=True).count(),
+        "purchases_not_notified": Purchase.objects.filter(notified=False).count(),
+    }
+
+    # Visitors trend (last 7 days)
+    visitors_by_day = (
+        Visitor.objects.filter(date__gte=week_ago)
+        .values("date")
+        .annotate(count=Count("id"))
+        .order_by("date")
+    )
+    dates = [v["date"].strftime("%Y-%m-%d") for v in visitors_by_day]
+    counts = [v["count"] for v in visitors_by_day]
+
+    # Feedback ratio
+    feedback_data = [
+        Feedback.objects.filter(feedback_type="like").count(),
+        Feedback.objects.filter(feedback_type="dislike").count(),
+    ]
+
+    # Top 5 domains
+    top_domains = (
+        FaceAnalysis.objects.values("domain")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:5]
+    )
+
+    # All domains (for filter results)
+    domain_stats = (
+        analysis_qs.values("domain")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+
+    context = {
+        "stats": stats,
+        "dates": dates,
+        "counts": counts,
+        "feedback_data": feedback_data,
+        "top_domains": top_domains,
+        "domain_stats": domain_stats,
+        "domain_filter": domain_filter,
+    }
+    return render(request, "recommender/dashboard.html", context)

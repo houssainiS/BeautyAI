@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #F9FAFB;
+      color: #202223;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background-color: #F3F4F6;
+      border-right: 1px solid #E5E7EB;
+      padding: 24px 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #202223;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-nav {
+      padding: 16px 0;
+    }
+
+    .nav-section {
+      margin-bottom: 24px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6B7280;
+      padding: 0 20px 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      color: #4B5563;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background-color: #E5E7EB;
+      color: #202223;
+    }
+
+    .nav-item.active {
+      background-color: #008060;
+      color: white;
+      border-left: 3px solid #005E46;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 240px;
+      flex: 1;
+      padding: 24px 32px;
+      width: calc(100% - 240px);
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #202223;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #008060, #00C9A7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #6B7280;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #202223;
+    }
+
+    .stat-trend {
+      font-size: 12px;
+      color: #008060;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #202223;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 24px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .chart-card {
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 24px;
+      animation: fadeIn 0.7s ease;
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #202223;
+      margin-bottom: 20px;
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table thead {
+      background-color: #F9FAFB;
+      border-bottom: 2px solid #E5E7EB;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 16px;
+      border-bottom: 1px solid #F3F4F6;
+      font-size: 14px;
+      color: #202223;
+    }
+
+    .data-table tbody tr:hover {
+      background-color: #F9FAFB;
+    }
+
+    /* Search/Filter */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      max-width: 400px;
+      padding: 10px 16px;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #008060;
+      box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background-color: #008060;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #005E46;
+    }
+
+    .btn-secondary {
+      background-color: #F3F4F6;
+      color: #4B5563;
+      border: 1px solid #D1D5DB;
+    }
+
+    .btn-secondary:hover {
+      background-color: #E5E7EB;
+    }
+
+    /* Show All Button */
+    .show-all-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      background-color: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      color: #008060;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .show-all-btn:hover {
+      background-color: #F3F4F6;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        z-index: 1000;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #6B7280;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-success {
+      background-color: #D1FAE5;
+      color: #065F46;
+    }
+
+    .badge-warning {
+      background-color: #FEF3C7;
+      color: #92400E;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        Admin Panel
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <a href="#" class="nav-item active">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          Visitors
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Analytics</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          Face Analysis
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+          </svg>
+          Feedback
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          Purchases
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Settings</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Settings
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <h1 class="page-title">Dashboard Overview</h1>
+      <div class="user-menu">
+        <div class="user-avatar">A</div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Main Page Visitors</div>
+        <div class="stat-value">{{ stats.main_visitors }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Analyses Today</div>
+        <div class="stat-value">{{ stats.analysis_today }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Last 7 Days</div>
+        <div class="stat-value">{{ stats.analysis_week }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Last 30 Days</div>
+        <div class="stat-value">{{ stats.analysis_month }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Purchases</div>
+        <div class="stat-value">{{ stats.total_purchases }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Feedback Likes</div>
+        <div class="stat-value">{{ stats.likes }}</div>
+        <div class="stat-trend">{{ stats.dislikes }} dislikes</div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3 class="chart-title">Visitors Trend (Last 7 Days)</h3>
+        <canvas id="visitorsChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="chart-title">Feedback Ratio</h3>
+        <canvas id="feedbackChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Purchases Overview -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Purchase Statistics</h2>
+      </div>
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <div class="stat-card">
+          <div class="stat-label">Notified Purchases</div>
+          <div class="stat-value">{{ stats.purchases_notified }}</div>
+          <span class="badge badge-success">Completed</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Not Notified</div>
+          <div class="stat-value">{{ stats.purchases_not_notified }}</div>
+          <span class="badge badge-warning">Pending</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Domain Analysis Table -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Domain Analysis</h2>
+      </div>
+
+      <div class="card">
+        <form method="GET" class="filter-bar">
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search by domain name..." 
+            name="domain" 
+            value="{{ domain_filter }}"
+          >
+          <button class="btn btn-primary" type="submit">Filter</button>
+          {% if domain_filter %}
+          <a href="{% url 'dashboard' %}" class="btn btn-secondary">Clear</a>
+          {% endif %}
+        </form>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Total Analyses</th>
+              </tr>
+            </thead>
+            <tbody id="domainTableBody">
+              {% for d in domain_stats|slice:":5" %}
+                <tr class="domain-row">
+                  <td>{{ d.domain|default:"(unknown)" }}</td>
+                  <td><strong>{{ d.total }}</strong></td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="2">
+                    <div class="empty-state">
+                      <div class="empty-state-icon">📊</div>
+                      <p>No domain analyses found</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+              {% for d in domain_stats|slice:"5:" %}
+                <tr class="domain-row hidden-row" style="display: none;">
+                  <td>{{ d.domain|default:"(unknown)" }}</td>
+                  <td><strong>{{ d.total }}</strong></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% if domain_stats|length > 5 %}
+          <button class="show-all-btn" onclick="toggleAllDomains()">
+            <span id="toggleText">Show All Domains ({{ domain_stats|length }})</span>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Django Template Data -->
+  {{ dates|json_script:"dates-data" }}
+  {{ counts|json_script:"counts-data" }}
+  {{ feedback_data|json_script:"feedback-data" }}
+
+  <script>
+    // Parse Django data
+    const dates = JSON.parse(document.getElementById('dates-data').textContent);
+    const counts = JSON.parse(document.getElementById('counts-data').textContent);
+    const feedbackData = JSON.parse(document.getElementById('feedback-data').textContent);
+
+    // Visitors Trend Chart
+    const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
+    new Chart(visitorsCtx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Daily Visitors',
+          data: counts,
+          borderColor: '#008060',
+          backgroundColor: 'rgba(0, 128, 96, 0.1)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#008060',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#202223',
+            padding: 12,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#E5E7EB',
+            borderWidth: 1,
+            cornerRadius: 8
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: '#F3F4F6',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#6B7280',
+              font: {
+                size: 12
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false,
+              drawBorder: false
+            },
+            ticks: {
+              color: '#6B7280',
+              font: {
+                size: 12
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Feedback Doughnut Chart
+    const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
+    new Chart(feedbackCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Likes 👍', 'Dislikes 👎'],
+        datasets: [{
+          data: feedbackData,
+          backgroundColor: ['#008060', '#E5E7EB'],
+          borderWidth: 0,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              font: {
+                size: 13,
+                family: 'Inter'
+              },
+              color: '#202223',
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: '#202223',
+            padding: 12,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            cornerRadius: 8
+          }
+        },
+        cutout: '65%'
+      }
+    });
+
+    // Toggle Show All Domains
+    let showingAll = false;
+    function toggleAllDomains() {
+      const hiddenRows = document.querySelectorAll('.hidden-row');
+      const toggleText = document.getElementById('toggleText');
+      
+      showingAll = !showingAll;
+      
+      hiddenRows.forEach(row => {
+        row.style.display = showingAll ? 'table-row' : 'none';
+      });
+      
+      toggleText.textContent = showingAll 
+        ? 'Show Less' 
+        : `Show All Domains (${document.querySelectorAll('.domain-row').length})`;
+    }
+  </script>
+</body>
+</html>
