@@ -17,4 +17,7 @@ urlpatterns = [
     path("create_metafield/", views.create_metafield, name="create_metafield"),
     path("delete_metafield/", views.delete_metafield, name="delete_metafield"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("login/", views.staff_login, name="staff_login"),
+    path("logout/", views.staff_logout, name="staff_logout"),
+
 ]

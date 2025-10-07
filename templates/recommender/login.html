@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Staff Login</title>
+  <style>
+    body { font-family: sans-serif; background: #f9fafb; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .login-box { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; }
+    input { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px; }
+    button { width: 100%; margin-top: 15px; padding: 10px; background: #5E5EFF; color: white; border: none; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<nav><a href="{% url 'staff_logout' %}">Logout</a>
+</nav>
+<body>
+  <form method="post" class="login-box">
+    {% csrf_token %}
+    <h2>Staff Login</h2>
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+    {% if error %}
+      <p style="color:red;">{{ error }}</p>
+    {% endif %}
+  </form>
+</body>
+</html>

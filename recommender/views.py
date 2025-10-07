@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from PIL import Image
 import base64
@@ -589,9 +591,8 @@ def privacy_policy(request):
 from django.db.models import Count
 from datetime import timedelta
 from django.utils import timezone
-from django.contrib.admin.views.decorators import staff_member_required
 
-@staff_member_required
+@login_required
 def dashboard(request):
     today = timezone.now().date()
     week_ago = today - timedelta(days=7)
@@ -658,3 +659,38 @@ def dashboard(request):
         "domain_filter": domain_filter,
     }
     return render(request, "recommender/dashboard.html", context)
+
+
+
+
+def staff_login(request):
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('/admin/')
+        else:
+            return redirect('dashboard')
+    
+    error = None
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if user.is_superuser:
+                error = "Please use the admin panel login."
+            elif user.is_staff:
+                login(request, user)
+                return redirect('dashboard')
+            else:
+                error = "You are not authorized to access the staff dashboard."
+        else:
+            error = "Invalid username or password."
+
+    return render(request, 'recommender/login.html', {'error': error})
+
+
+from django.contrib.auth import logout
+def staff_logout(request):
+    logout(request)
+    return redirect('staff_login')
