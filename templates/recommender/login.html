@@ -2,24 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff Login</title>
   <style>
-    body { font-family: sans-serif; background: #f9fafb; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .login-box { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; }
-    input { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px; }
-    button { width: 100%; margin-top: 15px; padding: 10px; background: #5E5EFF; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Added branding header to match dashboard theme */
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-header p {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    /* Updated login box styling to match Shopify aesthetic */
+    .login-box {
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    .login-box h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Enhanced input styling with focus states */
+    input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: #ffffff;
+      color: #1a1a1a;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #008060;
+      box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+    }
+
+    input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Updated button to use Shopify teal color */
+    button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.875rem 1rem;
+      background: #008060;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    button:hover {
+      background: #006e52;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Enhanced error message styling */
+    .error-message {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #dc2626;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .error-message::before {
+      content: "⚠";
+      font-size: 1.125rem;
+    }
+
+    /* Added footer for additional links */
+    .login-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .login-footer a {
+      color: #008060;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .login-footer a:hover {
+      color: #006e52;
+      text-decoration: underline;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 2rem 1.5rem;
+      }
+
+      .login-header h1 {
+        font-size: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <form method="post" class="login-box">
-    {% csrf_token %}
-    <h2>Staff Login</h2>
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-    {% if error %}
-      <p style="color:red;">{{ error }}</p>
-    {% endif %}
-  </form>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>Admin Portal</h1>
+      <p>Sign in to access your dashboard</p>
+    </div>
+
+    <form method="post" class="login-box">
+      {% csrf_token %}
+      <h2>Staff Login</h2>
+      
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+
+      <button type="submit">Sign In</button>
+
+      {% if error %}
+        <div class="error-message">{{ error }}</div>
+      {% endif %}
+    </form>
+
+    <div class="login-footer">
+      <p>Need help? <a href="#">Contact Support</a></p>
+    </div>
+  </div>
 </body>
 </html>
