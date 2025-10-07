@@ -24,9 +24,9 @@ class FeedbackAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 # Change admin site headers and titles
-admin.site.site_header = "Webixia"
-admin.site.site_title = "Webixia"
-admin.site.index_title = "Welcome to Skin Analyzer Dashboard"
+admin.site.site_header = "Beautyxia"
+admin.site.site_title = "Beautyxia"
+admin.site.index_title = "Welcome to Beautyxia Dashboard"
 
 # Remove Groups from admin
 admin.site.unregister(Group)
