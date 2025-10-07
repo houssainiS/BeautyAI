@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from PIL import Image
 import base64
@@ -662,24 +663,20 @@ def dashboard(request):
 
 
 
-
 def staff_login(request):
+    # Already logged in? Send to dashboard
     if request.user.is_authenticated:
-        if request.user.is_superuser:
-            return redirect('/admin/')
-        else:
-            return redirect('dashboard')
-    
+        return redirect('dashboard')
+
     error = None
+
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            if user.is_superuser:
-                error = "Please use the admin panel login."
-            elif user.is_staff:
+            if user.is_staff or user.is_superuser:
                 login(request, user)
                 return redirect('dashboard')
             else:
@@ -690,7 +687,6 @@ def staff_login(request):
     return render(request, 'recommender/login.html', {'error': error})
 
 
-from django.contrib.auth import logout
 def staff_logout(request):
     logout(request)
     return redirect('staff_login')
