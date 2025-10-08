@@ -410,11 +410,15 @@
       background-color: #FEF3C7;
       color: #92400E;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
-  <!-- Sidebar -->
+   Sidebar 
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
@@ -488,9 +492,8 @@
     </nav>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
-    <!-- Top Bar -->
+
     <div class="top-bar">
       <h1 class="page-title">Dashboard Overview</h1>
       <div class="user-menu">
@@ -498,7 +501,7 @@
       </div>
     </div>
 
-    <!-- Stats Grid -->
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Main Page Visitors</div>
@@ -532,7 +535,6 @@
       </div>
     </div>
 
-    <!-- Charts Section -->
     <div class="charts-grid">
       <div class="chart-card">
         <h3 class="chart-title">Visitors Trend (Last 7 Days)</h3>
@@ -545,7 +547,6 @@
       </div>
     </div>
 
-    <!-- Purchases Overview -->
     <div class="section">
       <div class="section-header">
         <h2 class="section-title">Purchase Statistics</h2>
@@ -564,26 +565,22 @@
       </div>
     </div>
 
-    <!-- Domain Analysis Table -->
     <div class="section">
       <div class="section-header">
         <h2 class="section-title">Domain Analysis</h2>
       </div>
 
       <div class="card">
-        <form method="GET" class="filter-bar">
+        <div class="filter-bar">
           <input 
             type="text" 
+            id="domainSearch"
             class="search-input" 
             placeholder="Search by domain name..." 
-            name="domain" 
             value="{{ domain_filter }}"
           >
-          <button class="btn btn-primary" type="submit">Filter</button>
-          {% if domain_filter %}
-          <a href="{% url 'dashboard' %}" class="btn btn-secondary">Clear</a>
-          {% endif %}
-        </form>
+          <button id="clearBtn" class="btn btn-secondary hidden">Clear</button>
+        </div>
 
         <div class="table-container">
           <table class="data-table">
@@ -618,17 +615,15 @@
             </tbody>
           </table>
 
-          {% if domain_stats|length > 5 %}
-          <button class="show-all-btn" onclick="toggleAllDomains()">
-            <span id="toggleText">Show All Domains ({{ domain_stats|length }})</span>
+          <button id="showAllBtn" class="show-all-btn">
+            <span id="toggleText">Show All Domains</span>
           </button>
-          {% endif %}
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Django Template Data -->
+ 
   {{ dates|json_script:"dates-data" }}
   {{ counts|json_script:"counts-data" }}
   {{ feedback_data|json_script:"feedback-data" }}
@@ -749,22 +744,111 @@
       }
     });
 
-    // Toggle Show All Domains
+    // Live Domain Search
+    const domainSearchInput = document.getElementById('domainSearch');
+    const domainTableBody = document.getElementById('domainTableBody');
+    const clearBtn = document.getElementById('clearBtn');
+    const showAllBtn = document.getElementById('showAllBtn');
+    const toggleText = document.getElementById('toggleText');
+    
+    let searchTimeout;
+    let allDomains = [];
+    let filteredDomains = [];
     let showingAll = false;
-    function toggleAllDomains() {
-      const hiddenRows = document.querySelectorAll('.hidden-row');
-      const toggleText = document.getElementById('toggleText');
+
+    // Debounced search function
+    domainSearchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
       
-      showingAll = !showingAll;
+      // Show/hide clear button
+      if (query) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
       
-      hiddenRows.forEach(row => {
-        row.style.display = showingAll ? 'table-row' : 'none';
-      });
-      
-      toggleText.textContent = showingAll 
-        ? 'Show Less' 
-        : `Show All Domains (${document.querySelectorAll('.domain-row').length})`;
+      searchTimeout = setTimeout(() => {
+        fetchDomains(query);
+      }, 300);
+    });
+
+    // Clear button functionality
+    clearBtn.addEventListener('click', () => {
+      domainSearchInput.value = '';
+      clearBtn.classList.add('hidden');
+      fetchDomains('');
+    });
+
+    // Fetch domains from server
+    async function fetchDomains(query) {
+      try {
+        const response = await fetch(`/dashboard/search-domains/?domain=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        allDomains = data.domains;
+        filteredDomains = allDomains;
+        showingAll = false;
+        
+        renderDomains();
+      } catch (error) {
+        console.error('Error fetching domains:', error);
+        domainTableBody.innerHTML = `
+          <tr>
+            <td colspan="2">
+              <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <p>Error loading domains</p>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
     }
+
+    // Render domains in table
+    function renderDomains() {
+      if (filteredDomains.length === 0) {
+        domainTableBody.innerHTML = `
+          <tr>
+            <td colspan="2">
+              <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>No domain analyses found</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        showAllBtn.style.display = 'none';
+        return;
+      }
+
+      // Show first 5 or all based on showingAll state
+      const domainsToShow = showingAll ? filteredDomains : filteredDomains.slice(0, 5);
+      
+      domainTableBody.innerHTML = domainsToShow.map(d => `
+        <tr>
+          <td>${d.domain || '(unknown)'}</td>
+          <td><strong>${d.total}</strong></td>
+        </tr>
+      `).join('');
+
+      // Show/hide "Show All" button
+      if (filteredDomains.length > 5) {
+        showAllBtn.style.display = 'block';
+        toggleText.textContent = showingAll 
+          ? 'Show Less' 
+          : `Show All Domains (${filteredDomains.length})`;
+      } else {
+        showAllBtn.style.display = 'none';
+      }
+    }
+
+    // Toggle show all domains
+    showAllBtn.addEventListener('click', () => {
+      showingAll = !showingAll;
+      renderDomains();
+    });
   </script>
 </body>
 </html>

@@ -595,6 +595,8 @@ from django.utils import timezone
 
 @login_required
 def dashboard(request):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return redirect('staff_login')
     today = timezone.now().date()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
@@ -661,6 +663,22 @@ def dashboard(request):
     }
     return render(request, "recommender/dashboard.html", context)
 
+#to search face analysis by domain
+@login_required
+def search_domains(request):
+    domain_filter = request.GET.get('domain', '')
+    analysis_qs = FaceAnalysis.objects.all()
+
+    if domain_filter:
+        analysis_qs = analysis_qs.filter(domain__icontains=domain_filter)
+
+    domain_stats = (
+        analysis_qs.values("domain")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+
+    return JsonResponse({"domains": list(domain_stats)})
 
 
 def staff_login(request):
