@@ -320,24 +320,6 @@
       background-color: #E5E7EB;
     }
 
-    /* Show All Button */
-    .show-all-btn {
-      margin-top: 16px;
-      width: 100%;
-      padding: 12px;
-      background-color: #F9FAFB;
-      border: 1px solid #E5E7EB;
-      border-radius: 8px;
-      color: #008060;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .show-all-btn:hover {
-      background-color: #F3F4F6;
-    }
-
     /* Animations */
     @keyframes fadeIn {
       from {
@@ -614,10 +596,6 @@
               {% endfor %}
             </tbody>
           </table>
-
-          <button id="showAllBtn" class="show-all-btn">
-            <span id="toggleText">Show All Domains</span>
-          </button>
         </div>
       </div>
     </div>
@@ -748,13 +726,10 @@
     const domainSearchInput = document.getElementById('domainSearch');
     const domainTableBody = document.getElementById('domainTableBody');
     const clearBtn = document.getElementById('clearBtn');
-    const showAllBtn = document.getElementById('showAllBtn');
-    const toggleText = document.getElementById('toggleText');
     
     let searchTimeout;
     let allDomains = [];
     let filteredDomains = [];
-    let showingAll = false;
 
     // Debounced search function
     domainSearchInput.addEventListener('input', (e) => {
@@ -788,7 +763,6 @@
         
         allDomains = data.domains;
         filteredDomains = allDomains;
-        showingAll = false;
         
         renderDomains();
       } catch (error) {
@@ -819,36 +793,16 @@
             </td>
           </tr>
         `;
-        showAllBtn.style.display = 'none';
         return;
       }
 
-      // Show first 5 or all based on showingAll state
-      const domainsToShow = showingAll ? filteredDomains : filteredDomains.slice(0, 5);
-      
-      domainTableBody.innerHTML = domainsToShow.map(d => `
+      domainTableBody.innerHTML = filteredDomains.map(d => `
         <tr>
           <td>${d.domain || '(unknown)'}</td>
           <td><strong>${d.total}</strong></td>
         </tr>
       `).join('');
-
-      // Show/hide "Show All" button
-      if (filteredDomains.length > 5) {
-        showAllBtn.style.display = 'block';
-        toggleText.textContent = showingAll 
-          ? 'Show Less' 
-          : `Show All Domains (${filteredDomains.length})`;
-      } else {
-        showAllBtn.style.display = 'none';
-      }
     }
-
-    // Toggle show all domains
-    showAllBtn.addEventListener('click', () => {
-      showingAll = !showingAll;
-      renderDomains();
-    });
   </script>
 </body>
 </html>
