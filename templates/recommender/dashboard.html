@@ -770,8 +770,6 @@
     const clearBtn = document.getElementById('clearBtn');
     
     let searchTimeout;
-    let allDomains = [];
-    let filteredDomains = [];
 
     // Debounced search function
     domainSearchInput.addEventListener('input', (e) => {
@@ -803,24 +801,48 @@
         const response = await fetch(`/dashboard/search-domains/?domain=${encodeURIComponent(query)}`);
         const data = await response.json();
         
-        allDomains = data.domains;
-        filteredDomains = allDomains.filter(domain => domain.domain.toLowerCase().includes(query.toLowerCase()));
+        // When query is empty, show all domains from server
+        // When query has value, filter the results
+        const domainsToShow = data.domains || [];
         
-        renderDomains();
+        renderDomains(domainsToShow);
       } catch (error) {
         console.error('Error fetching domains:', error);
-        domainTableBody.innerHTML = ` <tr> <td colspan="2"> <div class="empty-state"> <div class="empty-state-icon">⚠️</div> <p>Error loading domains</p> </div> </td> </tr> `;
+        domainTableBody.innerHTML = `
+          <tr>
+            <td colspan="2">
+              <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <p>Error loading domains</p>
+              </div>
+            </td>
+          </tr>
+        `;
       }
     }
 
     // Render domains in table
-    function renderDomains() {
-      if (filteredDomains.length === 0) {
-        domainTableBody.innerHTML = ` <tr> <td colspan="2"> <div class="empty-state"> <div class="empty-state-icon">📊</div> <p>No domain analyses found</p> </div> </td> </tr> `;
+    function renderDomains(domains) {
+      if (!domains || domains.length === 0) {
+        domainTableBody.innerHTML = `
+          <tr>
+            <td colspan="2">
+              <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>No domain analyses found</p>
+              </div>
+            </td>
+          </tr>
+        `;
         return;
       }
 
-      domainTableBody.innerHTML = filteredDomains.map(d => ` <tr> <td>${d.domain || '(unknown)'}</td> <td><strong>${d.total}</strong></td> </tr> `).join('');
+      domainTableBody.innerHTML = domains.map(d => `
+        <tr>
+          <td>${d.domain || '(unknown)'}</td>
+          <td><strong>${d.total}</strong></td>
+        </tr>
+      `).join('');
     }
   </script>
 </body>
