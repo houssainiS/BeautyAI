@@ -277,6 +277,17 @@
       background-color: #E5E7EB;
     }
 
+    /* Active Button Styling */
+    .btn-secondary.active {
+      background-color: #008060;
+      color: white;
+      border-color: #008060;
+    }
+
+    .btn-secondary.active:hover {
+      background-color: #005E46;
+    }
+
     /* Animations */
     @keyframes fadeIn {
       from {
@@ -504,8 +515,11 @@
   {{ dates|json_script:"dates-data" }}
   {{ counts|json_script:"counts-data" }}
   {{ feedback_data|json_script:"feedback-data" }}
+  {{ analysis_today_labels|json_script:"analysis-today-labels" }}
   {{ analysis_today_data|json_script:"analysis-today-data" }}
+  {{ analysis_week_labels|json_script:"analysis-week-labels" }}
   {{ analysis_week_data|json_script:"analysis-week-data" }}
+  {{ analysis_month_labels|json_script:"analysis-month-labels" }}
   {{ analysis_month_data|json_script:"analysis-month-data" }}
 
   <script>
@@ -513,9 +527,20 @@
     const dates = JSON.parse(document.getElementById('dates-data').textContent);
     const counts = JSON.parse(document.getElementById('counts-data').textContent);
     const feedbackData = JSON.parse(document.getElementById('feedback-data').textContent);
+    
+    const analysisTodayLabels = JSON.parse(document.getElementById('analysis-today-labels').textContent);
     const analysisTodayData = JSON.parse(document.getElementById('analysis-today-data').textContent);
+    const analysisWeekLabels = JSON.parse(document.getElementById('analysis-week-labels').textContent);
     const analysisWeekData = JSON.parse(document.getElementById('analysis-week-data').textContent);
+    const analysisMonthLabels = JSON.parse(document.getElementById('analysis-month-labels').textContent);
     const analysisMonthData = JSON.parse(document.getElementById('analysis-month-data').textContent);
+
+    console.log('[v0] Analysis Today Labels:', analysisTodayLabels);
+    console.log('[v0] Analysis Today Data:', analysisTodayData);
+    console.log('[v0] Analysis Week Labels:', analysisWeekLabels);
+    console.log('[v0] Analysis Week Data:', analysisWeekData);
+    console.log('[v0] Analysis Month Labels:', analysisMonthLabels);
+    console.log('[v0] Analysis Month Data:', analysisMonthData);
 
     // Visitors Trend Chart
     const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
@@ -632,9 +657,9 @@
     let analysisChart = new Chart(analysisCtx, {
       type: 'line',
       data: {
-        labels: dates,
+        labels: analysisTodayLabels,
         datasets: [ {
-          label: 'Analysis Trend',
+          label: 'Analyses',
           data: analysisTodayData,
           borderColor: '#008060',
           backgroundColor: 'rgba(0, 128, 96, 0.1)',
@@ -676,7 +701,8 @@
               color: '#6B7280',
               font: {
                 size: 12
-              }
+              },
+              stepSize: 1
             }
           },
           x: {
@@ -688,7 +714,9 @@
               color: '#6B7280',
               font: {
                 size: 12
-              }
+              },
+              maxRotation: 45,
+              minRotation: 45
             }
           }
         }
@@ -699,28 +727,40 @@
     const periodButtons = document.querySelectorAll('.period-btn');
     periodButtons.forEach(button => {
       button.addEventListener('click', () => {
+        console.log('[v0] Period button clicked:', button.getAttribute('data-period'));
+        
         periodButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
         const period = button.getAttribute('data-period');
-        let data;
+        let labels, data;
 
         switch (period) {
           case 'today':
+            labels = analysisTodayLabels;
             data = analysisTodayData;
+            console.log('[v0] Switching to today data');
             break;
           case 'week':
+            labels = analysisWeekLabels;
             data = analysisWeekData;
+            console.log('[v0] Switching to week data');
             break;
           case 'month':
+            labels = analysisMonthLabels;
             data = analysisMonthData;
+            console.log('[v0] Switching to month data');
             break;
           default:
+            labels = analysisTodayLabels;
             data = analysisTodayData;
         }
 
+        analysisChart.data.labels = labels;
         analysisChart.data.datasets[0].data = data;
         analysisChart.update();
+        
+        console.log('[v0] Chart updated with labels:', labels, 'and data:', data);
       });
     });
 

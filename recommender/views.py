@@ -590,7 +590,7 @@ def privacy_policy(request):
 
 ############# dashboard #############
 from django.db.models import Count
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 @login_required
@@ -632,6 +632,36 @@ def dashboard(request):
     dates = [v["date"].strftime("%Y-%m-%d") for v in visitors_by_day]
     counts = [v["count"] for v in visitors_by_day]
 
+    analysis_today_hours = []
+    analysis_today_counts = []
+    for hour in range(24):
+        hour_start = timezone.make_aware(datetime.combine(today, datetime.min.time()) + timedelta(hours=hour))
+        hour_end = hour_start + timedelta(hours=1)
+        count = FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_end).count()
+        if count > 0 or hour <= timezone.now().hour:  # Only show up to current hour
+            analysis_today_hours.append(f"{hour:02d}:00")
+            analysis_today_counts.append(count)
+    
+    analysis_week_dates = []
+    analysis_week_counts = []
+    for i in range(7):
+        date = today - timedelta(days=6-i)
+        count = FaceAnalysis.objects.filter(timestamp__date=date).count()
+        analysis_week_dates.append(date.strftime("%m/%d"))
+        analysis_week_counts.append(count)
+    
+    analysis_month_dates = []
+    analysis_month_counts = []
+    for i in range(10):  # 10 groups of 3 days
+        end_date = today - timedelta(days=i*3)
+        start_date = end_date - timedelta(days=2)
+        count = FaceAnalysis.objects.filter(
+            timestamp__date__gte=start_date,
+            timestamp__date__lte=end_date
+        ).count()
+        analysis_month_dates.insert(0, f"{start_date.strftime('%m/%d')}-{end_date.strftime('%m/%d')}")
+        analysis_month_counts.insert(0, count)
+
     # Feedback ratio
     feedback_data = [
         Feedback.objects.filter(feedback_type="like").count(),
@@ -660,6 +690,12 @@ def dashboard(request):
         "top_domains": top_domains,
         "domain_stats": domain_stats,
         "domain_filter": domain_filter,
+        "analysis_today_labels": analysis_today_hours,
+        "analysis_today_data": analysis_today_counts,
+        "analysis_week_labels": analysis_week_dates,
+        "analysis_week_data": analysis_week_counts,
+        "analysis_month_labels": analysis_month_dates,
+        "analysis_month_data": analysis_month_counts,
     }
     return render(request, "recommender/dashboard.html", context)
 
