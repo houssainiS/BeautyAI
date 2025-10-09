@@ -19,88 +19,16 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background-color: #F9FAFB;
       color: #202223;
-      display: flex;
       min-height: 100vh;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 240px;
-      background-color: #F3F4F6;
-      border-right: 1px solid #E5E7EB;
-      padding: 24px 0;
-      position: fixed;
-      height: 100vh;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-    }
-
-    .sidebar-header {
-      padding: 0 20px 24px;
-      border-bottom: 1px solid #E5E7EB;
-    }
-
-    .sidebar-logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: #202223;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sidebar-nav {
-      padding: 16px 0;
-    }
-
-    .nav-section {
-      margin-bottom: 24px;
-    }
-
-    .nav-section-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #6B7280;
-      padding: 0 20px 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      color: #4B5563;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-
-    .nav-item:hover {
-      background-color: #E5E7EB;
-      color: #202223;
-    }
-
-    .nav-item.active {
-      background-color: #008060;
-      color: white;
-      border-left: 3px solid #005E46;
-    }
-
-    .nav-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 12px;
     }
 
     /* Main Content */
     .main-content {
-      margin-left: 240px;
       flex: 1;
       padding: 24px 32px;
-      width: calc(100% - 240px);
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     /* Top Bar */
@@ -109,6 +37,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #E5E7EB;
     }
 
     .page-title {
@@ -135,6 +65,33 @@
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
+    }
+
+    /* Logout Button */
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background-color: #F3F4F6;
+      color: #4B5563;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .logout-btn:hover {
+      background-color: #E5E7EB;
+      color: #202223;
+    }
+
+    .logout-icon {
+      width: 18px;
+      height: 18px;
     }
 
     /* Stats Grid */
@@ -334,18 +291,7 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        z-index: 1000;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
       .main-content {
-        margin-left: 0;
-        width: 100%;
         padding: 16px;
       }
 
@@ -359,6 +305,15 @@
 
       .page-title {
         font-size: 24px;
+      }
+
+      .logout-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .logout-btn span {
+        display: none;
       }
     }
 
@@ -399,89 +354,22 @@
   </style>
 </head>
 
-<body> 
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-        </svg>
-        Admin Panel
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <div class="nav-section">
-        <div class="nav-section-title">Main</div>
-        <a href="#" class="nav-item active">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-          </svg>
-          Dashboard
-        </a>
-        <a href="#" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-          Visitors
-        </a>
-      </div>
-
-      <div class="nav-section">
-        <div class="nav-section-title">Analytics</div>
-        <a href="#" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-          </svg>
-          Face Analysis
-        </a>
-        <a href="#" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-          </svg>
-          Feedback
-        </a>
-        <a href="#" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-          Purchases
-        </a>
-      </div>
-
-      <div class="nav-section">
-        <div class="nav-section-title">Settings</div>
-        <a href="#" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          Settings
-        </a>
-      </div>
-      <div class="nav-section">
-        <div class="nav-section-title">Logout</div>
-        <a href="{% url 'staff_logout' %}" class="nav-item">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
-          </svg>
-          Logout
-        </a>
-      </div>
-
-    </nav>
-  </aside>
-
+<body>
   <main class="main-content">
 
     <div class="top-bar">
       <h1 class="page-title">Dashboard Overview</h1>
       <div class="user-menu">
         <div class="user-avatar">A</div>
+        <a href="{% url 'staff_logout' %}" class="logout-btn">
+          <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+          </svg>
+          <span>Logout</span>
+        </a>
       </div>
     </div>
-
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -617,7 +505,7 @@
       type: 'line',
       data: {
         labels: dates,
-        datasets: [{
+        datasets: [ {
           label: 'Daily Visitors',
           data: counts,
           borderColor: '#008060',
@@ -685,7 +573,7 @@
       type: 'doughnut',
       data: {
         labels: ['Likes 👍', 'Dislikes 👎'],
-        datasets: [{
+        datasets: [ {
           data: feedbackData,
           backgroundColor: ['#008060', '#E5E7EB'],
           borderWidth: 0,
@@ -766,41 +654,18 @@
         renderDomains();
       } catch (error) {
         console.error('Error fetching domains:', error);
-        domainTableBody.innerHTML = `
-          <tr>
-            <td colspan="2">
-              <div class="empty-state">
-                <div class="empty-state-icon">⚠️</div>
-                <p>Error loading domains</p>
-              </div>
-            </td>
-          </tr>
-        `;
+        domainTableBody.innerHTML = ` <tr> <td colspan="2"> <div class="empty-state"> <div class="empty-state-icon">⚠️</div> <p>Error loading domains</p> </div> </td> </tr> `;
       }
     }
 
     // Render domains in table
     function renderDomains() {
       if (filteredDomains.length === 0) {
-        domainTableBody.innerHTML = `
-          <tr>
-            <td colspan="2">
-              <div class="empty-state">
-                <div class="empty-state-icon">📊</div>
-                <p>No domain analyses found</p>
-              </div>
-            </td>
-          </tr>
-        `;
+        domainTableBody.innerHTML = ` <tr> <td colspan="2"> <div class="empty-state"> <div class="empty-state-icon">📊</div> <p>No domain analyses found</p> </div> </td> </tr> `;
         return;
       }
 
-      domainTableBody.innerHTML = filteredDomains.map(d => `
-        <tr>
-          <td>${d.domain || '(unknown)'}</td>
-          <td><strong>${d.total}</strong></td>
-        </tr>
-      `).join('');
+      domainTableBody.innerHTML = filteredDomains.map(d => ` <tr> <td>${d.domain || '(unknown)'}</td> <td><strong>${d.total}</strong></td> </tr> `).join('');
     }
   </script>
 </body>

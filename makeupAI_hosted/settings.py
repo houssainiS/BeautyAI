@@ -79,7 +79,7 @@ DATABASES = {
         'PASSWORD': os.getenv("DB_PASSWORD", ""),
         'HOST': os.getenv("DB_HOST", "localhost"),
         'PORT': '',
-        "CONN_MAX_AGE": 30,  # don’t keep forever
+        "CONN_MAX_AGE": 300,  # don’t keep forever
 
         # 'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"), #for sqlite3
         # 'NAME': os.getenv("DB_NAME", BASE_DIR / 'db.sqlite3'),
