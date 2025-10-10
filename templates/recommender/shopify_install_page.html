@@ -26,8 +26,10 @@
             margin: 0 auto;
         }
 
+        /* Center align page header */
         .page-header {
             margin-bottom: 24px;
+            text-align: center;
         }
 
         .page-header h1 {
@@ -61,6 +63,7 @@
             border-bottom: none;
         }
 
+        /* Center align success banner */
         .success-banner {
             background: #F1F8F5;
             border: 1px solid #9DC9B7;
@@ -68,6 +71,7 @@
             padding: 16px;
             display: flex;
             align-items: flex-start;
+            justify-content: center;
             gap: 12px;
             margin-bottom: 24px;
         }
@@ -98,11 +102,13 @@
             line-height: 1.5;
         }
 
+        /* Center align section titles and descriptions */
         .section-title {
             font-size: 14px;
             font-weight: 600;
             color: rgba(26, 26, 26, 1);
             margin-bottom: 16px;
+            text-align: center;
         }
 
         .section-description {
@@ -110,32 +116,28 @@
             color: rgba(97, 97, 97, 1);
             margin-bottom: 16px;
             line-height: 1.5;
+            text-align: center;
         }
 
-        /* <CHANGE> Added styles for step containers with visual separation */
-        .setup-step {
-            background: #FAFBFB;
+        /* Added step container styles */
+        .step-container {
+            background: #F9FAFB;
             border: 1px solid rgba(227, 227, 227, 1);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
         }
 
-        .setup-step:last-child {
+        .step-container:last-child {
             margin-bottom: 0;
         }
 
         .step-header {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             margin-bottom: 8px;
-        }
-
-        .step-number {
-            font-size: 13px;
-            font-weight: 600;
-            color: #005BD3;
         }
 
         .step-title {
@@ -144,38 +146,31 @@
             color: rgba(26, 26, 26, 1);
         }
 
+        .step-done-badge {
+            background: #F1F8F5;
+            color: #008060;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .step-description {
             font-size: 13px;
             color: rgba(97, 97, 97, 1);
             line-height: 1.5;
             margin-bottom: 12px;
+            text-align: center;
         }
-
-        .step-done-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #F1F8F5;
-            border: 1px solid #9DC9B7;
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #008060;
-            margin-bottom: 12px;
-        }
-
-        .step-done-badge svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-        }
-        /* </CHANGE> */
 
         .button-group {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            align-items: center;
         }
 
         .btn {
@@ -194,22 +189,25 @@
             min-height: 36px;
             text-align: center;
             font-family: inherit;
+            max-width: 400px;
+            width: 100%;
         }
 
+        /* Updated button colors to Shopify admin dark color */
         .btn-primary {
-            background: #005BD3;
+            background: rgba(26, 26, 26, 1);
             color: white;
-            border: 1px solid #005BD3;
+            border: 1px solid rgba(26, 26, 26, 1);
         }
 
         .btn-primary:hover {
-            background: #004A9E;
-            border-color: #004A9E;
+            background: rgba(48, 48, 48, 1);
+            border-color: rgba(48, 48, 48, 1);
         }
 
         .btn-primary:active {
-            background: #003D82;
-            border-color: #003D82;
+            background: rgba(10, 10, 10, 1);
+            border-color: rgba(10, 10, 10, 1);
         }
 
         .btn-secondary {
@@ -261,6 +259,7 @@
             margin-top: 12px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
 
@@ -283,10 +282,11 @@
             border: 1px solid rgba(227, 227, 227, 1);
         }
 
+        /* Updated feature icon background to match new button color */
         .feature-icon {
             width: 36px;
             height: 36px;
-            background: #005BD3;
+            background: rgba(26, 26, 26, 1);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -313,10 +313,12 @@
             line-height: 1.5;
         }
 
+        /* Center align footer links */
         .footer-links {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .footer-text {
@@ -326,8 +328,9 @@
             padding: 16px;
         }
 
+        /* Updated footer link color to match new button color */
         .footer-text a {
-            color: #005BD3;
+            color: rgba(26, 26, 26, 1);
             text-decoration: none;
             font-weight: 500;
         }
@@ -363,13 +366,13 @@
 </head>
 <body>
     <div class="container">
-        <!-- Page Header -->
+         Page Header 
         <div class="page-header">
             <h1>Beautyxia</h1>
             <p class="subtitle">Complete your app setup to start using AI-powered beauty recommendations</p>
         </div>
 
-        <!-- Success Banner -->
+         Success Banner 
         <div class="success-banner">
             <div class="success-banner-icon">
                 <svg viewBox="0 0 20 20">
@@ -382,46 +385,43 @@
             </div>
         </div>
 
-        <!-- <CHANGE> Restructured setup section with numbered steps, titles, and descriptions -->
-        <!-- Setup Actions Card -->
+         Setup Actions Card 
         <div class="card">
             <div class="card-section">
                 <h2 class="section-title">Setup steps</h2>
                 <p class="section-description">Complete these steps to enable Beautyxia on your storefront</p>
                 
-                <!-- Step 1: Create Face Analyzer Page -->
-                <div class="setup-step">
+                 Added Step 1 with title, description, and done indicator 
+                <div class="step-container">
                     <div class="step-header">
-                        <span class="step-number">Step 1</span>
-                        <span class="step-title">Create Face Analyzer Page</span>
-                    </div>
-                    <p class="step-description">
-                        Clicking this button creates a "Face Analyzer" page in your store and adds it to your navigation menu so customers can easily access the AI-powered beauty analysis tool.
-                    </p>
-                    
-                    {% if page_created %}
-                    <div class="step-done-badge">
-                        <svg viewBox="0 0 20 20">
-                            <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
-                        </svg>
-                        Done
-                    </div>
-                    {% endif %}
-                    
-                    <a href="/create_page/?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
+                        <span class="step-title">Step 1 – Create Face Analyzer Page</span>
                         {% if page_created %}
-                            <svg viewBox="0 0 20 20" fill="currentColor">
+                        <span class="step-done-badge">
+                            <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
                                 <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
                             </svg>
-                            Page + Nav Link Created
-                        {% else %}
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm5 11h-4v4H9v-4H5V9h4V5h2v4h4v2z"/>
-                            </svg>
-                            Create Page + Add Nav Link
+                            Done
+                        </span>
                         {% endif %}
-                    </a>
-
+                    </div>
+                    <p class="step-description">
+                        Clicking this button creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool.
+                    </p>
+                    <div class="button-group">
+                        <a href="/create_page/?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
+                            {% if page_created %}
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
+                                </svg>
+                                Page + Nav Link Created
+                            {% else %}
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm5 11h-4v4H9v-4H5V9h4V5h2v4h4v2z"/>
+                                </svg>
+                                Create Page + Add Nav Link
+                            {% endif %}
+                        </a>
+                    </div>
                     {% if page_created %}
                     <div class="status-message">
                         <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
@@ -430,62 +430,48 @@
                         Your "Face Analyzer" page and navigation link have been created successfully.
                     </div>
                     {% endif %}
+                </div>
 
-                    {% if messages %}
-                        {% for message in messages %}
-                        <div class="status-message">
-                            <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+                 Added Step 2 with title and description 
+                <div class="step-container">
+                    <div class="step-header">
+                        <span class="step-title">Step 2 – Add App Block in Theme Editor</span>
+                    </div>
+                    <p class="step-description">
+                        This opens Shopify's Theme Editor where you'll find the "Beautyxia App Block" that you can drag and drop into your theme to display the face analyzer on your storefront.
+                    </p>
+                    <div class="button-group">
+                        {% if theme_editor_link %}
+                        <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-secondary">
+                            <svg viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M17 0H3C1.35 0 0 1.35 0 3v14c0 1.65 1.35 3 3 3h14c1.65 0 3-1.35 3-3V3c0-1.65-1.35-3-3-3zm-1 16H4V4h12v12z"/>
+                            </svg>
+                            Open Theme Editor & Add App Block
+                        </a>
+                        {% else %}
+                        <div class="btn btn-secondary" style="opacity: 0.5; cursor: not-allowed;">
+                            Theme Editor link not available
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                 Added Step 3 with title, description, and done indicator 
+                <div class="step-container">
+                    <div class="step-header">
+                        <span class="step-title">Step 3 – Manage Metafields</span>
+                        {% if metafield_created %}
+                        <span class="step-done-badge">
+                            <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
                                 <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
                             </svg>
-                            {{ message }}
-                        </div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <!-- Step 2: Add App Block in Theme Editor -->
-                <div class="setup-step">
-                    <div class="step-header">
-                        <span class="step-number">Step 2</span>
-                        <span class="step-title">Add App Block in Theme Editor</span>
+                            Done
+                        </span>
+                        {% endif %}
                     </div>
                     <p class="step-description">
-                        This opens Shopify's Theme Editor where you'll find the "Beautyxia App Block" in the left sidebar. Simply drag and drop it into your theme to display the face analyzer on your storefront.
+                        Metafields let the app track product usage duration and automatically send reminder emails to customers when their products expire, helping drive repeat purchases.
                     </p>
-                    
-                    {% if theme_editor_link %}
-                    <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-secondary">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M17 0H3C1.35 0 0 1.35 0 3v14c0 1.65 1.35 3 3 3h14c1.65 0 3-1.35 3-3V3c0-1.65-1.35-3-3-3zm-1 16H4V4h12v12z"/>
-                        </svg>
-                        Open Theme Editor & Add App Block
-                    </a>
-                    {% else %}
-                    <div class="btn btn-secondary" style="opacity: 0.5; cursor: not-allowed;">
-                        Theme Editor link not available
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Step 3: Manage Metafields -->
-                <div class="setup-step">
-                    <div class="step-header">
-                        <span class="step-number">Step 3</span>
-                        <span class="step-title">Manage Metafields</span>
-                    </div>
-                    <p class="step-description">
-                        Metafields allow the app to track product usage duration for each customer. This enables automatic reminder emails when a product is about to expire, helping increase repeat purchases.
-                    </p>
-                    
-                    {% if metafield_created %}
-                    <div class="step-done-badge">
-                        <svg viewBox="0 0 20 20">
-                            <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
-                        </svg>
-                        Done
-                    </div>
-                    {% endif %}
-                    
                     <div class="button-group">
                         {% if metafield_created %}
                         <div class="status-message">
@@ -520,11 +506,21 @@
                         {% endif %}
                     </div>
                 </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="status-message" style="margin-top: 16px;">
+                        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+                            <path d="M10 0C4.486 0 0 4.486 0 10s4.486 10 10 10 10-4.486 10-10S15.514 0 10 0zm-1.5 14.5L4 10l1.5-1.5L9 12l5.5-5.5L16 8l-7.5 6.5z"/>
+                        </svg>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
-        <!-- </CHANGE> -->
 
-        <!-- Features Card -->
+         Features Card 
         <div class="card">
             <div class="card-section">
                 <h2 class="section-title">What's included</h2>
@@ -564,7 +560,7 @@
             </div>
         </div>
 
-        <!-- Resources Card -->
+         Resources Card 
         <div class="card">
             <div class="card-section">
                 <h2 class="section-title">Resources</h2>
@@ -587,7 +583,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
+         Footer 
         <div class="footer-text">
             Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
