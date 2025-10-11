@@ -523,7 +523,7 @@ def create_shopify_page(request):
             title=page_content.title,
             body=page_content.body,
             api_key=SHOPIFY_API_KEY,
-            block_type="test",
+            block_type="Beautyxia",
         )
 
         if page:
