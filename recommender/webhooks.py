@@ -31,6 +31,7 @@ def app_uninstalled(request):
     """
     Handles Shopify 'app/uninstalled' webhook.
     Marks the shop as inactive and deletes its saved metafield definition.
+    Also removes any stored theme editor deep link.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -97,10 +98,11 @@ def app_uninstalled(request):
         else:
             print("[Webhook] No metafield definition to delete.")
 
-        # --- Step 3: Mark shop inactive ---
+        # --- Step 3: Mark shop inactive & clear theme editor link ---
         shop_obj.is_active = False
-        shop_obj.save(update_fields=["is_active"])
-        print(f"[Webhook] App uninstalled from {shop_domain}, marked inactive")
+        shop_obj.theme_editor_link = None
+        shop_obj.save(update_fields=["is_active", "theme_editor_link"])
+        print(f"[Webhook] App uninstalled from {shop_domain}, marked inactive and cleared theme_editor_link")
 
     except Exception as e:
         print(f"[Webhook] Exception handling uninstall for {shop_domain}: {e}")
