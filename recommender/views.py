@@ -308,11 +308,11 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
             create_query = """
             mutation {
               metafieldDefinitionCreate(definition: {
-                name: "Product Usage Duration (in days)"
+                name: "Product Usage Duration (in days) By beautyxia"
                 namespace: "custom"
                 key: "usage_duration"
                 type: "number_integer"
-                description: "How many days will use the product."
+                description: "How many days the buyer will use the product. By fullfilling this Beautyxia will automatically send an email to the buyer when the usage duration ends . You can leave it empty if you dont want us to send the mail."
                 ownerType: PRODUCT
               }) {
                 createdDefinition { id name namespace key type { name } }

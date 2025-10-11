@@ -288,18 +288,22 @@ def order_updated(request):
             product_name = item.get("title")
             usage_days = fetch_usage_duration(product_id, shop_domain)
 
-            Purchase.objects.create(
-                email=email,
-                phone=phone,
-                order_id=str(order_id),
-                product_id=str(product_id),
-                product_name=product_name,
-                purchase_date=timezone.now(),
-                usage_duration_days=usage_days,
-                domain=shop_domain,
-            )
-            print(f"[Webhook] Saved purchase: {product_name} ({usage_days} days) "
-                  f"for email={email}, phone={phone}, domain={shop_domain}")
+            if usage_days and usage_days > 0:
+                Purchase.objects.create(
+                    email=email,
+                    phone=phone,
+                    order_id=str(order_id),
+                    product_id=str(product_id),
+                    product_name=product_name,
+                    purchase_date=timezone.now(),
+                    usage_duration_days=usage_days,
+                    domain=shop_domain,
+                )
+                print(f"[Webhook] ✅ Saved purchase: {product_name} ({usage_days} days) "
+                    f"for email={email}, phone={phone}, domain={shop_domain}")
+            else:
+                print(f"[Webhook] ⚠️ Skipped saving {product_name} — usage_duration={usage_days}")
+
 
     except Exception as e:
         print("[Orders/Updated Webhook] Exception:", e)
