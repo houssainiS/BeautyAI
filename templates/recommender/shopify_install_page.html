@@ -401,7 +401,7 @@
                         {% endif %}
                     </div>
                     <p class="step-description">
-                        Clicking this button creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool.
+                        Clicking this button creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool. You can delete the page anytime from your store Admin page
                     </p>
                     <div class="button-group">
                         <a href="/create_page/?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
@@ -464,7 +464,7 @@
                         {% endif %}
                     </div>
                     <p class="step-description">
-                        Metafields let the app track product usage duration and automatically send reminder emails to customers when their products expire, helping drive repeat purchases.
+                        Metafields let the app track product usage duration and automatically send reminder emails to customers when their products expire, helping drive repeat purchases.This will create a metafield (Usage duration). You can delete it anytime if you dont want us to send mails to the users. By spam clicking the buttons action won't duplicate
                     </p>
                     <div class="button-group">
                         {% if metafield_created %}
@@ -559,7 +559,7 @@
                 <p class="section-description">Learn more about Beautyxia and get support</p>
                 
                 <div class="footer-links">
-                    <a href="https://beautyai.duckdns.org/" target="_blank" class="btn btn-secondary">
+                    <a href="{% url 'home' %}" target="_blank" class="btn btn-secondary">
                         <svg viewBox="0 0 20 20" fill="currentColor">
                             <path d="M18 2H2C.9 2 0 2.9 0 4v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H2V6h16v10z"/>
                         </svg>
