@@ -22,6 +22,10 @@ def send_usage_expiry_notifications():
     sg_client = SendGridAPIClient(SENDGRID_API_KEY)
 
     for purchase in purchases_to_notify:
+        if not purchase.email:
+            print(f"[WARNING] Purchase {purchase.id} has no email, skipping...")
+            continue
+
         purchase_date = purchase.purchase_date
         if timezone.is_naive(purchase_date):
             purchase_date = timezone.make_aware(purchase_date, timezone.get_current_timezone())
