@@ -6,7 +6,7 @@ import django
 # Add project root (where manage.py is) to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "makeupAI.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "makeupAI_hosted.settings")
 django.setup()
 
 from cron.send_usage_expiry_notifications import send_usage_expiry_notifications
