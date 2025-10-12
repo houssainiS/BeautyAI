@@ -4,451 +4,478 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beautyxia - Your Personal Makeup Assistant</title>
+    <title>Beautyxia - Your Personal Beauty Assistant</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/logo-white.png' %}">
 </head>
 <body>
-    <div class="app">
-        <!-- Navigation -->
-        <nav class="navbar">
-            <div class="nav-container">
+    <div class="app-container">
+        <nav class="app-navbar">
+            <div class="nav-content">
                 <div class="nav-brand">
                     <div class="brand-icon">
-                        <i class="fas fa-sparkles"></i>
+                        <!-- Replaced Font Awesome gem icon with logo image -->
+                        <img src="{% static 'images/logo-white.png' %}" alt="Beautyxia Logo">
                     </div>
                     <span class="brand-text">Beautyxia</span>
                 </div>
-                <div class="nav-menu">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-home"></i>
-                        <span>Home</span>
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-info-circle"></i>
-                        <span>About</span>
-                    </a>
+                <div class="nav-links">
+                    <a href="#home" class="nav-link">Home</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <a href="#analyse" class="nav-link">Face analyse</a>
                 </div>
             </div>
         </nav>
 
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-container">
-                <div class="hero-content">
-                    <div class="hero-badge">
-                        <i class="fas fa-magic"></i>
-                        <span>AI-Powered Beauty Analysis</span>
+        <section class="hero-section" id="home">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>AI-Powered Analysis</span>
+                </div>
+                <h1 class="hero-title">Discover your unique beauty profile</h1>
+                <p class="hero-description">
+                    Experience personalized beauty recommendations powered by advanced AI technology. 
+                    Unlock your skin's potential with expert analysis and tailored skincare guidance.
+                </p>
+
+                <div class="about-section" id="about">
+                    <div class="about-welcome">
+                        <h2>Welcome to Beautyxia – Your Smart AI Skin Expert</h2>
+                        <p>Discover your natural beauty with the power of AI. Beautyxia analyzes your face to understand your skin type and skin conditions, then recommends the best products just for you.</p>
                     </div>
-                    <h1 class="hero-title">
-                        Discover Your Perfect
-                        <span class="gradient-text">Makeup Look</span>
-                    </h1>
-                    <p class="hero-description">
-                        Get personalized makeup recommendations based on advanced AI analysis of your skin type, 
-                        eye color, and facial features. Transform your beauty routine with intelligent insights.
-                    </p>
-                    <div class="hero-stats">
-                        <div class="stat">
-                            <div class="stat-number">10K+</div>
-                            <div class="stat-label">Happy Users</div>
+
+                    <div class="about-how">
+                        <div class="about-icon">
+                            <i class="fas fa-flower"></i>
                         </div>
-                        <div class="stat">
-                            <div class="stat-number">95%</div>
-                            <div class="stat-label">Accuracy</div>
+                        <h3>How It Works</h3>
+                        <ul class="about-steps">
+                            <li>
+                                <span class="step-number">1</span>
+                                <span class="step-text">Take or upload a photo of your face</span>
+                            </li>
+                            <li>
+                                <span class="step-number">2</span>
+                                <span class="step-text">Let our AI scan and analyze your skin for signs of acne, redness, dark circles, wrinkles, and more</span>
+                            </li>
+                            <li>
+                                <span class="step-number">3</span>
+                                <span class="step-text">Get personalized skincare advice and product recommendations instantly</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="about-why">
+                        <div class="about-icon">
+                            <i class="fas fa-star"></i>
                         </div>
-                        <div class="stat">
-                            <div class="stat-number">24/7</div>
-                            <div class="stat-label">Available</div>
+                        <h3>Why Choose Beautyxia</h3>
+                        <div class="about-features">
+                            <div class="feature-item">
+                                <i class="fas fa-brain"></i>
+                                <span>Smart AI-driven analysis</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-bolt"></i>
+                                <span>Instant and accurate results</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-lock"></i>
+                                <span>100% private and secure</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-pump-soap"></i>
+                                <span>Trusted skincare recommendations</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-user-check"></i>
+                                <span>Personalized results for your unique skin</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Constantly improving</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="about-cta">
+                        <p>Let Beautyxia be your personal beauty assistant — Start your free skin analysis today and see what your skin truly needs!</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="container">
-                <!-- Django Template Results (Server-side rendering) -->
+        <main class="main-container">
+            <div class="content-wrapper">
                 {% if predicted_type and acne_pred and recommendation %}
-                <div class="results-section active">
-                    <div class="results-header">
-                        <div class="results-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <h2>AI Analysis Complete!</h2>
-                        <p>Your personalized beauty profile is ready</p>
-                    </div>
-                    <div class="results-grid">
-                        <div class="result-card">
-                            <div class="result-icon skin-type">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="result-content">
-                                <h3>Skin Type</h3>
-                                <p class="result-value">{{ predicted_type|title }}</p>
+                <div class="results-card active">
+                    <div class="card-header">
+                        <div class="header-icon-wrapper">
+                            <div class="header-icon">
+                                <i class="fas fa-check-circle"></i>
                             </div>
                         </div>
-                        <div class="result-card">
-                            <div class="result-icon acne-level">
-                                <i class="fas fa-microscope"></i>
-                            </div>
-                            <div class="result-content">
-                                <h3>Acne Level</h3>
-                                <p class="result-value">{{ acne_pred|title }}</p>
-                                {% if acne_confidence %}
-                                <p class="confidence-score">{{ acne_confidence|floatformat:1 }}% confidence</p>
-                                {% endif %}
-                            </div>
+                        <div class="header-text">
+                            <h2>Your Beauty Profile</h2>
+                            <p>Personalized analysis complete</p>
                         </div>
                     </div>
-                    <div class="recommendation-card">
-                        <div class="recommendation-header">
-                            <i class="fas fa-palette"></i>
-                            <h3>Your Personalized Recommendation</h3>
+                    
+                    <div class="card-body">
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <div class="result-icon-wrapper skin-type">
+                                    <i class="fas fa-droplet"></i>
+                                </div>
+                                <div class="result-info">
+                                    <h3>Skin Type</h3>
+                                    <p class="result-value">{{ predicted_type|title }}</p>
+                                </div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-icon-wrapper acne-level">
+                                    <i class="fas fa-microscope"></i>
+                                </div>
+                                <div class="result-info">
+                                    <h3>Skin Condition</h3>
+                                    <p class="result-value">{{ acne_pred|title }}</p>
+                                    {% if acne_confidence %}
+                                    <p class="confidence-text">{{ acne_confidence|floatformat:1 }}% confidence</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="recommendation-content">
-                            <p>{{ recommendation }}</p>
+                        
+                        <div class="recommendation-box">
+                            <div class="recommendation-icon">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3>Your Personalized Recommendations</h3>
+                            <p class="recommendation-text">{{ recommendation }}</p>
                         </div>
-                    </div>
-                    <div class="results-actions">
-                        <button class="btn btn-secondary" onclick="location.reload()">
-                            <i class="fas fa-redo"></i>
-                            Try Another Photo
-                        </button>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="location.reload()">
+                                <i class="fas fa-rotate-right"></i>
+                                Analyze Another Photo
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- JavaScript Results (AJAX) -->
-                <div class="results-section" id="ajaxResults" style="display:none;">
-                    <div class="results-header">
-                        <div class="results-icon">
-                            <i class="fas fa-brain"></i>
+                <div class="results-card" id="ajaxResults" style="display:none;">
+                    <div class="card-header">
+                        <div class="header-icon-wrapper">
+                            <div class="header-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
                         </div>
-                        <h2>AI Analysis Complete!</h2>
-                        <p>Your personalized beauty profile is ready</p>
+                        <div class="header-text">
+                            <h2>Your Beauty Profile</h2>
+                            <p>Personalized analysis complete</p>
+                        </div>
                     </div>
                     
-                    <!-- Cropped Face Section -->
-                    <div class="face-analysis-card" id="croppedFaceSection" style="display:none;">
-                        <div class="face-display">
-                            <div class="face-frame">
-                                <img id="croppedFaceImage" src="" alt="Detected Face">
-                                <div class="face-badge">
-                                    <i class="fas fa-check"></i>
+                    <div class="card-body">
+                        <div class="face-section" id="croppedFaceSection" style="display:none;">
+                            <div class="face-display">
+                                <div class="face-frame">
+                                    <img id="croppedFaceImage" src="/placeholder.svg" alt="Detected Face">
+                                    <div class="face-badge">
+                                        <i class="fas fa-check"></i>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="face-info">
-                                <h3>Face Detected Successfully</h3>
-                                <p>AI has identified and analyzed your facial features</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="results-grid">
-                        <!-- Skin Type Result -->
-                        <div class="result-card">
-                            <div class="result-icon skin-type">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="result-content">
-                                <h3>Skin Type</h3>
-                                <p class="result-value" id="skinType"></p>
-                            </div>
-                        </div>
-
-                        <!-- Eye Colors Result -->
-                        <div class="result-card">
-                            <div class="result-icon eye-color">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <div class="result-content">
-                                <h3>Eye Colors</h3>
-                                <div class="eye-colors">
-                                    <p class="result-value" id="leftEyeColor"></p>
-                                    <p class="result-value" id="rightEyeColor"></p>
+                                <div class="face-info">
+                                    <h3>Face Successfully Detected</h3>
+                                    <p>Our AI has analyzed your unique features</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Acne Level Result -->
-                        <div class="result-card">
-                            <div class="result-icon acne-level">
-                                <i class="fas fa-microscope"></i>
-                            </div>
-                            <div class="result-content">
-                                <h3>Acne Level</h3>
-                                <p class="result-value" id="acneLevel"></p>
-                                <p class="confidence-score" id="acneConfidence"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Analysis Statistics -->
-                    <div class="analysis-section">
-                        <!-- Skin Type Probabilities -->
-                        <div class="analysis-card" id="typeProbsSection" style="display:none;">
-                            <div class="analysis-header">
-                                <div class="analysis-icon">
-                                    <i class="fas fa-chart-bar"></i>
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <div class="result-icon-wrapper skin-type">
+                                    <i class="fas fa-droplet"></i>
                                 </div>
-                                <div class="analysis-title">
-                                    <h3>Skin Type Analysis</h3>
-                                    <p>Detailed probability breakdown</p>
+                                <div class="result-info">
+                                    <h3>Skin Type</h3>
+                                    <p class="result-value" id="skinType"></p>
                                 </div>
                             </div>
-                            <div class="prob-bars-container" id="typeProbsBars"></div>
-                        </div>
 
-                        <!-- Acne Analysis Section -->
-                        <div class="analysis-card" id="acneAnalysisSection" style="display:none;">
-                            <div class="analysis-header">
-                                <div class="analysis-icon acne">
+                            <div class="result-item">
+                                <div class="result-icon-wrapper eye-color">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="result-info">
+                                    <h3>Eye Colors</h3>
+                                    <div class="eye-colors">
+                                        <p class="result-value" id="leftEyeColor"></p>
+                                        <p class="result-value" id="rightEyeColor"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="result-item">
+                                <div class="result-icon-wrapper acne-level">
                                     <i class="fas fa-microscope"></i>
                                 </div>
-                                <div class="analysis-title">
-                                    <h3>Acne Analysis</h3>
-                                    <p>AI confidence level for acne detection</p>
+                                <div class="result-info">
+                                    <h3>Skin Condition</h3>
+                                    <p class="result-value" id="acneLevel"></p>
+                                    <p class="confidence-text" id="acneConfidence"></p>
                                 </div>
-                            </div>
-                            <div class="confidence-display">
-                                <div class="confidence-meter">
-                                    <div class="confidence-fill" id="acneConfidenceFill"></div>
-                                </div>
-                                <div class="confidence-text" id="acneConfidenceText"></div>
                             </div>
                         </div>
 
-                        <!-- Skin Condition Segmentation Section -->
-                        <div class="analysis-card" id="segmentationSection" style="display:none;">
-                            <div class="analysis-header">
-                                <div class="analysis-icon segmentation">
-                                    <i class="fas fa-layer-group"></i>
+                        <div class="analysis-section">
+                            <div class="analysis-card" id="typeProbsSection" style="display:none;">
+                                <div class="analysis-header">
+                                    <div class="analysis-icon">
+                                        <i class="fas fa-chart-simple"></i>
+                                    </div>
+                                    <div class="analysis-title">
+                                        <h3>Skin Type Distribution</h3>
+                                        <p>Detailed probability analysis</p>
+                                    </div>
                                 </div>
-                                <div class="analysis-title">
-                                    <h3>Skin Condition Mapping</h3>
-                                    <p>Advanced AI segmentation analysis</p>
+                                <div class="prob-bars" id="typeProbsBars"></div>
+                            </div>
+
+                            <div class="analysis-card" id="acneAnalysisSection" style="display:none;">
+                                <div class="analysis-header">
+                                    <div class="analysis-icon">
+                                        <i class="fas fa-microscope"></i>
+                                    </div>
+                                    <div class="analysis-title">
+                                        <h3>Condition Analysis</h3>
+                                        <p>AI confidence assessment</p>
+                                    </div>
+                                </div>
+                                <div class="confidence-display">
+                                    <div class="confidence-meter">
+                                        <div class="confidence-fill" id="acneConfidenceFill"></div>
+                                    </div>
+                                    <div class="confidence-label" id="acneConfidenceText"></div>
                                 </div>
                             </div>
-                            <div class="segmentation-container">
-                                <div class="segmentation-tabs">
-                                    <button class="tab-btn" data-tab="original">
-                                        <i class="fas fa-image"></i>
-                                        Original
-                                    </button>
-                                    <button class="tab-btn active" data-tab="segmented">
+
+                            <div class="analysis-card" id="segmentationSection" style="display:none;">
+                                <div class="analysis-header">
+                                    <div class="analysis-icon">
                                         <i class="fas fa-layer-group"></i>
-                                        Segmented
-                                    </button>
-                                    <button class="tab-btn" data-tab="overlay">
-                                        <i class="fas fa-eye"></i>
-                                        Overlay
-                                    </button>
+                                    </div>
+                                    <div class="analysis-title">
+                                        <h3>Skin Mapping</h3>
+                                        <p>Advanced segmentation analysis</p>
+                                    </div>
                                 </div>
-                                <div class="segmentation-display">
-                                    <div class="image-container" id="originalContainer" style="display:none;">
-                                        <img id="originalImage" src="" alt="Original Face">
-                                    </div>
-                                    <div class="image-container" id="segmentedContainer">
-                                        <img id="segmentedImage" src="" alt="Segmented Analysis">
-                                    </div>
-                                    <div class="image-container" id="overlayContainer" style="display:none;">
-                                        <div class="overlay-wrapper">
-                                            <img id="overlayOriginal" src="" alt="Original">
-                                            <img id="overlaySegmented" src="" alt="Overlay" class="overlay-image">
+                                <div class="segmentation-container">
+                                    <div class="segmentation-display">
+                                        <div class="image-wrapper">
+                                            <img id="segmentedImage" src="/placeholder.svg" alt="Segmented Analysis">
                                         </div>
                                     </div>
                                 </div>
-                                
                             </div>
-                        </div>
 
-                        <!-- YOLO Detection Section -->
-                        <div class="analysis-card" id="yoloDetectionSection" style="display:none;">
-                            <div class="analysis-header">
-                                <div class="analysis-icon detection">
-                                    <i class="fas fa-crosshairs"></i>
-                                </div>
-                                <div class="analysis-title">
-                                    <h3>Detected Skin Defects</h3>
-                                    <p>AI-identified areas of concern</p>
-                                </div>
-                            </div>
-                            <div class="detection-container">
-                                <canvas id="yoloCanvas"></canvas>
-                                <div class="detection-legend">
-                                    <div class="legend-item">
-                                        <div class="legend-color detected"></div>
-                                        <span>Detected Areas</span>
+                            <div class="analysis-card" id="yoloDetectionSection" style="display:none;">
+                                <div class="analysis-header">
+                                    <div class="analysis-icon">
+                                        <i class="fas fa-bullseye"></i>
                                     </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color confidence"></div>
-                                        <span>Confidence Level</span>
+                                    <div class="analysis-title">
+                                        <h3>Feature Detection</h3>
+                                        <p>Identified areas of interest</p>
                                     </div>
                                 </div>
+                                <div class="detection-container">
+                                    <canvas id="yoloCanvas"></canvas>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Recommendation Card -->
-                    <div class="recommendation-card">
-                        <div class="recommendation-header">
-                            <i class="fas fa-palette"></i>
-                            <h3>Your Personalized Recommendation</h3>
+                        <div class="recommendation-box">
+                            <div class="recommendation-icon">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3>Your Personalized Recommendations</h3>
+                            <p class="recommendation-text" id="recommendationText">Based on your unique features, we'll provide tailored beauty guidance.</p>
                         </div>
-                        <div class="recommendation-content">
-                            <p id="recommendationText">Based on your skin type and eye color, we'll provide personalized makeup recommendations.</p>
-                        </div>
-                    </div>
 
-                    <!-- New Feedback Section -->
-                    <div class="feedback-section" id="feedbackSection">
-                        <div class="feedback-header">
-                            <i class="fas fa-comment-dots"></i>
-                            <h3>Was this analysis helpful?</h3>
+                        <div class="feedback-section" id="feedbackSection">
+                            <div class="feedback-header">
+                                <i class="fas fa-heart"></i>
+                                <h3>How was your experience?</h3>
+                            </div>
+                            <div class="feedback-buttons">
+                                <button class="btn btn-feedback-positive" id="likeBtn">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    Helpful
+                                </button>
+                                <button class="btn btn-feedback-negative" id="dislikeBtn">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    Not Helpful
+                                </button>
+                            </div>
+                            <div class="dislike-area" id="dislikeFeedbackArea" style="display:none;">
+                                <p>Help us improve - what went wrong?</p>
+                                <textarea id="dislikeReason" rows="3" placeholder="Share your thoughts..."></textarea>
+                                <button class="btn btn-primary" id="submitDislikeFeedbackBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Submit Feedback
+                                </button>
+                            </div>
+                            <div class="feedback-message" id="feedbackMessage" style="display:none;"></div>
                         </div>
-                        <div class="feedback-buttons">
-                            <button class="btn btn-success feedback-btn" id="likeBtn">
-                                <i class="fas fa-thumbs-up"></i>
-                                Yes, it was helpful!
+
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="resetForm()">
+                                <i class="fas fa-rotate-right"></i>
+                                Analyze Another Photo
                             </button>
-                            <button class="btn btn-error feedback-btn" id="dislikeBtn">
-                                <i class="fas fa-thumbs-down"></i>
-                                No, not really.
-                            </button>
-                        </div>
-                        <div class="dislike-feedback-area" id="dislikeFeedbackArea" style="display:none;">
-                            <p>Tell us why:</p>
-                            <textarea id="dislikeReason" rows="3" placeholder="e.g., 'Recommendations were not accurate', 'Analysis was incorrect'"></textarea>
-                            <button class="btn btn-primary" id="submitDislikeFeedbackBtn">
-                                <i class="fas fa-paper-plane"></i>
-                                Submit Feedback
-                            </button>
-                        </div>
-                        <div class="feedback-message" id="feedbackMessage" style="display:none;"></div>
-                    </div>
-
-                    <div class="results-actions">
-                        <button class="btn btn-secondary" onclick="resetForm()">
-                            <i class="fas fa-redo"></i>
-                            Try Another Photo
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Loading Section -->
-                <div class="loading-section" id="loadingSection" style="display:none;">
-                    <div class="loading-container">
-                        <div class="loading-animation">
-                            <div class="loading-circle"></div>
-                            <div class="loading-circle"></div>
-                            <div class="loading-circle"></div>
-                        </div>
-                        <h3>Analyzing Your Photo...</h3>
-                        <p>Our AI is examining your skin and preparing personalized recommendations</p>
-                        <div class="loading-progress">
-                            <div class="progress-bar"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Upload Section -->
-                <div class="upload-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="fas fa-upload"></i>
+                <div class="loading-card" id="loadingSection" style="display:none;">
+                    <div class="loading-content">
+                        <div class="loading-spinner">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
                         </div>
-                        <h2>Upload Your Photo</h2>
-                        <p>Choose a clear photo of your face for the best recommendations</p>
+                        <div class="loading-text">
+                            <h3>Analyzing Your Beauty Profile</h3>
+                            <p>Our AI is carefully examining your features to provide personalized recommendations</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-card" id="analyse">
+                    <div class="card-header">
+                        <div class="header-icon-wrapper">
+                            <div class="header-icon">
+                                <i class="fas fa-cloud-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="header-text">
+                            <h2>Upload Your Photo</h2>
+                            <p>Choose a well-lit photo for accurate analysis</p>
+                        </div>
                     </div>
                     
-                    <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}" style="text-align: center;">
-                        {% csrf_token %}
-                        <div class="upload-area">
-                            <input type="file" accept="image/*" id="fileInput" name="photo" required>
-                            <label for="fileInput" class="upload-label">
-                                <div class="upload-icon">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <div class="upload-text">
-                                    <span class="upload-title">Drop your photo here</span>
-                                    <span class="upload-subtitle">or click to browse</span>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="photo-preview" id="photoPreview"></div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sparkles"></i>
-                            Get Makeup Recommendations
-                        </button>
-                    </form>
+                    <div class="card-body">
+                        <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}">
+                            {% csrf_token %}
+                            <div class="upload-area">
+                                <input type="file" accept="image/*" id="fileInput" name="photo" required class="hidden-input">
+                                <label for="fileInput" class="upload-label">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <span class="upload-title">Drop your photo here</span>
+                                        <span class="upload-subtitle">or click to browse your files</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="photo-preview" id="photoPreview"></div>
+                            <div class="privacy-agreement">
+                                <label class="privacy-checkbox-label">
+                                    <input type="checkbox" id="privacyCheckbox" class="privacy-checkbox">
+                                    <span class="privacy-text">
+                                        I agree to the processing of my photo for temporary analysis to receive beauty tips and product recommendations. I understand that my photo will not be stored.
+                                        <a href="https://beautyai.duckdns.org/privacy-policy/" target="_blank" class="privacy-link">Read our Privacy Policy</a> for more details.
+                                    </span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="analyzeBtn" disabled>
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                                Analyze My Beauty Profile
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="divider">
-                    <span>OR</span>
+                    <span>or use your camera</span>
                 </div>
 
-                <!-- Camera Section -->
-                <div class="camera-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="fas fa-camera"></i>
-                        </div>
-                        <h2>Take a Live Photo</h2>
-                        <p>Use your camera to capture a photo instantly</p>
-                    </div>
-
-                    <div class="camera-controls">
-                        <button id="startCameraBtn" class="btn btn-secondary">
-                            <i class="fas fa-video"></i>
-                            Start Camera
-                        </button>
-                    </div>
-
-                    <div class="camera-preview">
-                        <video id="video" autoplay playsinline></video>
-                        <div class="camera-overlay">
-                            <div class="face-guide">
-                                <div class="guide-text">Position your face here</div>
+                <div class="camera-card">
+                    <div class="card-header">
+                        <div class="header-icon-wrapper">
+                            <div class="header-icon">
+                                <i class="fas fa-camera"></i>
                             </div>
                         </div>
+                        <div class="header-text">
+                            <h2>Take a Live Photo</h2>
+                            <p>Capture your photo instantly with your camera</p>
+                        </div>
                     </div>
 
-                    <div class="capture-controls">
-                        <button id="captureBtn" class="btn btn-accent" disabled>
-                            <i class="fas fa-camera-retro"></i>
-                            Capture Photo
-                        </button>
-                    </div>
+                    <div class="card-body">
+                        <div class="camera-controls">
+                            <button id="startCameraBtn" class="btn btn-secondary">
+                                <i class="fas fa-video"></i>
+                                Start Camera
+                            </button>
+                        </div>
 
-                    <canvas id="canvas"></canvas>
-                    
-                    <form id="cameraForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}" style="display:none;">
-                        {% csrf_token %}
-                        <input type="hidden" name="photo" id="capturedPhoto">
-                    </form>
+                        <div class="camera-preview">
+                            <video id="video" autoplay playsinline></video>
+                        </div>
+
+                        <div class="capture-controls">
+                            <button id="captureBtn" class="btn btn-accent" disabled>
+                                <i class="fas fa-camera"></i>
+                                Capture Photo
+                            </button>
+                        </div>
+
+                        <canvas id="canvas"></canvas>
+                        
+                        <div class="privacy-agreement">
+                            <label class="privacy-checkbox-label">
+                                <input type="checkbox" id="cameraPrivacyCheckbox" class="privacy-checkbox">
+                                <span class="privacy-text">
+                                    I agree to the processing of my photo for temporary analysis to receive beauty tips and product recommendations. I understand that my photo will not be stored.
+                                    <a href="https://beautyai.duckdns.org/privacy-policy/" target="_blank" class="privacy-link">Read our Privacy Policy</a> for more details.
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <form id="cameraForm" method="post" enctype="multipart/form-data" action="{% url 'upload_photo' %}" style="display:none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="photo" id="capturedPhoto">
+                        </form>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-container">
-                <div class="footer-content">
-                    <div class="footer-brand">
-                        <div class="brand-icon">
-                            <i class="fas fa-sparkles"></i>
-                        </div>
-                        <span class="brand-text">Beautyxia</span>
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-icon">
+                        <!-- Replaced Font Awesome gem icon with logo image -->
+                        <img src="{% static 'images/logo-white.png' %}" alt="Beautyxia Logo">
                     </div>
-                    <p>&copy; 2025 houssaini slimen. All rights reserved.</p>
+                    <span class="brand-text">Beautyxia</span>
                 </div>
+                <p>&copy; 2025 Beautyxia by <a class="privacy-link" href="https://www.creation-site-web.tn" target="_blank">Webixia</a>. All rights reserved.</p>
             </div>
         </footer>
     </div>
 
+    <script src="{% static 'js/tips.js' %}"></script>
     <script src="{% static 'js/scripts.js' %}"></script>
 </body>
 </html>

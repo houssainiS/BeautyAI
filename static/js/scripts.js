@@ -1,3 +1,24 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const navLinks = document.querySelectorAll('.nav-link[href^="#"]')
+  const navbarHeight = document.querySelector(".app-navbar").offsetHeight
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault()
+      const targetId = link.getAttribute("href").substring(1)
+      const targetSection = document.getElementById(targetId)
+
+      if (targetSection) {
+        const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navbarHeight
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth",
+        })
+      }
+    })
+  })
+})
+
 const startCameraBtn = document.getElementById("startCameraBtn")
 const video = document.getElementById("video")
 const captureBtn = document.getElementById("captureBtn")
@@ -10,6 +31,10 @@ const photoPreview = document.getElementById("photoPreview")
 const loadingSection = document.getElementById("loadingSection")
 const ajaxResults = document.getElementById("ajaxResults")
 
+const privacyCheckbox = document.getElementById("privacyCheckbox")
+const analyzeBtn = document.getElementById("analyzeBtn")
+const cameraPrivacyCheckbox = document.getElementById("cameraPrivacyCheckbox")
+
 // New feedback elements
 const feedbackSection = document.getElementById("feedbackSection")
 const likeBtn = document.getElementById("likeBtn")
@@ -20,6 +45,20 @@ const submitDislikeFeedbackBtn = document.getElementById("submitDislikeFeedbackB
 const feedbackMessage = document.getElementById("feedbackMessage")
 
 let stream
+let beautyTips // Declare the beautyTips variable
+let isCameraActive = false
+
+// Import or declare generateTips function here
+// Placeholder for the real generateTips function from tips.js
+
+privacyCheckbox.addEventListener("change", (e) => {
+  analyzeBtn.disabled = !e.target.checked
+})
+
+cameraPrivacyCheckbox.addEventListener("change", (e) => {
+  // Enable capture button only if camera is active AND privacy is checked
+  captureBtn.disabled = !(isCameraActive && e.target.checked)
+})
 
 // File input preview
 fileInput.addEventListener("change", (e) => {
@@ -62,8 +101,8 @@ uploadForm.addEventListener("submit", async (e) => {
 
 function showLoading() {
   loadingSection.style.display = "block"
-  document.querySelector(".upload-section").style.display = "none"
-  document.querySelector(".camera-section").style.display = "none"
+  document.querySelector(".upload-card").style.display = "none"
+  document.querySelector(".camera-card").style.display = "none"
   document.querySelector(".divider").style.display = "none"
 }
 
@@ -107,64 +146,14 @@ function createProbBars(containerId, labels, probs, colors) {
   })
 }
 
-// Segmentation tab functionality
-function initializeSegmentationTabs() {
-  const tabButtons = document.querySelectorAll(".segmentation-tabs .tab-btn")
-  const containers = {
-    original: document.getElementById("originalContainer"),
-    segmented: document.getElementById("segmentedContainer"),
-    overlay: document.getElementById("overlayContainer"),
-  }
-
-  // Set initial state: segmented tab active, segmented image visible
-  tabButtons.forEach((button) => {
-    if (button.dataset.tab === "segmented") {
-      button.classList.add("active")
-    } else {
-      button.classList.remove("active")
-    }
-  })
-
-  Object.keys(containers).forEach((key) => {
-    if (key === "segmented") {
-      containers[key].style.display = "block"
-    } else {
-      containers[key].style.display = "none"
-    }
-  })
-
-  // Add event listeners for subsequent clicks
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const targetTab = button.dataset.tab
-
-      // Update active tab
-      tabButtons.forEach((btn) => btn.classList.remove("active"))
-      button.classList.add("active")
-
-      // Show/hide containers
-      Object.keys(containers).forEach((key) => {
-        if (key === targetTab) {
-          containers[key].style.display = "block"
-        } else {
-          containers[key].style.display = "none"
-        }
-      })
-    })
-  })
-}
-
 function showResults(data) {
-  // Display skin type
   document.getElementById("skinType").textContent = data.skin_type || data.predicted_type || "Unknown"
 
-  // Display eye colors
   document.getElementById("leftEyeColor").textContent = data.left_eye_color ? `Left Eye: ${data.left_eye_color}` : ""
   document.getElementById("rightEyeColor").textContent = data.right_eye_color
     ? `Right Eye: ${data.right_eye_color}`
     : ""
 
-  // Display acne level and confidence with styling
   const acneLevelElement = document.getElementById("acneLevel")
   const acneConfidenceElement = document.getElementById("acneConfidence")
 
@@ -173,44 +162,24 @@ function showResults(data) {
   if (data.acne_confidence) {
     const confidencePercent = data.acne_confidence * 100
     acneConfidenceElement.textContent = `Confidence: ${confidencePercent.toFixed(1)}%`
-
-    // Add confidence level styling
-    acneConfidenceElement.classList.remove("high-confidence", "medium-confidence", "low-confidence")
-    if (confidencePercent >= 80) {
-      acneConfidenceElement.classList.add("high-confidence")
-    } else if (confidencePercent >= 60) {
-      acneConfidenceElement.classList.add("medium-confidence")
-    } else {
-      acneConfidenceElement.classList.add("low-confidence")
-    }
   } else {
     acneConfidenceElement.textContent = ""
   }
 
-  // Show cropped face if available
   if (data.cropped_face) {
     const croppedFaceSection = document.getElementById("croppedFaceSection")
     const croppedFaceImage = document.getElementById("croppedFaceImage")
     croppedFaceImage.src = data.cropped_face
     croppedFaceSection.style.display = "block"
 
-    // Show segmentation if available
     if (data.segmentation_overlay) {
       const segmentationSection = document.getElementById("segmentationSection")
-
-      // Set up images for all tabs
-      document.getElementById("originalImage").src = data.cropped_face
       document.getElementById("segmentedImage").src = data.segmentation_overlay
-      document.getElementById("overlayOriginal").src = data.cropped_face
-      document.getElementById("overlaySegmented").src = data.segmentation_overlay
-
       segmentationSection.style.display = "block"
-      initializeSegmentationTabs() // This function needs to be updated
     } else {
       document.getElementById("segmentationSection").style.display = "none"
     }
 
-    // Show YOLO detection if available
     if (data.yolo_boxes && data.yolo_boxes.length > 0) {
       const yoloDetectionSection = document.getElementById("yoloDetectionSection")
       const yoloCanvas = document.getElementById("yoloCanvas")
@@ -218,31 +187,25 @@ function showResults(data) {
       const image = new Image()
 
       image.onload = () => {
-        // Set canvas size to match image
         yoloCanvas.width = image.width
         yoloCanvas.height = image.height
 
-        // Draw the image
         ctx.drawImage(image, 0, 0)
 
-        // Draw bounding boxes
         data.yolo_boxes.forEach((box) => {
           const [x1, y1, x2, y2] = box.bbox
           const label = box.label
           const confidence = box.confidence
 
-          // Draw bounding box
-          ctx.strokeStyle = "#00ff00"
+          ctx.strokeStyle = "#A8D5BA"
           ctx.lineWidth = 3
           ctx.strokeRect(x1, y1, x2 - x1, y2 - y1)
 
-          // Draw semi-transparent background for text
-          ctx.fillStyle = "rgba(0, 255, 0, 0.8)"
+          ctx.fillStyle = "rgba(168, 213, 186, 0.9)"
           ctx.fillRect(x1, y1 - 25, (label.length + 10) * 8, 25)
 
-          // Draw label text
-          ctx.fillStyle = "#000000"
-          ctx.font = "bold 14px Arial"
+          ctx.fillStyle = "#ffffff"
+          ctx.font = "bold 14px 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto"
           ctx.fillText(`${label} ${(confidence * 100).toFixed(1)}%`, x1 + 5, y1 - 8)
         })
       }
@@ -254,9 +217,8 @@ function showResults(data) {
     }
   }
 
-  // Show skin type probabilities if available
   const skinTypeLabels = ["Dry", "Normal", "Oily"]
-  const typeColors = ["#64b5f6", "#4fc3f7", "#4dd0e1"]
+  const typeColors = ["#A8D5BA", "#9BA8D5", "#D5B8A8"]
 
   if (data.type_probs && data.type_probs.length === skinTypeLabels.length) {
     document.getElementById("typeProbsSection").style.display = "block"
@@ -265,7 +227,6 @@ function showResults(data) {
     document.getElementById("typeProbsSection").style.display = "none"
   }
 
-  // Show acne analysis if available
   if (data.acne_pred && data.acne_confidence) {
     const acneAnalysisSection = document.getElementById("acneAnalysisSection")
     const acneConfidenceFill = document.getElementById("acneConfidenceFill")
@@ -281,96 +242,54 @@ function showResults(data) {
     document.getElementById("acneAnalysisSection").style.display = "none"
   }
 
-  // Generate recommendation based on available data
   generateRecommendation(data)
 
   ajaxResults.style.display = "block"
   ajaxResults.classList.add("active")
 
-  // Show feedback section and reset its state
   feedbackSection.style.display = "block"
-  feedbackMessage.style.display = "none" // Hide any previous feedback message
-  dislikeFeedbackArea.style.display = "none" // Hide dislike area initially
-  dislikeReason.value = "" // Clear previous reason
-  likeBtn.disabled = false // Enable buttons
+  feedbackMessage.style.display = "none"
+  dislikeFeedbackArea.style.display = "none"
+  dislikeReason.value = ""
+  likeBtn.disabled = false
   dislikeBtn.disabled = false
+
+  setTimeout(() => {
+    ajaxResults.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, 100)
 }
 
 function generateRecommendation(data) {
-  let recommendation = "Based on your comprehensive AI analysis: "
-
-  if (data.skin_type) {
-    recommendation += `Your ${data.skin_type.toLowerCase()} skin type `
+  if (typeof window.generateTips === "undefined") {
+    console.error("generateTips function not loaded from tips.js")
+    document.getElementById("recommendationText").textContent =
+      "Unable to load recommendations. Please refresh the page."
+    return
   }
 
-  if (data.acne_pred && data.acne_pred.toLowerCase() !== "unknown") {
-    recommendation += `with ${data.acne_pred.toLowerCase()} acne level `
+  const language = "en" // Default to English, can be made dynamic
+
+  // Generate tips using the function from tips.js
+  const tips = window.generateTips(data, language)
+
+  // If we have tips, display them
+  if (tips.length > 0) {
+    // Join tips with bullet points for better readability
+    const recommendation = tips.map((tip) => `• ${tip}`).join("\n")
+    document.getElementById("recommendationText").textContent = recommendation
+  } else {
+    // Fallback recommendation
+    document.getElementById("recommendationText").textContent =
+      "Based on your analysis, we recommend consulting with a beauty professional for personalized advice."
   }
-
-  if (data.left_eye_color && data.right_eye_color) {
-    recommendation += `and your beautiful ${data.left_eye_color.toLowerCase()} eyes `
-  }
-
-  recommendation += "suggest specific makeup techniques that will enhance your natural beauty. "
-
-  // Add segmentation-based recommendations
-  if (data.segmentation_overlay) {
-    recommendation +=
-      "Our advanced skin mapping has identified specific areas that can benefit from targeted makeup application. "
-  }
-
-  // Add skin type specific recommendations
-  if (data.skin_type) {
-    const skinType = data.skin_type.toLowerCase()
-    if (skinType === "dry") {
-      recommendation += "For dry skin, use hydrating primers and cream-based foundations. "
-    } else if (skinType === "oily") {
-      recommendation += "For oily skin, use mattifying primers and long-lasting foundations. "
-    } else if (skinType === "normal") {
-      recommendation += "Your normal skin type gives you flexibility with most makeup products. "
-    }
-  }
-
-  // Add acne-specific recommendations
-  if (data.acne_pred) {
-    const acneLevel = data.acne_pred.toLowerCase()
-    if (acneLevel === "severe" || acneLevel === "high") {
-      recommendation +=
-        "For acne-prone skin, use non-comedogenic products and consider color-correcting concealers. Green concealer can neutralize redness. "
-    } else if (acneLevel === "moderate" || acneLevel === "medium") {
-      recommendation += "For moderate acne, use lightweight, buildable coverage and spot concealing techniques. "
-    } else if (acneLevel === "mild" || acneLevel === "low") {
-      recommendation += "With mild acne concerns, focus on gentle coverage and skin-friendly formulations. "
-    } else if (acneLevel === "clear" || acneLevel === "none") {
-      recommendation += "Your clear skin allows for versatile makeup looks and lighter coverage options. "
-    }
-  }
-
-  // Add eye color specific recommendations
-  if (data.left_eye_color) {
-    const eyeColor = data.left_eye_color.toLowerCase()
-    if (eyeColor.includes("brown")) {
-      recommendation += "Brown eyes look stunning with warm golds, bronzes, and deep purples."
-    } else if (eyeColor.includes("blue")) {
-      recommendation += "Blue eyes pop with warm oranges, coppers, and complementary browns."
-    } else if (eyeColor.includes("green")) {
-      recommendation += "Green eyes are enhanced by purples, plums, and warm reddish tones."
-    } else if (eyeColor.includes("hazel")) {
-      recommendation += "Hazel eyes can be enhanced with both warm and cool tones depending on the lighting."
-    } else if (eyeColor.includes("eyes closed")) {
-      recommendation += "Please ensure your eyes are open in the photo for accurate eye color analysis."
-    }
-  }
-
-  document.getElementById("recommendationText").textContent = recommendation
 }
 
 function resetForm() {
   stopCamera() // Ensure camera is stopped and capture button is disabled
   ajaxResults.style.display = "none"
   ajaxResults.classList.remove("active")
-  document.querySelector(".upload-section").style.display = "block"
-  document.querySelector(".camera-section").style.display = "block"
+  document.querySelector(".upload-card").style.display = "block"
+  document.querySelector(".camera-card").style.display = "block"
   document.querySelector(".divider").style.display = "block"
   uploadForm.reset()
   photoPreview.style.display = "none"
@@ -380,6 +299,11 @@ function resetForm() {
   document.getElementById("yoloDetectionSection").style.display = "none"
   document.getElementById("acneAnalysisSection").style.display = "none"
   document.getElementById("segmentationSection").style.display = "none"
+
+  privacyCheckbox.checked = false
+  analyzeBtn.disabled = true
+
+  cameraPrivacyCheckbox.checked = false
 
   // Reset feedback section
   feedbackSection.style.display = "none"
@@ -402,7 +326,8 @@ startCameraBtn.addEventListener("click", async () => {
     })
     video.srcObject = stream
     video.parentElement.style.display = "block"
-    captureBtn.disabled = false
+    isCameraActive = true
+    captureBtn.disabled = !cameraPrivacyCheckbox.checked
     startCameraBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Camera'
     startCameraBtn.onclick = stopCamera
   } catch (err) {
@@ -415,6 +340,7 @@ function stopCamera() {
   if (stream) {
     stream.getTracks().forEach((track) => track.stop())
     video.parentElement.style.display = "none"
+    isCameraActive = false
     captureBtn.disabled = true
     startCameraBtn.innerHTML = '<i class="fas fa-video"></i> Start Camera'
     startCameraBtn.onclick = () => startCameraBtn.click() // Re-attach original click handler
@@ -460,7 +386,7 @@ captureBtn.addEventListener("click", async () => {
   }
 
   stopCamera()
-  captureBtn.innerHTML = '<i class="fas fa-camera-retro"></i> Capture Photo'
+  captureBtn.innerHTML = '<i class="fas fa-camera"></i> Capture Photo'
   captureBtn.disabled = false
 })
 
@@ -491,12 +417,14 @@ async function sendFeedback(feedbackType, reason = "") {
 
     if (response.ok) {
       feedbackMessage.textContent = data.message || "Thank you for your feedback!"
-      feedbackMessage.classList.remove("text-red-600", "bg-red-100", "border-red-200")
-      feedbackMessage.classList.add("text-green-600", "bg-green-100", "border-green-200")
+      feedbackMessage.style.color = "#7FB89A"
+      feedbackMessage.style.backgroundColor = "rgba(168, 213, 186, 0.15)"
+      feedbackMessage.style.border = "1px solid rgba(168, 213, 186, 0.3)"
     } else {
       feedbackMessage.textContent = data.error || "Failed to submit feedback."
-      feedbackMessage.classList.remove("text-green-600", "bg-green-100", "border-green-200")
-      feedbackMessage.classList.add("text-red-600", "bg-red-100", "border-red-200")
+      feedbackMessage.style.color = "#C97A7A"
+      feedbackMessage.style.backgroundColor = "rgba(201, 122, 122, 0.15)"
+      feedbackMessage.style.border = "1px solid rgba(201, 122, 122, 0.3)"
       // Re-enable buttons if submission failed
       likeBtn.disabled = false
       dislikeBtn.disabled = false
@@ -506,8 +434,9 @@ async function sendFeedback(feedbackType, reason = "") {
     }
   } catch (error) {
     feedbackMessage.textContent = "Network error: Could not submit feedback."
-    feedbackMessage.classList.remove("text-green-600", "bg-green-100", "border-green-200")
-    feedbackMessage.classList.add("text-red-600", "bg-red-100", "border-red-200")
+    feedbackMessage.style.color = "#C97A7A"
+    feedbackMessage.style.backgroundColor = "rgba(201, 122, 122, 0.15)"
+    feedbackMessage.style.border = "1px solid rgba(201, 122, 122, 0.3)"
     // Re-enable buttons on network error
     likeBtn.disabled = false
     dislikeBtn.disabled = false
@@ -516,6 +445,9 @@ async function sendFeedback(feedbackType, reason = "") {
     }
   } finally {
     feedbackMessage.style.display = "block"
+    feedbackMessage.style.padding = "16px"
+    feedbackMessage.style.borderRadius = "12px"
+    feedbackMessage.style.fontWeight = "500"
     dislikeFeedbackArea.style.display = "none" // Hide dislike area after submission attempt
     dislikeReason.value = "" // Clear reason
   }
@@ -539,23 +471,6 @@ submitDislikeFeedbackBtn.addEventListener("click", () => {
   if (reason) {
     sendFeedback("dislike", reason)
   } else {
-    alert("Please provide a reason for disliking the analysis.")
+    alert("Please provide a reason for your feedback.")
   }
 })
-
-// Helper function to get CSRF token (if needed later)
-// function getCookie(name) {
-//     let cookieValue = null;
-//     if (document.cookie && document.cookie !== '') {
-//         const cookies = document.cookie.split(';');
-//         for (let i = 0; i < cookies.length; i++) {
-//             const cookie = cookies[i].trim();
-//             // Does this cookie string begin with the name we want?
-//             if (cookie.substring(0, name.length + 1) === (name + '=')) {
-//                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-//                 break;
-//             }
-//         }
-//     }
-//     return cookieValue;
-// }
