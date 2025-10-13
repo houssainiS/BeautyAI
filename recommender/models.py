@@ -63,7 +63,7 @@ class Shop(models.Model):
     online_token = models.TextField(blank=True, null=True)   # Short-lived token
     installed_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)  # Track active/inactive status
-    theme_editor_link = models.URLField(blank=True, null=True)  # Store Theme Editor deep link
+    theme_editor_link = models.URLField(max_length=500, blank=True, null=True) # Store Theme Editor deep link
     metafield_definition_id = models.CharField(max_length=255, blank=True, null=True)  # 👈 Store definition ID
 
     def __str__(self):
