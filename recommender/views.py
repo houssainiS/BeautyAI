@@ -744,3 +744,7 @@ def staff_login(request):
 def staff_logout(request):
     logout(request)
     return redirect('staff_login')
+
+
+
+# this is the perfect version with email marketing notification system
