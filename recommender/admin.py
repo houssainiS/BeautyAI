@@ -53,18 +53,18 @@ class PageContentAdmin(admin.ModelAdmin):
     ordering = ('-updated_at',)  # newest first
 
 
-@admin.register(Purchase)
-class PurchaseAdmin(admin.ModelAdmin):
-    list_display = (
-        "email",
-        "product_name",
-        "purchase_date",
-        "usage_duration_days",
-        "notified",
-        "expiry_date",
-        "domain",
-    )
-    list_filter = ("notified", "purchase_date")
-    search_fields = ("email", "product_name", "order_id", "domain")
-    readonly_fields = ("expiry_date",)
+# @admin.register(Purchase)
+# class PurchaseAdmin(admin.ModelAdmin):
+#     list_display = (
+#         "email",
+#         "product_name",
+#         "purchase_date",
+#         "usage_duration_days",
+#         "notified",
+#         "expiry_date",
+#         "domain",
+#     )
+#     list_filter = ("notified", "purchase_date")
+#     search_fields = ("email", "product_name", "order_id", "domain")
+#     readonly_fields = ("expiry_date",)
     

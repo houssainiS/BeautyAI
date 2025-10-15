@@ -243,7 +243,8 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Shop, PageContent, Purchase
-from .webhooks import register_uninstall_webhook, fetch_usage_duration, register_orders_updated_webhook
+# from .webhooks import register_uninstall_webhook, fetch_usage_duration, register_orders_updated_webhook
+from .webhooks import register_uninstall_webhook
 from .shopify_navigation import create_page  # only import the working function
 
 # Load from environment variables with fallback
@@ -258,8 +259,8 @@ def app_entry(request):
 
     # Check if page creation or metafield flags were passed
     page_created = request.GET.get("page_created") == "1"
-    metafield_created = request.GET.get("metafield_created") == "1"
-    metafield_deleted = request.GET.get("metafield_deleted") == "1"
+    # metafield_created = request.GET.get("metafield_created") == "1"
+    # metafield_deleted = request.GET.get("metafield_deleted") == "1"
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
@@ -271,18 +272,19 @@ def app_entry(request):
                 "shop": shop,
                 "theme_editor_link": shop_obj.theme_editor_link,
                 "page_created": page_created,
-                "metafield_created": metafield_created,
-                "metafield_deleted": metafield_deleted,
+                # "metafield_created": metafield_created,
+                # "metafield_deleted": metafield_deleted,
             },
         )
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
 
 
+"""
 def create_or_get_metafield_definition(shop, offline_token, shop_obj):
-    """
-    Helper function to create or retrieve the metafield definition for 'usage_duration'.
-    """
+    
+    #Helper function to create or retrieve the metafield definition for 'usage_duration'.
+    
     graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
     headers = {
         "X-Shopify-Access-Token": offline_token,
@@ -293,19 +295,19 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
     definition_id = None
     try:
         # --- Check for existing metafield definition ---
-        definition_query = """
+        definition_query = ""
         {
           metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
             edges { node { id name namespace key } }
           }
         }
-        """
+        ""
         def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
         edges = def_response.json().get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
         if edges:
             definition_id = edges[0]["node"]["id"]
         else:
-            create_query = """
+            create_query = ""
             mutation {
               metafieldDefinitionCreate(definition: {
                 name: "Product Usage Duration (in days) By beautyxia"
@@ -319,7 +321,7 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
                 userErrors { field message }
               }
             }
-            """
+            ""
             gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
             definition_id = gql_response.json().get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
     except Exception as e:
@@ -331,19 +333,20 @@ def create_or_get_metafield_definition(shop, offline_token, shop_obj):
             shop_obj.metafield_definition_id = definition_id
             shop_obj.save(update_fields=["metafield_definition_id"])
 
-            pin_query = """
+            pin_query = ""
             mutation metafieldDefinitionPin($definitionId: ID!) {
               metafieldDefinitionPin(definitionId: $definitionId) {
                 pinnedDefinition { id name namespace key }
                 userErrors { field message }
               }
             }
-            """
+            ""
             requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": {"definitionId": definition_id}})
         except Exception as pin_e:
             print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
 
     return definition_id
+"""
 
 
 def delete_metafield(request):
@@ -453,7 +456,7 @@ def oauth_callback(request):
         register_uninstall_webhook(shop, offline_token)
 
         # --- Register orders/paid webhook for notification system ---
-        register_orders_updated_webhook(shop, offline_token)
+        # register_orders_updated_webhook(shop, offline_token)
 
         # Render install page (metafield creation now manual)
         return render(
@@ -469,11 +472,12 @@ def oauth_callback(request):
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
 
 
+"""
 def create_metafield(request):
-    """
-    Manually creates or retrieves the 'usage_duration' metafield definition
-    when the merchant clicks the 'Create Metafield' button.
-    """
+    
+    #Manually creates or retrieves the 'usage_duration' metafield definition
+    #when the merchant clicks the 'Create Metafield' button.
+    
     shop = request.GET.get("shop")
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
@@ -500,6 +504,7 @@ def create_metafield(request):
         print(f"[ERROR] Exception in create_metafield: {e}")
         messages.error(request, f"⚠️ Error: {e}")
         return redirect(f"/app_entry/?shop={shop}")
+"""
 
 
 def create_shopify_page(request):
@@ -617,9 +622,9 @@ def dashboard(request):
         "analysis_month": FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).count(),
         "likes": Feedback.objects.filter(feedback_type="like").count(),
         "dislikes": Feedback.objects.filter(feedback_type="dislike").count(),
-        "total_purchases": Purchase.objects.count(),
-        "purchases_notified": Purchase.objects.filter(notified=True).count(),
-        "purchases_not_notified": Purchase.objects.filter(notified=False).count(),
+        # "total_purchases": Purchase.objects.count(),
+        # "purchases_notified": Purchase.objects.filter(notified=True).count(),
+        # "purchases_not_notified": Purchase.objects.filter(notified=False).count(),
     }
 
     # Visitors trend (last 7 days)
@@ -744,7 +749,3 @@ def staff_login(request):
 def staff_logout(request):
     logout(request)
     return redirect('staff_login')
-
-
-
-# this is the perfect version with email marketing notification system

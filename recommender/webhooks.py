@@ -1,4 +1,3 @@
-# webhooks.py
 import requests
 import hmac
 import hashlib
@@ -6,8 +5,8 @@ import base64
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
-from .models import Shop, Purchase
+# from django.utils import timezone
+from .models import Shop  #,  Purchase
 import os
 
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
@@ -139,6 +138,7 @@ def register_uninstall_webhook(shop, access_token):
 # ==========================================================
 # 📌 Orders/Updated Webhook Registration & Endpoint
 # ==========================================================
+"""
 from django.conf import settings
 from django.utils import timezone
 
@@ -147,9 +147,9 @@ from django.utils import timezone
 # -------------------------------
 
 def fetch_usage_duration(product_id, shop_domain):
-    """
-    Fetch usage_duration metafield for a product via GraphQL.
-    """
+    
+    #Fetch usage_duration metafield for a product via GraphQL.
+    
     try:
         shop = Shop.objects.get(domain=shop_domain)
         graphql_url = f"https://{shop_domain}/admin/api/2025-07/graphql.json"
@@ -157,7 +157,7 @@ def fetch_usage_duration(product_id, shop_domain):
             "X-Shopify-Access-Token": shop.offline_token,
             "Content-Type": "application/json",
         }
-        query = """
+        query = ""
         query($id: ID!) {
           product(id: $id) {
             metafield(namespace: "custom", key: "usage_duration") {
@@ -165,7 +165,7 @@ def fetch_usage_duration(product_id, shop_domain):
             }
           }
         }
-        """
+        ""
         variables = {"id": f"gid://shopify/Product/{product_id}"}
         resp = requests.post(
             graphql_url,
@@ -184,9 +184,9 @@ def fetch_usage_duration(product_id, shop_domain):
 # -------------------------------
 
 def register_orders_updated_webhook(shop_domain, access_token):
-    """
-    Registers the 'orders/updated' webhook for a shop with detailed debugging.
-    """
+    
+    #Registers the 'orders/updated' webhook for a shop with detailed debugging.
+    
     url = f"https://{shop_domain}/admin/api/2025-07/webhooks.json"
     headers = {
         "X-Shopify-Access-Token": access_token,
@@ -230,11 +230,11 @@ def register_orders_updated_webhook(shop_domain, access_token):
 
 @csrf_exempt
 def order_updated(request):
-    """
-    Endpoint to receive Shopify 'orders/updated' webhook.
-    Only saves purchase when financial_status == 'paid'.
-    Includes detailed debugging.
-    """
+    
+    #Endpoint to receive Shopify 'orders/updated' webhook.
+    #Only saves purchase when financial_status == 'paid'.
+    #Includes detailed debugging.
+    
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
@@ -314,3 +314,4 @@ def order_updated(request):
         return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"status": "ok"}, status=200)
+"""
