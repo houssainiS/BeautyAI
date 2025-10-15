@@ -14,11 +14,7 @@ from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
 from recommender.AImodels.segment_skin_conditions_yolo import segment_skin_conditions  
 
-
-
-
 from .models import FaceAnalysis, Feedback , Visitor
-
 
 def home(request):
     """
@@ -242,8 +238,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Shop, PageContent, Purchase
-# from .webhooks import register_uninstall_webhook, fetch_usage_duration, register_orders_updated_webhook
+from .models import Shop, PageContent
 from .webhooks import register_uninstall_webhook
 from .shopify_navigation import create_page  # only import the working function
 
@@ -257,10 +252,7 @@ def app_entry(request):
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
-    # Check if page creation or metafield flags were passed
     page_created = request.GET.get("page_created") == "1"
-    # metafield_created = request.GET.get("metafield_created") == "1"
-    # metafield_deleted = request.GET.get("metafield_deleted") == "1"
 
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
@@ -272,152 +264,16 @@ def app_entry(request):
                 "shop": shop,
                 "theme_editor_link": shop_obj.theme_editor_link,
                 "page_created": page_created,
-                # "metafield_created": metafield_created,
-                # "metafield_deleted": metafield_deleted,
             },
         )
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
 
 
-"""
-def create_or_get_metafield_definition(shop, offline_token, shop_obj):
-    
-    #Helper function to create or retrieve the metafield definition for 'usage_duration'.
-    
-    graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
-    headers = {
-        "X-Shopify-Access-Token": offline_token,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
-
-    definition_id = None
-    try:
-        # --- Check for existing metafield definition ---
-        definition_query = ""
-        {
-          metafieldDefinitions(first: 10, ownerType: PRODUCT, namespace: "custom", key: "usage_duration") {
-            edges { node { id name namespace key } }
-          }
-        }
-        ""
-        def_response = requests.post(graphql_url, headers=headers, json={"query": definition_query})
-        edges = def_response.json().get("data", {}).get("metafieldDefinitions", {}).get("edges", [])
-        if edges:
-            definition_id = edges[0]["node"]["id"]
-        else:
-            create_query = ""
-            mutation {
-              metafieldDefinitionCreate(definition: {
-                name: "Product Usage Duration (in days) By beautyxia"
-                namespace: "custom"
-                key: "usage_duration"
-                type: "number_integer"
-                description: "How many days the buyer will use the product. By fullfilling this Beautyxia will automatically send an email to the buyer when the usage duration ends . You can leave it empty if you dont want us to send the mail."
-                ownerType: PRODUCT
-              }) {
-                createdDefinition { id name namespace key type { name } }
-                userErrors { field message }
-              }
-            }
-            ""
-            gql_response = requests.post(graphql_url, headers=headers, json={"query": create_query})
-            definition_id = gql_response.json().get("data", {}).get("metafieldDefinitionCreate", {}).get("createdDefinition", {}).get("id")
-    except Exception as e:
-        print(f"[WARNING] Error checking/creating metafield definition: {e}")
-
-    # Pin the metafield definition
-    if definition_id:
-        try:
-            shop_obj.metafield_definition_id = definition_id
-            shop_obj.save(update_fields=["metafield_definition_id"])
-
-            pin_query = ""
-            mutation metafieldDefinitionPin($definitionId: ID!) {
-              metafieldDefinitionPin(definitionId: $definitionId) {
-                pinnedDefinition { id name namespace key }
-                userErrors { field message }
-              }
-            }
-            ""
-            requests.post(graphql_url, headers=headers, json={"query": pin_query, "variables": {"definitionId": definition_id}})
-        except Exception as pin_e:
-            print(f"[WARNING] Failed to pin usage_duration metafield: {pin_e}")
-
-    return definition_id
-"""
-
-
-def delete_metafield(request):
-    """
-    Deletes the metafield definition manually when the user clicks 'Delete Metafield'.
-    """
-    shop = request.GET.get("shop")
-    if not shop:
-        return render(request, "error.html", {"message": "Missing shop parameter"})
-
-    try:
-        shop_obj = Shop.objects.get(domain=shop, is_active=True)
-        access_token = shop_obj.offline_token
-        metafield_id = shop_obj.metafield_definition_id
-
-        if not access_token or not metafield_id:
-            messages.error(request, "⚠️ Missing metafield or access token.")
-            return redirect(f"/app_entry/?shop={shop}")
-
-        graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
-        headers = {
-            "X-Shopify-Access-Token": access_token,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
-        delete_mutation = """
-        mutation metafieldDefinitionDelete($id: ID!) {
-          metafieldDefinitionDelete(id: $id) {
-            deletedDefinitionId
-            userErrors {
-              field
-              message
-            }
-          }
-        }
-        """
-
-        payload = {"query": delete_mutation, "variables": {"id": metafield_id}}
-        response = requests.post(graphql_url, headers=headers, json=payload)
-        data = response.json()
-
-        errors = data.get("data", {}).get("metafieldDefinitionDelete", {}).get("userErrors", [])
-        deleted_id = data.get("data", {}).get("metafieldDefinitionDelete", {}).get("deletedDefinitionId")
-
-        if errors:
-            print("[Shopify Error]", errors)
-            messages.error(request, "⚠️ Shopify returned an error while deleting metafield.")
-        elif deleted_id:
-            shop_obj.metafield_definition_id = None
-            shop_obj.save(update_fields=["metafield_definition_id"])
-            messages.success(request, "🗑️ Metafield deleted successfully!")
-            return redirect(f"/app_entry/?shop={shop}&metafield_deleted=1")
-        else:
-            messages.warning(request, "⚠️ No metafield was deleted. Check ID or permissions.")
-
-        return redirect(f"/app_entry/?shop={shop}")
-
-    except Shop.DoesNotExist:
-        return redirect(f"/start_auth/?shop={shop}")
-    except Exception as e:
-        print(f"[ERROR] Exception in delete_metafield: {e}")
-        messages.error(request, f"⚠️ Error deleting metafield: {e}")
-        return redirect(f"/app_entry/?shop={shop}")
-
-
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
     Saves/reactivates the shop and registers webhooks.
-    Metafield creation is now manual (triggered by user).
     """
     try:
         shop = request.GET.get("shop")
@@ -452,13 +308,8 @@ def oauth_callback(request):
             },
         )
 
-        # Register uninstall webhook
         register_uninstall_webhook(shop, offline_token)
 
-        # --- Register orders/paid webhook for notification system ---
-        # register_orders_updated_webhook(shop, offline_token)
-
-        # Render install page (metafield creation now manual)
         return render(
             request,
             "recommender/shopify_install_page.html",
@@ -470,41 +321,6 @@ def oauth_callback(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({"error": f"Server error: {e}"}, status=500)
-
-
-"""
-def create_metafield(request):
-    
-    #Manually creates or retrieves the 'usage_duration' metafield definition
-    #when the merchant clicks the 'Create Metafield' button.
-    
-    shop = request.GET.get("shop")
-    if not shop:
-        return render(request, "error.html", {"message": "Missing shop parameter"})
-
-    try:
-        shop_obj = Shop.objects.get(domain=shop, is_active=True)
-
-        if not shop_obj.offline_token:
-            messages.error(request, "⚠️ Missing offline token. Please reinstall the app.")
-            return redirect(f"/app_entry/?shop={shop}")
-
-        definition_id = create_or_get_metafield_definition(shop, shop_obj.offline_token, shop_obj)
-
-        if definition_id:
-            messages.success(request, "✅ Metafield created or already exists.")
-            return redirect(f"/app_entry/?shop={shop}&metafield_created=1")
-        else:
-            messages.error(request, "⚠️ Failed to create metafield.")
-            return redirect(f"/app_entry/?shop={shop}")
-
-    except Shop.DoesNotExist:
-        return redirect(f"/start_auth/?shop={shop}")
-    except Exception as e:
-        print(f"[ERROR] Exception in create_metafield: {e}")
-        messages.error(request, f"⚠️ Error: {e}")
-        return redirect(f"/app_entry/?shop={shop}")
-"""
 
 
 def create_shopify_page(request):
@@ -542,7 +358,6 @@ def create_shopify_page(request):
 
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
-
 
 def start_auth(request):
     """
@@ -614,7 +429,6 @@ def dashboard(request):
     if domain_filter:
         analysis_qs = analysis_qs.filter(domain__icontains=domain_filter)
 
-    # ---- Stats ----
     stats = {
         "main_visitors": Visitor.objects.count(),  # Main page visitors only
         "analysis_today": FaceAnalysis.objects.filter(timestamp__date=today).count(),
@@ -622,12 +436,8 @@ def dashboard(request):
         "analysis_month": FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).count(),
         "likes": Feedback.objects.filter(feedback_type="like").count(),
         "dislikes": Feedback.objects.filter(feedback_type="dislike").count(),
-        # "total_purchases": Purchase.objects.count(),
-        # "purchases_notified": Purchase.objects.filter(notified=True).count(),
-        # "purchases_not_notified": Purchase.objects.filter(notified=False).count(),
     }
 
-    # Visitors trend (last 7 days)
     visitors_by_day = (
         Visitor.objects.filter(date__gte=week_ago)
         .values("date")
@@ -667,20 +477,17 @@ def dashboard(request):
         analysis_month_dates.insert(0, f"{start_date.strftime('%m/%d')}-{end_date.strftime('%m/%d')}")
         analysis_month_counts.insert(0, count)
 
-    # Feedback ratio
     feedback_data = [
         Feedback.objects.filter(feedback_type="like").count(),
         Feedback.objects.filter(feedback_type="dislike").count(),
     ]
 
-    # Top 5 domains
     top_domains = (
         FaceAnalysis.objects.values("domain")
         .annotate(total=Count("id"))
         .order_by("-total")[:5]
     )
 
-    # All domains (for filter results)
     domain_stats = (
         analysis_qs.values("domain")
         .annotate(total=Count("id"))
@@ -704,7 +511,6 @@ def dashboard(request):
     }
     return render(request, "recommender/dashboard.html", context)
 
-#to search face analysis by domain
 @login_required
 def search_domains(request):
     domain_filter = request.GET.get('domain', '')
