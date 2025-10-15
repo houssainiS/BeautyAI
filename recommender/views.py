@@ -372,7 +372,7 @@ def start_auth(request):
         redirect_uri = settings.BASE_URL + "/auth/callback/"
         scopes = (
             "write_online_store_pages,read_online_store_pages,read_online_store_navigation,"
-            "write_online_store_navigation,"
+            "write_online_store_navigation,read_themes"
         )
 
         auth_url = (
