@@ -251,44 +251,38 @@
         </div>
 
         <div class="section">
-            <h2><span class="section-number">2</span>Metafield Setup</h2>
-            <div class="highlight-box">
-                <p><span class="step-indicator">1</span>The app automatically creates a metafield called <code>usage duration (in days)</code> for products.</p>
-            </div>
-            <ul>
-                <li>Merchants can fill in this metafield for products they want to track usage for.</li>
-                <li>After a customer purchases a product with this metafield, they will receive a <strong>notification email</strong> when the duration ends.</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2><span class="section-number">3</span>Customer Notifications</h2>
-            <ul>
-                <li>When a customer purchases a product with a usage duration, the app sends an email to notify them when the duration ends.</li>
-                <li>Emails are sent <strong>only for this purpose</strong> and are not used for marketing.</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2><span class="section-number">4</span>App Behavior Summary</h2>
+            <h2><span class="section-number">2</span>App Features</h2>
             <div class="feature-grid">
                 <div class="feature-card">
                     <div class="feature-title">Face Analysis</div>
-                    <div class="feature-description">Customers can upload a photo, which is analyzed temporarily by the backend for beauty tips.</div>
+                    <div class="feature-description">
+                        Customers can upload a photo, which is analyzed temporarily by the backend.
+                        The system uses AI to detect skin type, skin conditions (like redness, dark circles, melasma), and acne-related issues. 
+                        No photos are stored permanently; only temporary analysis is performed to generate personalized beauty tips.
+                    </div>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-title">Data Handling</div>
-                    <div class="feature-description">Photos are never stored; only IP/device info and email notifications are retained temporarily.</div>
+                    <div class="feature-title">Product Recommendations</div>
+                    <div class="feature-description">
+                        The recommendation system suggests products based on the <strong>product names</strong> and their <strong>tags</strong>. 
+                        To make it work effectively, merchants should add relevant tags to products.  
+
+                        <strong>Skin types:</strong> 'dry', 'normal', 'oily'<br>
+                        <strong>Skin concerns:</strong> 'darkcircle', 'skinredness', 'melasma', 'vascular', 'wrinkle'<br>
+                        <strong>Acne & related issues:</strong> 'blackhead', 'cystic', 'folliculitis', 'keloid', 'milium', 'papular', 'purulent', 'acne_scars', 'acne', 'pimple', 'spot'<br>
+
+                        Merchants are not required to add all tags—only the ones relevant for each product.
+                    </div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-title">Navigation & Theme</div>
-                    <div class="feature-description">Merchants can create and edit pages with our app using provided buttons.</div>
+                    <div class="feature-description">Merchants can create and edit pages with our app using the provided buttons.</div>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h2><span class="section-number">5</span>Security & Compliance</h2>
+            <h2><span class="section-number">3</span>Security & Compliance</h2>
             <ul>
                 <li>App uses HTTPS, Django sessions, CSRF protection, and limited access to logs.</li>
                 <li>Complies with GDPR, including explicit consent for photo analysis and handling of IP/email info.</li>
@@ -300,4 +294,5 @@
         </div>
     </div>
 </body>
+
 </html>
