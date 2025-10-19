@@ -5,13 +5,18 @@ import base64
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-# from django.utils import timezone
 from .models import Shop
 import os
 
+# ======================================================
+# LOAD SHOPIFY API SECRET
+# ======================================================
 SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "fallback-secret-for-dev")
 
 
+# ======================================================
+# HMAC VERIFICATION FUNCTION
+# ======================================================
 def verify_webhook(data, hmac_header):
     """
     Verifies Shopify webhook HMAC to ensure request authenticity.
@@ -25,6 +30,9 @@ def verify_webhook(data, hmac_header):
     return hmac.compare_digest(calculated_hmac, hmac_header)
 
 
+# ======================================================
+# APP UNINSTALLED WEBHOOK
+# ======================================================
 @csrf_exempt
 def app_uninstalled(request):
     """
@@ -35,6 +43,7 @@ def app_uninstalled(request):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
+    # --- Verify webhook authenticity ---
     hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
     if not hmac_header:
         print("[Webhook] Missing HMAC header")
@@ -44,6 +53,7 @@ def app_uninstalled(request):
         print("[Webhook] HMAC verification failed")
         return JsonResponse({"error": "Invalid webhook"}, status=401)
 
+    # --- Get shop domain ---
     shop_domain = request.headers.get("X-Shopify-Shop-Domain")
     if not shop_domain:
         return JsonResponse({"error": "Missing shop domain"}, status=400)
@@ -109,12 +119,15 @@ def app_uninstalled(request):
     return JsonResponse({"status": "ok"}, status=200)
 
 
+# ======================================================
+# REGISTER UNINSTALL WEBHOOK
+# ======================================================
 def register_uninstall_webhook(shop, access_token):
     """
     Registers the 'app/uninstalled' webhook for a specific shop.
     Call this function when a merchant installs the app.
     """
-    url = f"https://{shop}/admin/api/2023-10/webhooks.json"
+    url = f"https://{shop}/admin/api/2025-07/webhooks.json"
     headers = {
         "X-Shopify-Access-Token": access_token,
         "Content-Type": "application/json"
@@ -133,3 +146,115 @@ def register_uninstall_webhook(shop, access_token):
     except Exception as e:
         print("[Webhook Registration] Failed to register webhook:", str(e))
         print("[Webhook Registration] Raw response text:", getattr(response, "text", "No response text"))
+
+
+# ======================================================
+# GDPR MANDATORY WEBHOOKS (Required for App Approval)
+# ======================================================
+
+@csrf_exempt
+def customers_data_request(request):
+    """
+    Handles 'customers/data_request' webhook.
+    Shopify sends this when a customer requests to view their stored data.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    # Verify HMAC
+    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+    if not verify_webhook(request.body, hmac_header):
+        print("[GDPR] Invalid HMAC for customers/data_request")
+        return JsonResponse({"error": "Invalid webhook"}, status=401)
+
+    data = json.loads(request.body.decode("utf-8"))
+    print("[GDPR] Customer data request received:", data)
+
+    # ✅ You don't store customer data, just acknowledge the request
+    print("[GDPR] No customer data stored in app.")
+    return JsonResponse({"status": "ok"}, status=200)
+
+
+@csrf_exempt
+def customers_redact(request):
+    """
+    Handles 'customers/redact' webhook.
+    Shopify sends this when a customer requests their personal data be deleted.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    # Verify HMAC
+    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+    if not verify_webhook(request.body, hmac_header):
+        print("[GDPR] Invalid HMAC for customers/redact")
+        return JsonResponse({"error": "Invalid webhook"}, status=401)
+
+    data = json.loads(request.body.decode("utf-8"))
+    print("[GDPR] Customer redact request received:", data)
+
+    # ✅ You don't store customer data, just acknowledge
+    print("[GDPR] No customer data stored in app to delete.")
+    return JsonResponse({"status": "ok"}, status=200)
+
+
+@csrf_exempt
+def shop_redact(request):
+    """
+    Handles 'shop/redact' webhook.
+    Shopify sends this when a store owner requests deletion after uninstall.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    # Verify HMAC
+    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+    if not verify_webhook(request.body, hmac_header):
+        print("[GDPR] Invalid HMAC for shop/redact")
+        return JsonResponse({"error": "Invalid webhook"}, status=401)
+
+    data = json.loads(request.body.decode("utf-8"))
+    shop_domain = data.get("shop_domain")
+    print(f"[GDPR] Shop redact request received for: {shop_domain}")
+
+    # ✅ Keep shop data for your records — don’t delete it
+    print(f"[GDPR] Shop data retained for compliance/logging (not deleted).")
+    return JsonResponse({"status": "ok"}, status=200)
+
+
+# ======================================================
+# REGISTER GDPR WEBHOOKS (Automatically after Install)
+# ======================================================
+def register_gdpr_webhooks(shop, access_token):
+    """
+    Registers all mandatory GDPR webhooks after app installation.
+    Shopify requires these 3:
+      - customers/data_request
+      - customers/redact
+      - shop/redact
+    """
+    topics = {
+        "customers/data_request": "https://beautyai.duckdns.org/webhooks/customers_data_request/",
+        "customers/redact": "https://beautyai.duckdns.org/webhooks/customers_redact/",
+        "shop/redact": "https://beautyai.duckdns.org/webhooks/shop_redact/",
+    }
+
+    for topic, address in topics.items():
+        url = f"https://{shop}/admin/api/2025-07/webhooks.json"
+        headers = {
+            "X-Shopify-Access-Token": access_token,
+            "Content-Type": "application/json"
+        }
+        data = {
+            "webhook": {
+                "topic": topic,
+                "address": address,
+                "format": "json"
+            }
+        }
+
+        try:
+            response = requests.post(url, json=data, headers=headers)
+            print(f"[GDPR Webhook Registration] {topic}: {response.json()}")
+        except Exception as e:
+            print(f"[GDPR Webhook Registration] Failed for {topic}:", str(e))

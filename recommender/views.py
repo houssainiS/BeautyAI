@@ -239,7 +239,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Shop, PageContent
-from .webhooks import register_uninstall_webhook
+from .webhooks import register_uninstall_webhook ,  register_gdpr_webhooks
 from .shopify_navigation import create_page  # only import the working function
 
 # Load from environment variables with fallback
@@ -309,6 +309,7 @@ def oauth_callback(request):
         )
 
         register_uninstall_webhook(shop, offline_token)
+        register_gdpr_webhooks(shop, offline_token)
 
         return render(
             request,
