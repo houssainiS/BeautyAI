@@ -21,9 +21,8 @@ urlpatterns = [
     path("logout/", views.staff_logout, name="staff_logout"),
     path("dashboard/search-domains/", views.search_domains, name="search_domains"),
     #mandatory GDPR webhooks 
-    path('webhooks/app_uninstalled/', webhooks.app_uninstalled, name='app_uninstalled'),
     path('webhooks/customers_data_request/', webhooks.customers_data_request, name='customers_data_request'),
     path('webhooks/customers_redact/', webhooks.customers_redact, name='customers_redact'),
     path('webhooks/shop_redact/', webhooks.shop_redact, name='shop_redact'),
-    
+    path('webhooks/shop_redact', webhooks.shop_redact),
 ]
