@@ -257,15 +257,15 @@ def app_entry(request):
     try:
         shop_obj = Shop.objects.get(domain=shop, is_active=True)
 
-        return render(
-            request,
-            "recommender/shopify_install_page.html",
-            {
-                "shop": shop,
-                "theme_editor_link": shop_obj.theme_editor_link,
-                "page_created": page_created,
-            },
-        )
+        # Add context for App Bridge (needed for embedded apps)
+        context = {
+            "shop": shop,
+            "theme_editor_link": shop_obj.theme_editor_link,
+            "page_created": page_created,
+            "api_key": settings.SHOPIFY_API_KEY,  # Your public app API key
+        }
+
+        return render(request, "recommender/shopify_install_page.html", context)
     except Shop.DoesNotExist:
         return redirect(f"/start_auth/?shop={shop}")
 

@@ -546,5 +546,37 @@
             Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
     </div>
+
+    <!-- Shopify App Bridge Integration -->
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge-auth.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const AppBridge = window["app-bridge"];
+        const createApp = AppBridge.default;
+
+        const app = createApp({
+            apiKey: "{{ api_key }}",
+            shopOrigin: "{{ shop }}",
+            forceRedirect: true,
+        });
+
+        const actions = AppBridge.actions;
+        const Redirect = actions.Redirect;
+
+        // ✅ Request session token (Shopify requirement)
+        const getSessionToken = async () => {
+            const token = await window.appBridge.getState().then(() => {
+                return AppBridge.utils.getSessionToken(app);
+            });
+            console.log("Shopify session token:", token);
+            // You can use this token for secure backend calls if needed
+        };
+
+        getSessionToken();
+    });
+</script>
+
+
 </body>
 </html>
