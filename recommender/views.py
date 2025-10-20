@@ -262,7 +262,7 @@ def app_entry(request):
             "shop": shop,
             "theme_editor_link": shop_obj.theme_editor_link,
             "page_created": page_created,
-            "api_key": settings.SHOPIFY_API_KEY,  # Your public app API key
+            "api_key": SHOPIFY_API_KEY,
         }
 
         return render(request, "recommender/shopify_install_page.html", context)
