@@ -547,44 +547,43 @@
         </div>
     </div>
 
-<script type="module">
-  // ❌ INCORRECT: import createApp from "..."
-  // ✅ CORRECT: import { createApp } from "..."
-  import { createApp } from "https://unpkg.com/@shopify/app-bridge@3";
-  import { getSessionToken } from "https://unpkg.com/@shopify/app-bridge-utils@3";
+<!-- ✅ Shopify App Bridge (Global UMD version) -->
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
 
+<script>
   document.addEventListener("DOMContentLoaded", async () => {
+    const AppBridge = window['app-bridge'];
+    const createApp = AppBridge.createApp;
+    const utils = window['app-bridge-utils'];
+
     const app = createApp({
       apiKey: "{{ api_key }}",
-      shopOrigin: "{{ shop }}",
+      host: new URLSearchParams(window.location.search).get("host"),
       forceRedirect: true,
     });
 
+    // ✅ Get session token (Shopify requirement)
     try {
-      // ✅ Request a session token (required by Shopify review)
-      const token = await getSessionToken(app);
+      const token = await utils.getSessionToken(app);
       console.log("✅ Shopify session token:", token);
 
-      // Example backend call (optional)
+      // Optional: send to backend for auth
       // await fetch("/verify_token/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": `Bearer ${token}`,
-      //   },
+      //   method: "POST",
+      //   headers: { "Authorization": `Bearer ${token}` },
       // });
     } catch (error) {
-      console.error("❌ Error getting session token:", error);
+      console.error("❌ Failed to get session token:", error);
     }
 
-    // 🔁 Refresh token every 5 minutes
+    // 🔁 Refresh every 5 minutes
     setInterval(async () => {
-      const newToken = await getSessionToken(app);
+      const newToken = await utils.getSessionToken(app);
       console.log("🔄 Token refreshed:", newToken);
     }, 300000);
   });
 </script>
-
 
 </body>
 </html>
