@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="shopify-api-key" content="{{ api_key }}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beautyxia - Successfully Installed</title>
@@ -546,40 +548,33 @@
             Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
     </div>
-    
-    <!-- ✅ Load App Bridge v3 from unpkg -->
-<script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-<script src="https://unpkg.com/@shopify/app-bridge-utils@3"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    const AppBridge = window["app-bridge"];
-    const createApp = AppBridge.createApp;
-    const utils = window["app-bridge-utils"];
-
-    const host = new URLSearchParams(window.location.search).get("host");
-
-    const app = createApp({
-      apiKey: "{{ api_key }}",
-      host: host,
-      forceRedirect: true,
-    });
-
-    // ✅ Request session token for embedded app (silent, no console log)
     try {
-      await utils.getSessionToken(app);
-    } catch (error) {
-      console.error("❌ Error getting Shopify session token:", error);
-    }
+      const host = new URLSearchParams(window.location.search).get("host");
 
-    // 🔁 Refresh token every 5 minutes (silent)
-    setInterval(async () => {
-      try {
-        await utils.getSessionToken(app);
-      } catch (error) {
-        console.error("❌ Error refreshing token:", error);
-      }
-    }, 300000); // 5 minutes
+      // ✅ Initialize App Bridge app
+      const app = shopify.appBridge.createApp({
+        apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+        host: host,
+        forceRedirect: true,
+      });
+
+      // ✅ Request session token silently
+      await shopify.utils.getSessionToken(app);
+
+      // 🔁 Refresh token every 5 minutes silently
+      setInterval(async () => {
+        try {
+          await shopify.utils.getSessionToken(app);
+        } catch (err) {
+          console.error("❌ Error refreshing Shopify session token:", err);
+        }
+      }, 300000); // 5 minutes
+    } catch (err) {
+      console.error("❌ Error initializing Shopify App Bridge:", err);
+    }
   });
 </script>
 
