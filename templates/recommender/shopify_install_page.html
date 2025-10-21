@@ -547,14 +547,14 @@
         </div>
     </div>
     
-<!-- ✅ Load App Bridge v3 from unpkg -->
+    <!-- ✅ Load App Bridge v3 from unpkg -->
 <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
 <script src="https://unpkg.com/@shopify/app-bridge-utils@3"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     const AppBridge = window["app-bridge"];
-    const createApp = AppBridge.createApp; // ✅ this now works properly
+    const createApp = AppBridge.createApp;
     const utils = window["app-bridge-utils"];
 
     const host = new URLSearchParams(window.location.search).get("host");
@@ -565,22 +565,23 @@
       forceRedirect: true,
     });
 
-    // ✅ Request session token for embedded app
+    // ✅ Request session token for embedded app (silent, no console log)
     try {
-      const token = await utils.getSessionToken(app);
-      console.log("✅ Shopify session token:", token);
+      await utils.getSessionToken(app);
     } catch (error) {
-      console.error("❌ Error getting session token:", error);
+      console.error("❌ Error getting Shopify session token:", error);
     }
 
-    // 🔁 Refresh token every 5 minutes
+    // 🔁 Refresh token every 5 minutes (silent)
     setInterval(async () => {
-      const newToken = await utils.getSessionToken(app);
-      console.log("🔄 Token refreshed:", newToken);
-    }, 300000);
+      try {
+        await utils.getSessionToken(app);
+      } catch (error) {
+        console.error("❌ Error refreshing token:", error);
+      }
+    }, 300000); // 5 minutes
   });
 </script>
-
 
 </body>
 </html>
