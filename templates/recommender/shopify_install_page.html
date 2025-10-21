@@ -547,9 +547,10 @@
         </div>
     </div>
 
-<!-- ✅ Shopify App Bridge (v3) -->
 <script type="module">
-  import createApp from "https://unpkg.com/@shopify/app-bridge@3";
+  // ❌ INCORRECT: import createApp from "..."
+  // ✅ CORRECT: import { createApp } from "..."
+  import { createApp } from "https://unpkg.com/@shopify/app-bridge@3";
   import { getSessionToken } from "https://unpkg.com/@shopify/app-bridge-utils@3";
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -566,11 +567,11 @@
 
       // Example backend call (optional)
       // await fetch("/verify_token/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": `Bearer ${token}`,
-      //   },
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Authorization": `Bearer ${token}`,
+      //   },
       // });
     } catch (error) {
       console.error("❌ Error getting session token:", error);
