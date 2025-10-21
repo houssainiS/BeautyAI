@@ -547,10 +547,10 @@
         </div>
     </div>
 
-<!-- ✅ Shopify App Bridge v3 -->
+<!-- ✅ Shopify App Bridge (v3) -->
 <script type="module">
-  import createApp from "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-  import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils.js";
+  import createApp from "https://unpkg.com/@shopify/app-bridge@3";
+  import { getSessionToken } from "https://unpkg.com/@shopify/app-bridge-utils@3";
 
   document.addEventListener("DOMContentLoaded", async () => {
     const app = createApp({
@@ -559,13 +559,13 @@
       forceRedirect: true,
     });
 
-    // ✅ Fetch session token
     try {
+      // ✅ Request a session token (required by Shopify review)
       const token = await getSessionToken(app);
       console.log("✅ Shopify session token:", token);
 
-      // Optional: send to your backend for verification
-      // await fetch("/verify_session_token/", {
+      // Example backend call (optional)
+      // await fetch("/verify_token/", {
       //   method: "POST",
       //   headers: {
       //     "Content-Type": "application/json",
@@ -573,13 +573,13 @@
       //   },
       // });
     } catch (error) {
-      console.error("❌ Failed to get session token:", error);
+      console.error("❌ Error getting session token:", error);
     }
 
-    // Refresh token every 5 minutes
+    // 🔁 Refresh token every 5 minutes
     setInterval(async () => {
       const newToken = await getSessionToken(app);
-      console.log("🔁 Refreshed session token:", newToken);
+      console.log("🔄 Token refreshed:", newToken);
     }, 300000);
   });
 </script>
