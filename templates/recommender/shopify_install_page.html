@@ -547,43 +547,46 @@
         </div>
     </div>
 
-<!-- ✅ Shopify App Bridge (Global UMD version) -->
+<!-- ✅ Shopify App Bridge v3 (UMD build from Shopify CDN) -->
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    const AppBridge = window['app-bridge'];
-    const createApp = AppBridge.createApp;
-    const utils = window['app-bridge-utils'];
+    const AppBridge = window["app-bridge"];
+    const createApp = AppBridge.default.createApp; // ✅ fixed line
+    const utils = window["app-bridge-utils"];
+
+    const host = new URLSearchParams(window.location.search).get("host");
 
     const app = createApp({
       apiKey: "{{ api_key }}",
-      host: new URLSearchParams(window.location.search).get("host"),
+      host: host,
       forceRedirect: true,
     });
 
-    // ✅ Get session token (Shopify requirement)
+    // ✅ Request a session token (Shopify requirement)
     try {
       const token = await utils.getSessionToken(app);
       console.log("✅ Shopify session token:", token);
 
-      // Optional: send to backend for auth
+      // Optionally send token to backend for auth
       // await fetch("/verify_token/", {
       //   method: "POST",
       //   headers: { "Authorization": `Bearer ${token}` },
       // });
-    } catch (error) {
-      console.error("❌ Failed to get session token:", error);
+    } catch (err) {
+      console.error("❌ Failed to get session token:", err);
     }
 
-    // 🔁 Refresh every 5 minutes
+    // 🔁 Refresh token every 5 minutes
     setInterval(async () => {
       const newToken = await utils.getSessionToken(app);
       console.log("🔄 Token refreshed:", newToken);
     }, 300000);
   });
 </script>
+
 
 </body>
 </html>
