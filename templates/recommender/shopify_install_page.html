@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta name="shopify-api-key" content="{{ api_key }}" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" onload="initAppBridge()"></script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beautyxia - Successfully Installed</title>
@@ -550,14 +552,11 @@
     </div>
 
 
-<!-- ✅ Load Shopify App Bridge from CDN -->
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", async () => {
+  function initAppBridge() {
     try {
-      const AppBridge = window["app-bridge"];
+      const AppBridge = window.ShopifyApp; // official global
       const createApp = AppBridge.createApp;
       const utils = window["app-bridge-utils"];
 
@@ -570,21 +569,21 @@
       });
 
       // ✅ Request session token silently
-      await utils.getSessionToken(app);
+      utils.getSessionToken(app).catch(err => {
+        console.error("❌ Error getting Shopify session token:", err);
+      });
 
       // 🔁 Refresh token every 5 minutes silently
-      setInterval(async () => {
-        try {
-          await utils.getSessionToken(app);
-        } catch (err) {
+      setInterval(() => {
+        utils.getSessionToken(app).catch(err => {
           console.error("❌ Error refreshing Shopify session token:", err);
-        }
+        });
       }, 300000); // 5 minutes
 
     } catch (err) {
       console.error("❌ Error initializing Shopify App Bridge:", err);
     }
-  });
+  }
 </script>
 
 </body>
