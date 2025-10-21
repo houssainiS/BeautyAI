@@ -546,46 +546,43 @@
             Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
     </div>
-    
-<!-- Shopify App Bridge Integration -->
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", async () => {
-    const AppBridge = window["app-bridge"];
-    const createApp = AppBridge.default;
-    const actions = AppBridge.actions;
 
-    // ✅ Initialize App Bridge
+<!-- ✅ Shopify App Bridge v3 -->
+<script type="module">
+  import createApp from "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+  import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils.js";
+
+  document.addEventListener("DOMContentLoaded", async () => {
     const app = createApp({
-      apiKey: "{{ api_key }}", // Make sure you pass this from your Django context
-      shopOrigin: "{{ shop }}", // Same here
+      apiKey: "{{ api_key }}",
+      shopOrigin: "{{ shop }}",
       forceRedirect: true,
     });
 
-    // ✅ Get session token (required for Shopify app review)
-    const getSessionToken = async () => {
-      try {
-        const token = await AppBridge.utils.getSessionToken(app);
-        console.log("✅ Shopify session token:", token);
-        // Optionally: send the token to your backend via fetch() for verification
-        // await fetch("/verify_session_token/", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     "Authorization": `Bearer ${token}`,
-        //   },
-        // });
-      } catch (error) {
-        console.error("❌ Failed to get session token:", error);
-      }
-    };
+    // ✅ Fetch session token
+    try {
+      const token = await getSessionToken(app);
+      console.log("✅ Shopify session token:", token);
 
-    // Get new session token every few minutes (Shopify best practice)
-    await getSessionToken();
-    setInterval(getSessionToken, 300000); // 5 minutes refresh
+      // Optional: send to your backend for verification
+      // await fetch("/verify_session_token/", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Authorization": `Bearer ${token}`,
+      //   },
+      // });
+    } catch (error) {
+      console.error("❌ Failed to get session token:", error);
+    }
+
+    // Refresh token every 5 minutes
+    setInterval(async () => {
+      const newToken = await getSessionToken(app);
+      console.log("🔁 Refreshed session token:", newToken);
+    }, 300000);
   });
 </script>
-
 
 
 </body>
