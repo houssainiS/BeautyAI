@@ -546,15 +546,15 @@
             Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
     </div>
-
-<!-- ✅ Shopify App Bridge v3 (UMD build from Shopify CDN) -->
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
+    
+<!-- ✅ Load App Bridge v3 from unpkg -->
+<script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+<script src="https://unpkg.com/@shopify/app-bridge-utils@3"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     const AppBridge = window["app-bridge"];
-    const createApp = AppBridge.default.createApp; // ✅ fixed line
+    const createApp = AppBridge.createApp; // ✅ this now works properly
     const utils = window["app-bridge-utils"];
 
     const host = new URLSearchParams(window.location.search).get("host");
@@ -565,18 +565,12 @@
       forceRedirect: true,
     });
 
-    // ✅ Request a session token (Shopify requirement)
+    // ✅ Request session token for embedded app
     try {
       const token = await utils.getSessionToken(app);
       console.log("✅ Shopify session token:", token);
-
-      // Optionally send token to backend for auth
-      // await fetch("/verify_token/", {
-      //   method: "POST",
-      //   headers: { "Authorization": `Bearer ${token}` },
-      // });
-    } catch (err) {
-      console.error("❌ Failed to get session token:", err);
+    } catch (error) {
+      console.error("❌ Error getting session token:", error);
     }
 
     // 🔁 Refresh token every 5 minutes
