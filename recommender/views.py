@@ -45,12 +45,33 @@ def upload_photo(request):
             # Load image from uploaded file or base64 string
             if 'photo' in request.FILES:
                 photo_file = request.FILES['photo']
+
+                # ✅ Validate file size (max 10 MB)
+                max_size = 10 * 1024 * 1024  # 10 MB
+                if photo_file.size > max_size:
+                    return JsonResponse({"error": "File too large (max 10 MB allowed)."}, status=400)
+
+                # ✅ Validate file extension
+                valid_extensions = ['jpg', 'jpeg', 'png']
+                extension = photo_file.name.split('.')[-1].lower()
+                if extension not in valid_extensions:
+                    return JsonResponse({"error": "Invalid file type. Only PNG, JPG, and JPEG are allowed."}, status=400)
+
                 image = Image.open(photo_file).convert('RGB')
             else:
                 data_url = request.POST.get('photo')
                 header, encoded = data_url.split(",", 1)
                 decoded = base64.b64decode(encoded)
+
+                # ✅ Validate base64 image size (max 10 MB)
+                if len(decoded) > 10 * 1024 * 1024:
+                    return JsonResponse({"error": "Image too large (max 10 MB allowed)."}, status=400)
+
                 image = Image.open(io.BytesIO(decoded)).convert('RGB')
+
+                # ✅ Validate image format
+                if image.format not in ["JPEG", "JPG", "PNG"]:
+                    return JsonResponse({"error": "Unsupported image format."}, status=400)
 
             # Run main classifier (skin type + eyes + acne)
             preds = predict(image)
