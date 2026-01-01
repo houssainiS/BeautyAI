@@ -112,5 +112,3 @@ def clear_cors_cache(sender, instance, **kwargs):
     a Shop or AllowedOrigin is added, updated, or deleted.
     """
     cache.delete("allowed_origins")
-    # This print will show up in your terminal to confirm the cache cleared
-    print(f"✅ CORS cache cleared: {sender.__name__} modified.")
