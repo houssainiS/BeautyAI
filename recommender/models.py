@@ -97,3 +97,20 @@ class Purchase(models.Model):
     def expiry_date(self):
         return self.purchase_date + timezone.timedelta(days=self.usage_duration_days)
 
+#========================
+#this code will reset the allowed origins cache everytime new shop is added
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
+@receiver([post_save, post_delete], sender=AllowedOrigin)
+@receiver([post_save, post_delete], sender=Shop)
+def clear_cors_cache(sender, instance, **kwargs):
+    """
+    Clears the cached allowed origins immediately whenever 
+    a Shop or AllowedOrigin is added, updated, or deleted.
+    """
+    cache.delete("allowed_origins")
+    # This print will show up in your terminal to confirm the cache cleared
+    print(f"✅ CORS cache cleared: {sender.__name__} modified.")
