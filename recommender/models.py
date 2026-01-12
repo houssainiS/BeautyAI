@@ -114,11 +114,13 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 
-@receiver([post_save, post_delete], sender=AllowedOrigin)
 @receiver([post_save, post_delete], sender=Shop)
+@receiver([post_save, post_delete], sender=AllowedOrigin)
 def clear_cors_cache(sender, instance, **kwargs):
     """
     Clears the cached allowed origins immediately whenever 
-    a Shop or AllowedOrigin is added, updated, or deleted.
+    a Shop or AllowedOrigin is modified.
     """
     cache.delete("allowed_origins")
+    # Useful for debugging in your terminal
+    print(f"🧹 CORS Cache cleared because {sender.__name__} was updated.")
