@@ -15,14 +15,25 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
         cors_urls = cache.get("allowed_origins")
         if cors_urls is None:
             try:
-                # Fetch both manually added origins + active shop domains
+                # 1. Fetch manually added origins
                 allowed_from_model = list(AllowedOrigin.objects.values_list("url", flat=True))
-                allowed_from_shops = [
-                    f"https://{domain}"
-                    for domain in Shop.objects.filter(is_active=True).values_list("domain", flat=True)
-                ]
 
-                cors_urls = list(set(allowed_from_model + allowed_from_shops))  # merge + deduplicate
+                # 2. Fetch active shops: Get BOTH .myshopify.com AND custom domains
+                # This returns a list of tuples: [('store.myshopify.com', 'www.store.com'), ...]
+                shop_domains = Shop.objects.filter(is_active=True).values_list("domain", "custom_domain")
+
+                allowed_from_shops = []
+                for domain, custom_domain in shop_domains:
+                    # Add the standard myshopify domain
+                    if domain:
+                        allowed_from_shops.append(f"https://{domain}")
+                    
+                    # Add the custom domain if it exists (e.g. www.brand.com)
+                    if custom_domain:
+                        allowed_from_shops.append(f"https://{custom_domain}")
+
+                # 3. Merge and deduplicate
+                cors_urls = list(set(allowed_from_model + allowed_from_shops))
                 cache.set("allowed_origins", cors_urls, 300)  # cache 5 min
             except Exception:
                 cors_urls = []
@@ -54,6 +65,8 @@ class VisitorTrackingMiddleware(MiddlewareMixin):
         if not request.path.startswith("/webhooks/"):
             # Allow embedding in Shopify admin
             response["X-Frame-Options"] = "ALLOWALL"
+            # Note: We keep frame-ancestors focused on Shopify Admin/Myshopify 
+            # because the app is usually embedded in the Admin, not the storefront custom domain.
             response["Content-Security-Policy"] = (
                 "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
             )
