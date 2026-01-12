@@ -57,18 +57,28 @@ class AllowedOrigin(models.Model):
 
 from django.db import models
 
+from django.db import models
+
 class Shop(models.Model):
+    # The primary key: beauty-store.myshopify.com
     domain = models.CharField(max_length=255, unique=True)
-    offline_token = models.TextField(blank=True, null=True)  # Permanent token
-    online_token = models.TextField(blank=True, null=True)   # Short-lived token
+    
+    # The public-facing domain: www.beautyxia.com
+    custom_domain = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Friendly name for the admin (e.g., "Beautyxia Official")
+    shop_name = models.CharField(max_length=255, blank=True, null=True)
+    
+    offline_token = models.TextField(blank=True, null=True)
+    online_token = models.TextField(blank=True, null=True)
     installed_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)  # Track active/inactive status
-    theme_editor_link = models.URLField(max_length=500, blank=True, null=True) # Store Theme Editor deep link
-    metafield_definition_id = models.CharField(max_length=255, blank=True, null=True)  # 👈 Store definition ID
+    is_active = models.BooleanField(default=True)
+    
+    theme_editor_link = models.URLField(max_length=500, blank=True, null=True)
+    metafield_definition_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.domain
-
 
 
 class PageContent(models.Model):

@@ -249,7 +249,6 @@ def submit_feedback(request):
 
 
 ##############webhooks############
-
 import os
 import requests
 from django.shortcuts import redirect, render
@@ -260,7 +259,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Shop, PageContent
-from .webhooks import register_uninstall_webhook ,  register_gdpr_webhooks
+from .webhooks import register_uninstall_webhook, register_gdpr_webhooks
 from .shopify_navigation import create_page  # only import the working function
 
 # Load from environment variables with fallback
@@ -273,16 +272,19 @@ def app_entry(request):
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
+    page_created = request.GET.get("page_created") == "1"
+
     # 1. Try to find the shop
     shop_obj = Shop.objects.filter(domain=shop).first()
 
     # 2. Check if the shop is "Ready": Exists + Active + Has Token
+    # This logic "repairs" shops that were added manually but have no token
     if shop_obj and shop_obj.is_active and shop_obj.offline_token:
         # Shop is fully set up, show the dashboard
         context = {
             "shop": shop,
             "theme_editor_link": shop_obj.theme_editor_link,
-            "page_created": request.GET.get("page_created") == "1",
+            "page_created": page_created,
             "api_key": SHOPIFY_API_KEY,
         }
         return render(request, "recommender/shopify_install_page.html", context)
@@ -292,10 +294,11 @@ def app_entry(request):
         # Start Auth to "Repair" or "Install" the shop automatically.
         return redirect(f"/start_auth/?shop={shop}")
 
+
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves/reactivates the shop and registers webhooks.
+    Saves/reactivates the shop, FETCHES CUSTOM DOMAIN, and registers webhooks.
     """
     try:
         shop = request.GET.get("shop")
@@ -320,12 +323,29 @@ def oauth_callback(request):
         if not offline_token:
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        # Save/reactivate shop
+        # --- NEW LOGIC START: Fetch Shop Details (Custom Domain & Name) ---
+        shop_details_url = f"https://{shop}/admin/api/2024-01/shop.json"
+        headers = {"X-Shopify-Access-Token": offline_token}
+        detail_response = requests.get(shop_details_url, headers=headers)
+        
+        primary_custom_domain = None
+        actual_shop_name = None
+
+        if detail_response.status_code == 200:
+            shop_data = detail_response.json().get('shop', {})
+            # 'domain' here is the public/custom domain (e.g. www.beautyxia.com)
+            primary_custom_domain = shop_data.get('domain') 
+            actual_shop_name = shop_data.get('name')
+        # --- NEW LOGIC END ---
+
+        # Save/reactivate shop with NEW fields
         shop_obj, created = Shop.objects.update_or_create(
             domain=shop,
             defaults={
                 "offline_token": offline_token,
                 "online_token": online_token,
+                "custom_domain": primary_custom_domain, # Saves the pretty URL
+                "shop_name": actual_shop_name,          # Saves the store name
                 "is_active": True,
             },
         )
