@@ -273,23 +273,24 @@ def app_entry(request):
     if not shop:
         return render(request, "error.html", {"message": "Missing shop parameter"})
 
-    page_created = request.GET.get("page_created") == "1"
+    # 1. Try to find the shop
+    shop_obj = Shop.objects.filter(domain=shop).first()
 
-    try:
-        shop_obj = Shop.objects.get(domain=shop, is_active=True)
-
-        # Add context for App Bridge (needed for embedded apps)
+    # 2. Check if the shop is "Ready": Exists + Active + Has Token
+    if shop_obj and shop_obj.is_active and shop_obj.offline_token:
+        # Shop is fully set up, show the dashboard
         context = {
             "shop": shop,
             "theme_editor_link": shop_obj.theme_editor_link,
-            "page_created": page_created,
+            "page_created": request.GET.get("page_created") == "1",
             "api_key": SHOPIFY_API_KEY,
         }
-
         return render(request, "recommender/shopify_install_page.html", context)
-    except Shop.DoesNotExist:
+    
+    else:
+        # If shop doesn't exist OR is missing a token OR is inactive:
+        # Start Auth to "Repair" or "Install" the shop automatically.
         return redirect(f"/start_auth/?shop={shop}")
-
 
 def oauth_callback(request):
     """
