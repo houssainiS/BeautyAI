@@ -43,8 +43,20 @@ class AllowedOriginAdmin(admin.ModelAdmin):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    list_display = ('domain', 'installed_at', 'is_active')
-    search_fields = ("domain",)
+    # Fields to display in the list view
+    list_display = ('domain', 'shop_name', 'installed_at', 'is_active')
+    
+    # Fields to search by (top search bar)
+    search_fields = ("domain", "shop_name", "custom_domain")
+    
+    # The magic happens here: Adding filters to the right sidebar
+    list_filter = (
+        'is_active',           # Simple boolean filter (Yes/No)
+        'installed_at',        # Date hierarchy filter (Today, This month, etc.)
+    )
+    
+    # Optional: Adds a drill-down navigation by date at the top
+    date_hierarchy = 'installed_at'
 
 
 @admin.register(PageContent)
