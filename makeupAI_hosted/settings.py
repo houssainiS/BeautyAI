@@ -20,9 +20,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-insecure-key-for-dev")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 
-allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
-
+# allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
+# ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
+ALLOWED_HOSTS = ['beautyai.duckdns.org', '207.154.236.139', 'localhost', '127.0.0.1', '.duckdns.org']
 
 
 CSRF_TRUSTED_ORIGINS = ["https://beautyai.duckdns.org"]
