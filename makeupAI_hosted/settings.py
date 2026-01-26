@@ -26,6 +26,13 @@ ALLOWED_HOSTS = ['beautyai.duckdns.org', '207.154.236.139', 'localhost', '127.0.
 
 
 CSRF_TRUSTED_ORIGINS = ["https://beautyai.duckdns.org"]
+
+# Tell Django it's behind a proxy and to trust the X-Forwarded-Proto header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# This helps with the 400 error when using Nginx + SSL
+USE_X_FORWARDED_HOST = True
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
