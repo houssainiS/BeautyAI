@@ -298,7 +298,7 @@ def app_entry(request):
 def oauth_callback(request):
     """
     Handles Shopify OAuth callback.
-    Saves/reactivates the shop, FETCHES CUSTOM DOMAIN, and registers webhooks.
+    Saves/reactivates the shop, FETCHES CUSTOM DOMAIN, EMAIL, and registers webhooks.
     """
     try:
         shop = request.GET.get("shop")
@@ -323,19 +323,22 @@ def oauth_callback(request):
         if not offline_token:
             return JsonResponse({"error": "OAuth failed", "details": data}, status=400)
 
-        # --- NEW LOGIC START: Fetch Shop Details (Custom Domain & Name) ---
+        # --- NEW LOGIC START: Fetch Shop Details ---
         shop_details_url = f"https://{shop}/admin/api/2024-01/shop.json"
         headers = {"X-Shopify-Access-Token": offline_token}
         detail_response = requests.get(shop_details_url, headers=headers)
         
         primary_custom_domain = None
         actual_shop_name = None
+        shop_email = None  # Initialize variable
 
         if detail_response.status_code == 200:
             shop_data = detail_response.json().get('shop', {})
-            # 'domain' here is the public/custom domain (e.g. www.beautyxia.com)
+            
+            # Extract data
             primary_custom_domain = shop_data.get('domain') 
             actual_shop_name = shop_data.get('name')
+            shop_email = shop_data.get('email') 
         # --- NEW LOGIC END ---
 
         # Save/reactivate shop with NEW fields
@@ -344,8 +347,9 @@ def oauth_callback(request):
             defaults={
                 "offline_token": offline_token,
                 "online_token": online_token,
-                "custom_domain": primary_custom_domain, # Saves the pretty URL
-                "shop_name": actual_shop_name,          # Saves the store name
+                "custom_domain": primary_custom_domain,
+                "shop_name": actual_shop_name,
+                "email": shop_email,  
                 "is_active": True,
             },
         )

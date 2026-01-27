@@ -68,7 +68,8 @@ class Shop(models.Model):
     
     # Friendly name for the admin (e.g., "Beautyxia Official")
     shop_name = models.CharField(max_length=255, blank=True, null=True)
-    
+
+    email = models.EmailField(max_length=255, blank=True, null=True)    
     offline_token = models.TextField(blank=True, null=True)
     online_token = models.TextField(blank=True, null=True)
     installed_at = models.DateTimeField(auto_now_add=True)
