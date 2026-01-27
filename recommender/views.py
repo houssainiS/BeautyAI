@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import JsonResponse
+from django.db.models import F
 from PIL import Image
 import base64
 import io
@@ -147,6 +148,23 @@ def upload_photo(request):
                 device_type=device_type,
                 domain=domain
             )
+
+            # ----- Face analysis Increment Shop Counter -----
+            if domain:
+                # 1. Clean the domain string to match database format
+                # e.g. "https://beauty-store.myshopify.com/" -> "beauty-store.myshopify.com"
+                clean_domain = domain.replace("https://", "").replace("http://", "").strip("/")
+                
+                # 2. Find the shop (try primary domain first, then custom domain)
+                shop_obj = Shop.objects.filter(domain=clean_domain).first()
+                if not shop_obj:
+                    shop_obj = Shop.objects.filter(custom_domain=clean_domain).first()
+
+                # 3. Atomic Increment (Safe for concurrent requests)
+                if shop_obj:
+                    shop_obj.analysis_count = F("analysis_count") + 1
+                    shop_obj.save(update_fields=["analysis_count"])
+            # ---------------------------------------------
 
             # Response data (NO backend tips anymore)
             response_data = {
