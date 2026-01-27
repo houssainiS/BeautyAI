@@ -614,7 +614,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header with Stats and Navigation -->
         <div class="page-header">
             <div class="page-header-content">
                 <h1>Beautyxia</h1>
@@ -642,7 +641,6 @@
             </div>
         </div>
 
-        <!-- Messages -->
         {% if messages %}
             {% for message in messages %}
             <div class="success-banner {% if 'error' in message.tags %}banner-error{% endif %}">
@@ -665,9 +663,7 @@
             {% endfor %}
         {% endif %}
 
-        <!-- Two Setup Paths -->
         <div class="paths-grid">
-            <!-- Path A: Quick Setup -->
             <div class="quick-setup-card">
                 <div>
                     <h2>Pro Tip</h2>
@@ -675,18 +671,16 @@
                 </div>
             </div>
 
-            <!-- Path B: Guided Steps -->
             <div class="guided-steps-card">
                 <h2>Guided Setup (optionel)</h2>
                 <p class="subtitle">Follow these steps to set up Beautyxia on your store</p>
 
-                <!-- Step 1 -->
-                <div class="step-item {% if page_created %}completed{% else %}open{% endif %}">
+                <div class="step-item {% if theme_editor_link %}completed{% else %}open{% endif %}">
                     <button class="step-header-button" onclick="toggleStep(this)">
                         <div class="step-header-left">
                             <div class="step-number">1</div>
                             <div class="step-title">Create Face Analyzer Page</div>
-                            {% if page_created %}
+                            {% if theme_editor_link %}
                             <span class="step-done-badge">
                                 <svg viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
@@ -704,8 +698,8 @@
                     <div class="step-content">
                         <div class="step-content-inner">
                             <p class="step-description">Clicking the button below creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool.</p>
-                            <a href="{% url 'create_shopify_page' %}?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
-                                {% if page_created %}
+                            <a href="{% url 'create_shopify_page' %}?shop={{ shop }}" class="btn {% if theme_editor_link %}btn-success{% else %}btn-primary{% endif %}">
+                                {% if theme_editor_link %}
                                     <svg viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                                     </svg>
@@ -721,9 +715,8 @@
                     </div>
                 </div>
 
-                <!-- Step 2 -->
-                <div class="step-item">
-                    <button class="step-header-button" onclick="toggleStep(this)" {% if not page_created %}disabled{% endif %}>
+                <div class="step-item {% if theme_editor_link %}open{% endif %}">
+                    <button class="step-header-button" onclick="toggleStep(this)" {% if not theme_editor_link %}disabled{% endif %}>
                         <div class="step-header-left">
                             <div class="step-number">2</div>
                             <div class="step-title">Add App Block in Theme Editor</div>
@@ -756,7 +749,6 @@
                     </div>
                 </div>
 
-                <!-- Step 3 -->
                 <div class="step-item">
                     <button class="step-header-button" onclick="toggleStep(this)">
                         <div class="step-header-left">
@@ -784,7 +776,6 @@
             </div>
         </div>
 
-        <!-- Features Section -->
         <div class="features-section">
             <h2>What's Included</h2>
             <div class="features-grid">
@@ -820,7 +811,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <footer>
             <p>Powered by <strong><a href="https://webixia.net/">Webixia</a></strong> • <a href="https://beautyxia.app/privacy" target="_blank">Privacy Policy</a></p>
         </footer>
@@ -835,8 +825,9 @@
 
         // Auto-open first step on load
         document.addEventListener('DOMContentLoaded', function() {
-            const firstStep = document.querySelector('.step-item.open');
-            if (!firstStep) {
+            // If Step 2 is set to 'open' by backend logic (because Step 1 is done), don't force Step 1 open
+            const alreadyOpen = document.querySelector('.step-item.open');
+            if (!alreadyOpen) {
                 const steps = document.querySelectorAll('.step-item');
                 if (steps.length > 0) {
                     steps[0].classList.add('open');
