@@ -304,6 +304,7 @@ def app_entry(request):
             "theme_editor_link": shop_obj.theme_editor_link,
             "page_created": page_created,
             "api_key": SHOPIFY_API_KEY,
+            "analysis_count": shop_obj.analysis_count,
         }
         return render(request, "recommender/shopify_install_page.html", context)
     
