@@ -8,7 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beautyxia - Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         :root {
             --primary: #0a66cc;
@@ -35,29 +39,60 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
             margin: 0 auto;
         }
 
         /* Header Section */
         .page-header {
-            margin-bottom: 32px;
+            margin-bottom: 40px;
             padding-bottom: 24px;
             border-bottom: 1px solid var(--neutral-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .page-header h1 {
-            font-size: 28px;
-            font-weight: 600;
+        .page-header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
             color: var(--neutral-dark);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .page-header .subtitle {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--neutral-medium);
             font-weight: 400;
+        }
+
+        /* Stat Card */
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--neutral-light);
+            border-radius: 10px;
+            padding: 20px 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            min-width: 200px;
+        }
+
+        .stat-card-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: var(--neutral-medium);
+            margin-bottom: 8px;
+        }
+
+        .stat-card-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
         }
 
         /* Success/Alert Banner */
@@ -66,10 +101,10 @@
             border: 1px solid var(--success-border);
             border-left: 4px solid var(--success);
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px 20px;
             display: flex;
             align-items: flex-start;
-            gap: 16px;
+            gap: 12px;
             margin-bottom: 32px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
@@ -79,11 +114,14 @@
             height: 24px;
             flex-shrink: 0;
             margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .success-banner-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             stroke: var(--success);
             stroke-width: 2;
             fill: none;
@@ -93,7 +131,7 @@
             font-size: 15px;
             font-weight: 600;
             color: var(--neutral-dark);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .success-banner-content p {
@@ -102,98 +140,181 @@
             line-height: 1.5;
         }
 
-        /* Analytics Card */
-        .analytics-card {
-            background: linear-gradient(135deg, var(--neutral-dark) 0%, #2a2a2a 100%);
-            color: var(--white);
-            border-radius: 12px;
-            padding: 32px;
-            text-align: center;
+        /* Two-Path Container */
+        .paths-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
             margin-bottom: 32px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
-        .analytics-card h2 {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-weight: 600;
-            color: #8a8a8a;
-            margin-bottom: 12px;
-        }
-
-        .analytics-card .stat-value {
-            font-size: 48px;
-            font-weight: 700;
+        /* Quick Setup Path */
+        .quick-setup-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #0855b3 100%);
             color: var(--white);
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .analytics-card p {
-            font-size: 14px;
-            color: #a0a0a0;
-        }
-
-        /* Main Card Container */
-        .card {
-            background: var(--white);
             border-radius: 12px;
-            border: 1px solid var(--neutral-light);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            margin-bottom: 24px;
-            overflow: hidden;
+            padding: 40px;
+            box-shadow: 0 4px 16px rgba(10, 102, 204, 0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 320px;
         }
 
-        .card-section {
-            padding: 32px;
-            border-bottom: 1px solid var(--neutral-light);
-        }
-
-        .card-section:last-child {
-            border-bottom: none;
-        }
-
-        /* Section Headers */
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--neutral-dark);
+        .quick-setup-card h2 {
+            font-size: 20px;
+            font-weight: 700;
             margin-bottom: 8px;
+            line-height: 1.3;
         }
 
-        .section-description {
-            font-size: 14px;
-            color: var(--neutral-medium);
+        .quick-setup-card .subtitle {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 24px;
             line-height: 1.5;
         }
 
-        /* Steps Container */
-        .step-container {
+        .quick-setup-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .btn-quick-setup {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            background: var(--white);
+            color: var(--primary);
+            align-self: flex-start;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+
+        .btn-quick-setup:hover {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-quick-setup:active {
+            transform: translateY(0);
+        }
+
+        /* Guided Steps Path */
+        .guided-steps-card {
+            background: var(--white);
+            border: 1px solid var(--neutral-light);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .guided-steps-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neutral-dark);
+            margin-bottom: 8px;
+        }
+
+        .guided-steps-card .subtitle {
+            font-size: 14px;
+            color: var(--neutral-medium);
+            margin-bottom: 32px;
+        }
+
+        /* Accordion Stepper */
+        .step-item {
             background: var(--background);
             border: 1px solid var(--neutral-light);
             border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
 
-        .step-container:last-child {
-            margin-bottom: 0;
+        .step-item:hover {
+            border-color: #bebebe;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .step-header {
+        .step-item.completed {
+            background: var(--success-light);
+            border-color: var(--success-border);
+        }
+
+        .step-header-button {
+            width: 100%;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .step-header-button:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .step-header-left {
+            display: flex;
+            align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
+            flex: 1;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .step-item.completed .step-number {
+            background: var(--success);
         }
 
         .step-title {
             font-size: 15px;
             font-weight: 600;
             color: var(--neutral-dark);
+        }
+
+        .step-toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+            color: var(--neutral-medium);
+        }
+
+        .step-item.open .step-toggle {
+            transform: rotate(180deg);
         }
 
         .step-done-badge {
@@ -205,13 +326,30 @@
             border-radius: 6px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             flex-shrink: 0;
+            margin-left: 12px;
         }
 
         .step-done-badge svg {
             width: 14px;
             height: 14px;
+        }
+
+        .step-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        .step-item.open .step-content {
+            max-height: 500px;
+        }
+
+        .step-content-inner {
+            padding: 20px;
+            border-top: 1px solid var(--neutral-light);
         }
 
         .step-description {
@@ -226,15 +364,26 @@
             font-weight: 600;
         }
 
-        .step-description br {
-            line-height: 1.8;
+        .step-content-list {
+            font-size: 14px;
+            color: var(--neutral-medium);
+            line-height: 1.7;
+            margin-bottom: 16px;
         }
 
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
+        .step-content-list strong {
+            color: var(--neutral-dark);
+            font-weight: 600;
+            display: block;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .step-content-list em {
+            display: block;
+            font-style: italic;
+            margin-top: 8px;
+            color: #999;
         }
 
         .btn {
@@ -246,7 +395,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.2s ease;
             border: none;
             cursor: pointer;
@@ -285,8 +434,17 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
-        .btn-secondary:active {
-            background: #f0f0f0;
+        .btn-secondary:disabled,
+        .btn-secondary.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary:disabled:hover,
+        .btn-secondary.disabled:hover {
+            background: var(--white);
+            border-color: var(--neutral-light);
+            box-shadow: none;
         }
 
         .btn-success {
@@ -302,26 +460,20 @@
             flex-shrink: 0;
         }
 
-        .status-message {
-            padding: 12px 16px;
-            background: var(--success-light);
-            border: 1px solid var(--success-border);
-            border-radius: 8px;
-            color: var(--success);
-            font-size: 14px;
-            margin-top: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* Features Section */
+        .features-section {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--neutral-light);
         }
 
-        .status-message svg {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
+        .features-section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--neutral-dark);
+            margin-bottom: 24px;
         }
 
-        /* Features Grid */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -373,62 +525,94 @@
             line-height: 1.5;
         }
 
-        /* Footer Links */
-        .footer-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: flex-start;
-        }
-
-        .footer-text {
-            font-size: 13px;
-            color: var(--neutral-medium);
-            padding: 16px 0;
-            text-align: center;
-        }
-
-        .footer-text a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-
-        .footer-text a:hover {
-            color: var(--primary-hover);
-        }
-        .banner-error {
-        border-color: #fcc5c1 !important;
-        border-left-color: var(--danger) !important;
-        background: #ffeceb !important;
-        }
-
         /* Responsive Design */
+        @media (max-width: 900px) {
+            .paths-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stat-card {
+                align-self: flex-start;
+            }
+        }
+
         @media (max-width: 640px) {
             body { padding: 20px 16px; }
-            .analytics-card .stat-value { font-size: 40px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .step-header { flex-direction: column; align-items: flex-start; }
+
+            .page-header-content h1 {
+                font-size: 24px;
+            }
+
+            .quick-setup-card {
+                padding: 28px;
+                min-height: auto;
+            }
+
+            .quick-setup-card h2 {
+                font-size: 18px;
+            }
+
+            .guided-steps-card {
+                padding: 24px;
+            }
+
             .btn { width: 100%; }
-            .footer-links { flex-direction: column; }
-            .footer-links .btn { width: 100%; }
+            .btn-quick-setup { width: 100%; align-self: stretch; }
+
+            .step-header-button {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .step-toggle {
+                align-self: flex-end;
+                margin-top: -24px;
+            }
+
+            .features-grid { grid-template-columns: 1fr; }
+        }
+
+        .banner-error {
+            border-color: #fcc5c1 !important;
+            border-left-color: var(--danger) !important;
+            background: #ffeceb !important;
+        }
+
+        .banner-error .success-banner-icon svg {
+            stroke: var(--danger);
+        }
+
+        .banner-error .success-banner-content h2 {
+            color: var(--danger);
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header with Stats -->
         <div class="page-header">
-            <h1>Beautyxia</h1>
-            <p class="subtitle">Complete your app setup to start using AI-powered beauty recommendations</p>
+            <div class="page-header-content">
+                <h1>Beautyxia</h1>
+                <p class="subtitle">AI-powered beauty recommendations for your store</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">AI Analyses Performed</div>
+                <div class="stat-card-value">{{ analysis_count|default:0 }}</div>
+            </div>
         </div>
 
+        <!-- Messages -->
         {% if messages %}
             {% for message in messages %}
             <div class="success-banner {% if 'error' in message.tags %}banner-error{% endif %}">
                 <div class="success-banner-icon">
                     {% if 'error' in message.tags %}
-                        <svg viewBox="0 0 24 24" style="stroke: var(--danger);">
+                        <svg viewBox="0 0 24 24">
                             <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     {% else %}
@@ -438,202 +622,193 @@
                     {% endif %}
                 </div>
                 <div class="success-banner-content">
-                    <h2 {% if 'error' in message.tags %}style="color: var(--danger);"{% endif %}>Notice</h2>
+                    <h2>{% if 'error' in message.tags %}Error{% else %}Success{% endif %}</h2>
                     <p>{{ message }}</p>
                 </div>
             </div>
             {% endfor %}
         {% endif %}
 
-        <div class="analytics-card">
-            <h2>AI Analysis Usage</h2>
-            <div class="stat-value">{{ analysis_count|default:0 }}</div>
-            <p>Total face analyses performed on your store</p>
-        </div>
+        <!-- Two Setup Paths -->
+        <div class="paths-grid">
+            <!-- Path A: Quick Setup -->
+            <div class="quick-setup-card">
+                <div>
+                    <div class="quick-setup-icon">⚡</div>
+                    <h2>Quick Setup</h2>
+                    <p class="subtitle">Already know what to do? Just open the theme editor and drag the Beautyxia App Block onto any page.</p>
+                </div>
+                <a href="{% if theme_editor_link %}{{ theme_editor_link }}{% else %}#{% endif %}" target="_blank" class="btn-quick-setup" {% if not theme_editor_link %}disabled{% endif %}>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 5v2H7.21L20.9 20.71c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L8.62 5.59V4h2V2h2v3H9zm9 13.41V20h-2v-1.59L18 16.82l1.41 1.59zM7 9h10V7H7v2z"/>
+                    </svg>
+                    Open Theme Editor
+                </a>
+            </div>
 
-        <div class="card">
-            <div class="card-section">
-                <h2 class="section-title">Setup Steps</h2>
-                <p class="section-description">Complete these steps to enable Beautyxia on your storefront</p>
+            <!-- Path B: Guided Steps -->
+            <div class="guided-steps-card">
+                <h2>Guided Setup</h2>
+                <p class="subtitle">Follow these steps to set up Beautyxia on your store</p>
 
-                <div class="step-container">
-                    <div class="step-header">
-                        <span class="step-title">Step 1 — Create Face Analyzer Page</span>
-                        {% if page_created %}
-                        <span class="step-done-badge">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                            </svg>
-                            Done
-                        </span>
-                        {% endif %}
-                    </div>
-                    <p class="step-description">
-                        Clicking this button creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool.
-                    </p>
-                    <div class="button-group">
-                        <a href="{% url 'create_shopify_page' %}?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
+                <!-- Step 1 -->
+                <div class="step-item {% if page_created %}completed{% else %}open{% endif %}">
+                    <button class="step-header-button" onclick="toggleStep(this)">
+                        <div class="step-header-left">
+                            <div class="step-number">1</div>
+                            <div class="step-title">Create Face Analyzer Page</div>
                             {% if page_created %}
+                            <span class="step-done-badge">
                                 <svg viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                                 </svg>
-                                Page + Nav Link Created
-                            {% else %}
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                </svg>
-                                Create Page + Add Nav Link
+                                Done
+                            </span>
                             {% endif %}
-                        </a>
-                    </div>
-                    {% if page_created %}
-                    <div class="status-message">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                        </svg>
-                        Your "Face Analyzer" page is live.
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="step-container">
-                    <div class="step-header">
-                        <span class="step-title">Step 2 — Add App Block in Theme Editor</span>
-                    </div>
-                    <p class="step-description">
-                        This opens Shopify's Theme Editor where you'll find the "Beautyxia App Block". Drag and drop it into your theme to display the face analyzer.
-                    </p>
-                    <div class="button-group">
-                        {% if theme_editor_link %}
-                        <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-secondary">
+                        </div>
+                        <div class="step-toggle">
                             <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                <path d="M7 10l5 5 5-5z"/>
                             </svg>
-                            Open Theme Editor & Add App Block
-                        </a>
-                        {% else %}
-                        <div class="btn btn-secondary" style="opacity: 0.5; cursor: not-allowed;">
+                        </div>
+                    </button>
+                    <div class="step-content">
+                        <div class="step-content-inner">
+                            <p class="step-description">Clicking the button below creates a "Face Analyzer" page and adds it to your store navigation so customers can easily access the AI-powered beauty tool.</p>
+                            <a href="{% url 'create_shopify_page' %}?shop={{ shop }}" class="btn {% if page_created %}btn-success{% else %}btn-primary{% endif %}">
+                                {% if page_created %}
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                                    </svg>
+                                    Page + Nav Link Created
+                                {% else %}
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                    </svg>
+                                    Create Page + Add Nav Link
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-item">
+                    <button class="step-header-button" onclick="toggleStep(this)" {% if not page_created %}disabled{% endif %}>
+                        <div class="step-header-left">
+                            <div class="step-number">2</div>
+                            <div class="step-title">Add App Block in Theme Editor</div>
+                        </div>
+                        <div class="step-toggle">
                             <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                <path d="M7 10l5 5 5-5z"/>
                             </svg>
-                            Complete Step 1 to Enable Link
                         </div>
-                        {% endif %}
+                    </button>
+                    <div class="step-content">
+                        <div class="step-content-inner">
+                            <p class="step-description">This opens Shopify's Theme Editor where you'll find the "Beautyxia App Block". Drag and drop it into your theme to display the face analyzer.</p>
+                            {% if theme_editor_link %}
+                            <a href="{{ theme_editor_link }}" target="_blank" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                </svg>
+                                Go to Theme Editor
+                            </a>
+                            {% else %}
+                            <button class="btn btn-secondary disabled" disabled>
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                </svg>
+                                Complete Step 1 to Enable
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-item">
+                    <button class="step-header-button" onclick="toggleStep(this)">
+                        <div class="step-header-left">
+                            <div class="step-number">3</div>
+                            <div class="step-title">Add Product Tags</div>
+                        </div>
+                        <div class="step-toggle">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                    </button>
+                    <div class="step-content">
+                        <div class="step-content-inner">
+                            <p class="step-description">The recommendation system works based on product names and tags. Add these tags to your Shopify products to improve accuracy:</p>
+                            <div class="step-content-list">
+                                <strong>Skin types:</strong> dry, normal, oily
+                                <strong>Skin concerns:</strong> darkcircle, skinredness, melasma, vascular, wrinkle
+                                <strong>Acne:</strong> blackhead, cystic, folliculitis, keloid, milium, papular, purulent, acne_scars, acne, pimple, spot
+                                <em>You are not required to add all tags — just add the ones relevant to each product.</em>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-section">
-                <h2 class="section-title">Step 3 — Add Product Tags</h2>
-                <p class="section-description">
-                    The recommendation system works based on the product names and tags. Add these tags to your Shopify products to improve accuracy.
-                </p>
-                <div class="step-container">
-                    <p class="step-description">
-                        <strong>Skin types:</strong> 'dry', 'normal', 'oily'<br>
-                        <strong>Skin concerns:</strong> 'darkcircle', 'skinredness', 'melasma', 'vascular', 'wrinkle'<br>
-                        <strong>Acne:</strong> 'blackhead', 'cystic', 'folliculitis', 'keloid', 'milium', 'papular', 'purulent', 'acne_scars', 'acne', 'pimple', 'spot'<br><br>
-                        <em>You are not required to add all tags — just add the ones relevant to each product.</em>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-section">
-                <h2 class="section-title">What's Included</h2>
-                <div class="features-grid" style="margin-top: 24px;">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                            </svg>
-                        </div>
-                        <h3>AI Face Analysis</h3>
-                        <p>Advanced facial recognition technology analyzes skin tone, features, and preferences.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </div>
-                        <h3>Smart Recommendations</h3>
-                        <p>Personalized product suggestions that match your customers' unique beauty needs.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                        </div>
-                        <h3>Boost Sales</h3>
-                        <p>Increase conversion rates with targeted recommendations and enhanced customer experience.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-section">
-                <h2 class="section-title">Resources</h2>
-                <div class="footer-links" style="margin-top: 16px;">
-                    <a href="{% url 'home' %}" target="_blank" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        <!-- Features Section -->
+        <div class="features-section">
+            <h2>What's Included</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                         </svg>
-                        Our Website
-                    </a>
-                    <a href="{% url 'documentation' %}" target="_blank" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V8h8v2z"/>
+                    </div>
+                    <h3>AI Face Analysis</h3>
+                    <p>Advanced facial recognition technology analyzes skin tone, features, and preferences.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
-                        Documentation
-                    </a>
+                    </div>
+                    <h3>Smart Recommendations</h3>
+                    <p>Personalized product suggestions that match your customers' unique beauty needs.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <h3>Boost Sales</h3>
+                    <p>Increase conversion rates with targeted recommendations and enhanced customer experience.</p>
                 </div>
             </div>
-        </div>
-
-        <div class="footer-text">
-            Powered by <a href="https://www.creation-site-web.tn/" target="_blank">Webixia</a> • <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>
         </div>
     </div>
 
     <script>
-        function initAppBridge() {
-            try {
-                const AppBridge = window.ShopifyApp;
-                const createApp = AppBridge.createApp;
-                const utils = window["app-bridge-utils"];
+        function toggleStep(button) {
+            if (button.disabled) return;
+            const stepItem = button.closest('.step-item');
+            stepItem.classList.toggle('open');
+        }
 
-                // Retrieve host from URL to ensure valid App Bridge context
-                const host = new URLSearchParams(window.location.search).get("host");
-
-                const app = createApp({
-                    apiKey: "{{ api_key }}",
-                    host: host,
-                    forceRedirect: true,
-                });
-
-                // Keep session token fresh
-                utils.getSessionToken(app).catch(err => {
-                    console.error("❌ Error getting Shopify session token:", err);
-                });
-
-            } catch (error) {
-                console.error("App Bridge initialization error:", error);
+        // Auto-open first step on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstStep = document.querySelector('.step-item.open');
+            if (!firstStep) {
+                const steps = document.querySelectorAll('.step-item');
+                if (steps.length > 0) {
+                    steps[0].classList.add('open');
+                }
             }
-        }
-
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", initAppBridge);
-        } else {
-            initAppBridge();
-        }
+        });
     </script>
 </body>
 </html>
