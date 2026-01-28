@@ -110,19 +110,45 @@ class Purchase(models.Model):
         return self.purchase_date + timezone.timedelta(days=self.usage_duration_days)
 
 #========================
-#this code will reset the allowed origins cache everytime new shop is added
+#this code will reset the allowed origins cache everytime new shop is added or edited
 
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 
-@receiver([post_save, post_delete], sender=Shop)
-@receiver([post_save, post_delete], sender=AllowedOrigin)
-def clear_cors_cache(sender, instance, **kwargs):
+@receiver(post_save, sender=Shop)
+def clear_cors_cache_on_shop_save(sender, instance, created, **kwargs):
     """
-    Clears the cached allowed origins immediately whenever 
-    a Shop or AllowedOrigin is modified.
+    Clears the cached allowed origins only if critical domain fields
+    or the active status change.
     """
+    if created:
+        # New shop added - must clear cache
+        cache.delete("allowed_origins")
+        print(f"🧹 CORS Cache cleared: New Shop {instance.domain} created.")
+    else:
+        # Shop updated - check if critical fields changed
+        # We fetch the version currently in the DB to compare
+        try:
+            old_instance = Shop.objects.get(pk=instance.pk)
+            critical_fields_changed = (
+                old_instance.domain != instance.domain or
+                old_instance.custom_domain != instance.custom_domain or
+                old_instance.is_active != instance.is_active
+            )
+            
+            if critical_fields_changed:
+                cache.delete("allowed_origins")
+                print(f"🧹 CORS Cache cleared: Critical fields updated for {instance.domain}.")
+        except Shop.DoesNotExist:
+            pass
+
+@receiver(post_delete, sender=Shop)
+def clear_cors_cache_on_shop_delete(sender, instance, **kwargs):
     cache.delete("allowed_origins")
-    # Useful for debugging in your terminal
-    print(f"🧹 CORS Cache cleared because {sender.__name__} was updated.")
+    print(f"🧹 CORS Cache cleared: Shop {instance.domain} deleted.")
+
+@receiver([post_save, post_delete], sender=AllowedOrigin)
+def clear_cors_cache_on_origin_change(sender, instance, **kwargs):
+    cache.delete("allowed_origins")
+    print("🧹 CORS Cache cleared: AllowedOrigin model modified.")

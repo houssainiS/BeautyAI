@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.db.models import F
+from django.db.models import Q
 from PIL import Image
 import base64
 import io
@@ -151,19 +152,19 @@ def upload_photo(request):
 
             # ----- Face analysis Increment Shop Counter -----
             if domain:
-                # 1. Clean the domain string to match database format
-                # e.g. "https://beauty-store.myshopify.com/" -> "beauty-store.myshopify.com"
+                # 1. Clean the domain string
                 clean_domain = domain.replace("https://", "").replace("http://", "").strip("/")
                 
-                # 2. Find the shop (try primary domain first, then custom domain)
-                shop_obj = Shop.objects.filter(domain=clean_domain).first()
-                if not shop_obj:
-                    shop_obj = Shop.objects.filter(custom_domain=clean_domain).first()
+                # 2. Find the shop (Optimized query using Q for "either/or")
+                shop_obj = Shop.objects.filter(Q(domain=clean_domain) | Q(custom_domain=clean_domain)).first()
 
-                # 3. Atomic Increment (Safe for concurrent requests)
+                # 3. Atomic Increment
                 if shop_obj:
-                    shop_obj.analysis_count = F("analysis_count") + 1
-                    shop_obj.save(update_fields=["analysis_count"])
+                    try:
+                        shop_obj.analysis_count = F("analysis_count") + 1
+                        shop_obj.save(update_fields=["analysis_count"])
+                    except Exception as db_err:
+                        print(f"Non-critical error incrementing counter: {db_err}")
             # ---------------------------------------------
 
             # Response data (NO backend tips anymore)
