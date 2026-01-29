@@ -186,7 +186,7 @@
             padding: 32px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 20px;
             min-height: auto;
         }
 
@@ -205,9 +205,24 @@
             line-height: 1.6;
         }
 
-        .quick-setup-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
+        /* Video Container Styling */
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
         }
 
         /* Guided Steps Path */
@@ -358,34 +373,6 @@
             margin-bottom: 16px;
         }
 
-        .step-description strong {
-            color: var(--heading);
-            font-weight: 600;
-        }
-
-        .step-content-list {
-            font-size: 14px;
-            color: var(--body);
-            line-height: 1.7;
-            margin-bottom: 16px;
-        }
-
-        .step-content-list strong {
-            color: var(--heading);
-            font-weight: 600;
-            display: block;
-            margin-top: 8px;
-            margin-bottom: 4px;
-        }
-
-        .step-content-list em {
-            display: block;
-            font-style: italic;
-            margin-top: 8px;
-            color: var(--body);
-            opacity: 0.8;
-        }
-
         .btn {
             padding: 10px 20px;
             border-radius: 6px;
@@ -417,21 +404,10 @@
             box-shadow: 0 2px 4px rgba(0, 128, 96, 0.15);
         }
 
-        .btn-primary:active {
-            background: var(--primary-active);
-            border-color: var(--primary-active);
-        }
-
         .btn-secondary {
             background: var(--white);
             color: var(--heading);
             border: 1px solid var(--neutral-light);
-        }
-
-        .btn-secondary:hover {
-            background: #fafbfc;
-            border-color: #d0d2d4;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .btn-secondary:disabled,
@@ -440,18 +416,17 @@
             cursor: not-allowed;
         }
 
-        .btn-secondary:disabled:hover,
-        .btn-secondary.disabled:hover {
-            background: var(--white);
-            border-color: var(--neutral-light);
-            box-shadow: none;
-        }
-
+        /* Modified Success Button to remain clickable */
         .btn-success {
             background: var(--success-light);
             color: var(--success);
             border: 1px solid #a0d995;
-            cursor: default;
+            cursor: pointer; /* Keep clickable */
+        }
+
+        .btn-success:hover {
+            background: #d0f7e6;
+            border-color: var(--success);
         }
 
         .btn svg {
@@ -474,7 +449,6 @@
             margin-bottom: 24px;
         }
 
-        /* Footer */
         footer {
             margin-top: 60px;
             padding-top: 24px;
@@ -573,16 +547,11 @@
                 min-height: auto;
             }
 
-            .quick-setup-card h2 {
-                font-size: 18px;
-            }
-
             .guided-steps-card {
                 padding: 24px;
             }
 
             .btn { width: 100%; }
-            .btn-quick-setup { width: 100%; align-self: stretch; }
 
             .step-header-button {
                 flex-direction: column;
@@ -668,6 +637,14 @@
                 <div>
                     <h2>Pro Tip</h2>
                     <p class="subtitle">You can skip these steps by opening your Theme Editor and dragging the Beautyxia App Block onto any page.</p>
+                </div>
+                <div class="video-wrapper">
+                    <iframe 
+                        src="https://www.youtube.com/embed/pYCYA_DXyOA?autoplay=1&mute=1&loop=1&playlist=pYCYA_DXyOA" 
+                        title="Beautyxia Quick Setup" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
                 </div>
             </div>
 
@@ -768,6 +745,7 @@
                                 <strong>Skin types:</strong> dry, normal, oily
                                 <strong>Skin concerns:</strong> darkcircle, skinredness, melasma, vascular, wrinkle
                                 <strong>Acne:</strong> blackhead, cystic, folliculitis, keloid, milium, papular, purulent, acne_scars, acne, pimple, spot
+                                <br><br>
                                 <em>You are not required to add all tags — just add the ones relevant to each product.</em>
                             </div>
                         </div>
@@ -823,9 +801,7 @@
             stepItem.classList.toggle('open');
         }
 
-        // Auto-open first step on load
         document.addEventListener('DOMContentLoaded', function() {
-            // If Step 2 is set to 'open' by backend logic (because Step 1 is done), don't force Step 1 open
             const alreadyOpen = document.querySelector('.step-item.open');
             if (!alreadyOpen) {
                 const steps = document.querySelectorAll('.step-item');
