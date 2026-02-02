@@ -258,3 +258,69 @@ def register_gdpr_webhooks(shop, access_token):
             print(f"[GDPR Webhook Registration] {topic}: {response.json()}")
         except Exception as e:
             print(f"[GDPR Webhook Registration] Failed for {topic}:", str(e))
+
+# ======================================================
+# SHOP UPDATE WEBHOOK
+# ======================================================
+@csrf_exempt
+def shop_updated(request):
+    """
+    Handles Shopify 'shop/update' webhook to keep custom domain and email in sync.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    # 1. Verify HMAC for security
+    hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+    if not hmac_header or not verify_webhook(request.body, hmac_header):
+        return JsonResponse({"error": "Invalid webhook signature"}, status=401)
+
+    # 2. Extract and Update Data
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        myshopify_domain = data.get("myshopify_domain")
+        
+        # Look for the shop in your database
+        shop_obj = Shop.objects.filter(domain=myshopify_domain).first()
+        
+        if shop_obj:
+            # Sync the new values from Shopify's payload
+            shop_obj.custom_domain = data.get("domain")  # Primary domain
+            shop_obj.shop_name = data.get("name")
+            shop_obj.email = data.get("email")
+            shop_obj.save()
+            print(f"[Shop Update] Updated details for {myshopify_domain}")
+            
+        return JsonResponse({"status": "ok"}, status=200)
+
+    except Exception as e:
+        print(f"[Shop Update Error] {e}")
+        return JsonResponse({"error": "Internal error"}, status=500)
+
+# ======================================================
+# REGISTER WEBHOOK FUNCTION
+# ======================================================
+def register_shop_update_webhook(shop_domain, access_token):
+    """
+    Registers the 'shop/update' topic with Shopify.
+    """
+    url = f"https://{shop_domain}/admin/api/2025-07/webhooks.json"
+    headers = {
+        "X-Shopify-Access-Token": access_token,
+        "Content-Type": "application/json"
+    }
+    # Important: Replace with your actual live production URL
+    webhook_address = f"https://beautyai.duckdns.org/webhooks/shop_updated/"
+    
+    data = {
+        "webhook": {
+            "topic": "shop/update",
+            "address": webhook_address,
+            "format": "json"
+        }
+    }
+
+    try:
+        requests.post(url, json=data, headers=headers)
+    except Exception as e:
+        print(f"[Registration Error] Could not register shop/update: {e}")

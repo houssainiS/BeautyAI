@@ -25,4 +25,5 @@ urlpatterns = [
     path('webhooks/customers_redact/', webhooks.customers_redact, name='customers_redact'),
     path('webhooks/shop_redact/', webhooks.shop_redact, name='shop_redact'),
     path('webhooks/shop_redact', webhooks.shop_redact),
+    path('webhooks/shop_updated/', webhooks.shop_updated, name='shop_updated'),
 ]
