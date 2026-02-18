@@ -7,4 +7,5 @@ urlpatterns = [
     path('deactivate/', views.deactivate_shop, name='wp-deactivate'),
     path('analyze/', views.wp_analyze_photo, name='wp-analyze'),
     path('status/', views.wp_shop_status, name='wp-status'),
+    path('wp-api/uninstall/', views.wp_uninstall_webhook, name='wp_uninstall_webhook'),
 ]
