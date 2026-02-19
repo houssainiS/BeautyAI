@@ -225,29 +225,3 @@ def wp_shop_status(request):
             "limit": shop.current_limit
         }
     })
-
-@csrf_exempt
-def wp_uninstall_webhook(request):
-    """
-    Webhook triggered by WordPress when the plugin is uninstalled.
-    Expects 'shop_url' and 'api_key' for security.
-    """
-    if request.method != "POST":
-        return JsonResponse({'status': 'error', 'message': 'Only POST allowed'}, status=405)
-
-    shop_url = request.POST.get('shop_url')
-    api_key = request.POST.get('api_key')
-
-    if not shop_url or not api_key:
-        return JsonResponse({'status': 'error', 'message': 'Missing credentials'}, status=400)
-
-    # Find the shop with matching domain AND api_key for security
-    shop = WordpressShop.objects.filter(domain=shop_url, api_key=api_key).first()
-
-    if shop:
-        shop.is_active = False
-        shop.save()
-        # The post_save signal in your models.py will automatically clear the CORS cache
-        return JsonResponse({'status': 'success', 'message': f'Shop {shop_url} deactivated successfully'})
-    
-    return JsonResponse({'status': 'error', 'message': 'Shop not found or invalid API key'}, status=404)
