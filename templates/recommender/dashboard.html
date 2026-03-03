@@ -198,7 +198,7 @@
                 <a href="https://{{ shop.domain }}" target="_blank" class="external-link">↗</a>
             </div>
           </td>
-          <td style="color: #6B7280;">{{ shop.created_at|date:"M d, Y" }}</td>
+          <td style="color: #6B7280;">{{ shop.installed_at|date:"M d, Y" }}</td>
           <td><strong>{{ shop.analysis_count }}</strong></td>
         </tr>
         {% endfor %}

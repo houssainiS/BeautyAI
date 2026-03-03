@@ -580,7 +580,7 @@ def search_domains(request):
         results.append({
             "title": s.shop_name or "No Title",
             "domain": s.custom_domain or s.domain,
-            "installed_on": s.created_at.strftime("%b %d, %Y"),
+            "installed_on": s.installed_at.strftime("%b %d, %Y"),
             "analysis_count": s.analysis_count
         })
     return JsonResponse({"domains": results})
