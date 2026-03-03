@@ -10,7 +10,7 @@ import io
 import json
 import gc  # garbage collection import
 from datetime import datetime, timedelta
-from django.utils.timezone import now
+from django.utils import timezone
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
@@ -484,7 +484,9 @@ def dashboard(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return redirect('staff_login')
         
-    today = now().date()
+    # Use timezone.now() instead of now()
+    today_dt = timezone.now()
+    today = today_dt.date()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
 
@@ -506,10 +508,17 @@ def dashboard(request):
         visitor_trend_data.append(Visitor.objects.filter(date=date).count())
 
     analysis_today_labels, analysis_today_counts = [], []
+    # FIX: Create a timezone-aware midnight for today
+    midnight = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
+    
     for hour in range(24):
-        hour_start = datetime.combine(today, datetime.min.time()).replace(hour=hour)
+        hour_start = midnight + timedelta(hours=hour)
+        hour_end = hour_start + timedelta(hours=1)
         analysis_today_labels.append(f"{hour:02d}:00")
-        analysis_today_counts.append(FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_start + timedelta(hours=1)).count())
+        # Comparison is now Aware vs Aware
+        analysis_today_counts.append(
+            FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_end).count()
+        )
 
     analysis_week_labels, analysis_week_data = [], []
     for i in range(6, -1, -1):
@@ -524,11 +533,8 @@ def dashboard(request):
         analysis_month_labels.append(label)
         analysis_month_data.append(FaceAnalysis.objects.filter(timestamp__date=date).count())
 
-    # 3. Tables Data - Pass ALL data for client-side pagination
-    # Analysis logs: last 30 days (no limit for pagination)
+    # 3. Tables Data
     analysis_logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
-    
-    # Shops: all active shops (no limit for pagination)
     shops = Shop.objects.filter(is_active=True).order_by("-analysis_count")
 
     # 4. Device Split
@@ -562,7 +568,6 @@ def search_domains(request):
     shops = Shop.objects.filter(is_active=True)
     
     if query:
-        # Fixed: Changed title__icontains to shop_name__icontains
         shops = shops.filter(Q(domain__icontains=query) | Q(custom_domain__icontains=query) | Q(shop_name__icontains=query))
     
     if sort_by == 'newest':
@@ -573,7 +578,7 @@ def search_domains(request):
     results = []
     for s in shops:
         results.append({
-            "title": s.shop_name or "No Title", # Changed s.title to s.shop_name
+            "title": s.shop_name or "No Title",
             "domain": s.custom_domain or s.domain,
             "installed_on": s.created_at.strftime("%b %d, %Y"),
             "analysis_count": s.analysis_count
@@ -584,12 +589,12 @@ def search_domains(request):
 @login_required
 def filter_logs(request):
     device = request.GET.get('device', '')
-    month_ago = now().date() - timedelta(days=30)
+    # Use timezone.now()
+    month_ago = timezone.now().date() - timedelta(days=30)
     logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
     if device:
         logs = logs.filter(device_type__iexact=device)
     
-    # Return ALL matching logs (no limit) for client-side pagination
     results = [{"time": l.timestamp.strftime("%b %d, %H:%M"), "domain": l.domain or "Unknown", "device": l.device_type or "Desktop", "ip": l.ip_address or "0.0.0.0"} for l in logs]
     return JsonResponse({"logs": results})
 
