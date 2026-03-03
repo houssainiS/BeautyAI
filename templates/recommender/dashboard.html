@@ -87,6 +87,7 @@
     }
   </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -222,7 +223,7 @@
             this.currentPage = 1;
             this.allRows = [];
             this.filteredRows = [];
-            this.instanceName = instanceName; // Store instance name for dynamic reference
+            this.instanceName = instanceName;
             
             this.init();
         }
@@ -249,8 +250,8 @@
         
         render() {
             this.renderTable();
-            this.renderPagination();
             this.updateRowNumbers();
+            this.renderPagination();
         }
         
         renderTable() {
@@ -265,17 +266,15 @@
         }
         
         updateRowNumbers() {
-            // FIX: Only update visible rows with sequential numbers for current page
-            const start = (this.currentPage - 1) * this.itemsPerPage;
-            const end = Math.min(start + this.itemsPerPage, this.filteredRows.length);
+            // Get only the visible rows and number them sequentially starting from 1
+            const visibleRows = this.filteredRows.filter(row => row.style.display !== 'none');
             
-            for (let i = start; i < end; i++) {
-                const row = this.filteredRows[i];
+            visibleRows.forEach((row, index) => {
                 const numCell = row.querySelector('.row-number');
                 if (numCell) {
-                    numCell.textContent = i + 1; // Absolute index + 1 for continuous numbering
+                    numCell.textContent = index + 1;
                 }
-            }
+            });
         }
         
         renderPagination() {
@@ -287,7 +286,6 @@
                 return;
             }
             
-            // FIX: Use dynamic instance reference instead of hardcoded name
             const instanceRef = this.instanceName;
             
             let html = '';
@@ -322,7 +320,7 @@
             
             html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="${instanceRef}.goToPage(${this.currentPage + 1})">→</button>`;
             
-            // Info calculation (correct)
+            // Info calculation
             const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
             const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
             html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
@@ -336,7 +334,6 @@
     // ============================================
     class ShopsPaginator extends TablePaginator {
         constructor(tableBodyId, paginationId, itemsPerPage = 25, pageWindow = 7) {
-            // Pass instance name to parent - no need to override renderPagination
             super(tableBodyId, paginationId, itemsPerPage, pageWindow, 'shopsPaginator');
         }
     }
