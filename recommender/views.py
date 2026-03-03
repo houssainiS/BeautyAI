@@ -478,13 +478,12 @@ def privacy_policy(request):
 
 ############# dashboard #############
 
-
 @login_required
 def dashboard(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return redirect('staff_login')
         
-    # Use timezone.now() instead of now()
+    # Use timezone.now() for aware comparisons
     today_dt = timezone.now()
     today = today_dt.date()
     week_ago = today - timedelta(days=7)
@@ -508,14 +507,13 @@ def dashboard(request):
         visitor_trend_data.append(Visitor.objects.filter(date=date).count())
 
     analysis_today_labels, analysis_today_counts = [], []
-    # FIX: Create a timezone-aware midnight for today
+    # Aware midnight for correct filtering
     midnight = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
     
     for hour in range(24):
         hour_start = midnight + timedelta(hours=hour)
         hour_end = hour_start + timedelta(hours=1)
         analysis_today_labels.append(f"{hour:02d}:00")
-        # Comparison is now Aware vs Aware
         analysis_today_counts.append(
             FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_end).count()
         )
@@ -533,7 +531,7 @@ def dashboard(request):
         analysis_month_labels.append(label)
         analysis_month_data.append(FaceAnalysis.objects.filter(timestamp__date=date).count())
 
-    # 3. Tables Data
+    # 3. Tables Data - Strictly filter ONLY active shops
     analysis_logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
     shops = Shop.objects.filter(is_active=True).order_by("-analysis_count")
 
@@ -563,24 +561,34 @@ def dashboard(request):
 
 @login_required
 def search_domains(request):
-    query = request.GET.get('domain', '')
+    query = request.GET.get('domain', '').strip()
     sort_by = request.GET.get('sort', 'analyses')
+    
+    # Start with active shops only
     shops = Shop.objects.filter(is_active=True)
     
     if query:
-        shops = shops.filter(Q(domain__icontains=query) | Q(custom_domain__icontains=query) | Q(shop_name__icontains=query))
+        # Chain the filter so it stays within active shops
+        shops = shops.filter(
+            Q(domain__icontains=query) | 
+            Q(custom_domain__icontains=query) | 
+            Q(shop_name__icontains=query)
+        )
     
+    # FIX: Sorting by installed_at because created_at doesn't exist in your model
     if sort_by == 'newest':
-        shops = shops.order_by('-created_at')
+        shops = shops.order_by('-installed_at')
     else:
         shops = shops.order_by('-analysis_count')
 
     results = []
     for s in shops:
+        # Use safe formatting in case installed_at is null
+        installed_date = s.installed_at.strftime("%b %d, %Y") if s.installed_at else "N/A"
         results.append({
             "title": s.shop_name or "No Title",
             "domain": s.custom_domain or s.domain,
-            "installed_on": s.installed_at.strftime("%b %d, %Y"),
+            "installed_on": installed_date,
             "analysis_count": s.analysis_count
         })
     return JsonResponse({"domains": results})
@@ -589,15 +597,20 @@ def search_domains(request):
 @login_required
 def filter_logs(request):
     device = request.GET.get('device', '')
-    # Use timezone.now()
     month_ago = timezone.now().date() - timedelta(days=30)
     logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
     if device:
         logs = logs.filter(device_type__iexact=device)
     
-    results = [{"time": l.timestamp.strftime("%b %d, %H:%M"), "domain": l.domain or "Unknown", "device": l.device_type or "Desktop", "ip": l.ip_address or "0.0.0.0"} for l in logs]
+    results = [
+        {
+            "time": l.timestamp.strftime("%b %d, %H:%M"), 
+            "domain": l.domain or "Unknown", 
+            "device": l.device_type or "Desktop", 
+            "ip": l.ip_address or "0.0.0.0"
+        } for l in logs
+    ]
     return JsonResponse({"logs": results})
-
 
 def staff_login(request):
     # Already logged in? Send to dashboard
