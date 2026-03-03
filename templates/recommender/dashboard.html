@@ -270,11 +270,11 @@
         }
         
         updateRowNumbers() {
-            const start = (this.currentPage - 1) * this.itemsPerPage;
+            // FIX: Row number should be the absolute index in the filtered list + 1
             this.filteredRows.forEach((row, index) => {
                 const numCell = row.querySelector('.row-number');
                 if (numCell) {
-                    numCell.textContent = start + index + 1;
+                    numCell.textContent = index + 1;
                 }
             });
         }
@@ -325,8 +325,8 @@
             // Next button
             html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="logsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
             
-            // Info
-            const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+            // FIX: Info calculation
+            const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
             const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
             html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
             
@@ -384,8 +384,8 @@
             // Next button
             html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="shopsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
             
-            // Info
-            const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+            // FIX: Info calculation
+            const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
             const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
             html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
             
