@@ -9,83 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <link rel="icon" type="image/png" href="{% static 'Images/logo-white.png' %}">
-  <style>
-    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; background: #F3F4F6; color: #4B5563; }
-    .badge-mobile { background: #DBEAFE; color: #1E40AF; }
-    .badge-tablet { background: #FEF3C7; color: #92400E; }
-    .badge-desktop { background: #D1FAE5; color: #065F46; }
-    #logsTableBody, #domainTableBody { transition: opacity 0.2s ease; }
-    
-    /* Pagination Styles */
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-color);
-    }
-    
-    .pagination-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      height: 32px;
-      padding: 0 8px;
-      background: var(--color-white);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      color: var(--text-secondary);
-      font-size: var(--font-size-sm);
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-    }
-    
-    .pagination-btn:hover:not(:disabled) {
-      background: var(--color-gray-50);
-      border-color: var(--color-gray-300);
-      color: var(--text-primary);
-    }
-    
-    .pagination-btn.active {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: var(--color-white);
-    }
-    
-    .pagination-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .pagination-info {
-      font-size: var(--font-size-sm);
-      color: var(--text-muted);
-      margin: 0 8px;
-    }
-    
-    .pagination-ellipsis {
-      color: var(--text-muted);
-      padding: 0 4px;
-    }
-    
-    /* Row Number Column */
-    .row-number {
-      color: var(--text-muted);
-      font-weight: 500;
-      width: 50px;
-      text-align: center;
-    }
-    
-    .domain-table th:first-child,
-    .domain-table td:first-child {
-      width: 50px;
-      text-align: center;
-    }
-  </style>
 <base target="_blank">
 <base target="_blank">
 </head>
@@ -103,8 +26,8 @@
     <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value">{{ stats.analysis_month }}</div></div>
     <div class="stat-card">
         <div class="stat-label">Feedback Sentiment</div>
-        <div class="stat-value">{{ stats.likes }} <span style="font-size: 14px; color: #6B7280; font-weight: 400;">likes</span></div>
-        <div class="stat-trend" style="color: #BF0711;">{{ stats.dislikes }} dislikes</div>
+        <div class="stat-value">{{ stats.likes }} <span class="likes-text">likes</span></div>
+        <div class="stat-trend dislikes">{{ stats.dislikes }} dislikes</div>
     </div>
   </div>
 
@@ -124,16 +47,16 @@
     <div class="card"><h3>Device Split (30D)</h3><div class="chart-container"><canvas id="deviceChart"></canvas></div></div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-top: 24px;">
+  <div class="feedback-logs-grid">
     <div class="card">
         <h3>User Feedback</h3>
-        <div class="chart-container" style="height: 280px;"><canvas id="feedbackChart"></canvas></div>
+        <div class="chart-container feedback-chart"><canvas id="feedbackChart"></canvas></div>
     </div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div class="table-header">
             <h3>Recent Analysis Logs (30 Days)</h3>
-            <select id="deviceFilter" class="search-input" style="width: 150px;">
+            <select id="deviceFilter" class="search-input device-filter">
                 <option value="">All Devices</option>
                 <option value="Mobile">Mobile</option>
                 <option value="Tablet">Tablet</option>
@@ -148,6 +71,7 @@
                 <th>Domain</th>
                 <th>Device</th>
                 <th>IP Address</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="logsTableBody">
@@ -155,27 +79,32 @@
                 <tr data-log-id="{{ log.id }}">
                     <td class="row-number">{{ forloop.counter }}</td>
                     <td>{{ log.timestamp|date:"M d, H:i" }}</td>
-                    <td>{{ log.domain }}</td>
+                    <td>
+                        <div class="domain-link-wrapper">
+                            <span class="domain-text" title="{{ log.domain }}">{{ log.domain }}</span>
+                            <a href="https://{{ log.domain }}" target="_blank" class="external-link">↗</a>
+                        </div>
+                    </td>
                     <td><span class="badge {% if log.device_type == 'Mobile' %}badge-mobile{% elif log.device_type == 'Tablet' %}badge-tablet{% else %}badge-desktop{% endif %}">{{ log.device_type|default:"Desktop" }}</span></td>
-                    <td style="color: #6B7280;">{{ log.ip_address }}</td>
+                    <td class="ip-address">{{ log.ip_address }}</td>
+                    <td></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <!-- Analysis Logs Pagination -->
         <div class="pagination" id="logsPagination"></div>
     </div>
   </div>
 
-  <div class="card" style="margin-top: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+  <div class="card shops-card">
+    <div class="table-header">
         <h3>Active Shop Performance</h3>
-        <div style="display: flex; gap: 12px;">
-            <select id="shopSort" class="search-input" style="width: 180px;">
+        <div class="shop-controls">
+            <select id="shopSort" class="search-input shop-sort">
                 <option value="analyses">Sort by Analyses</option>
                 <option value="newest">Sort by Newest</option>
             </select>
-            <div style="width: 250px;"><input type="text" id="domainSearch" class="search-input" placeholder="Search shop..."></div>
+            <div class="search-wrapper"><input type="text" id="domainSearch" class="search-input" placeholder="Search shop..."></div>
         </div>
     </div>
     <table class="domain-table">
@@ -192,20 +121,19 @@
         {% for shop in domain_stats %}
         <tr data-shop-id="{{ shop.id }}">
           <td class="row-number">{{ forloop.counter }}</td>
-          <td style="font-weight: 600;">{{ shop.shop_name|default:"No Title" }}</td>
+          <td class="shop-title">{{ shop.shop_name|default:"No Title" }}</td>
           <td>
             <div class="domain-link-wrapper">
-                {{ shop.custom_domain|default:shop.domain }}
+                <span class="domain-text" title="{{ shop.custom_domain|default:shop.domain }}">{{ shop.custom_domain|default:shop.domain }}</span>
                 <a href="https://{{ shop.domain }}" target="_blank" class="external-link">↗</a>
             </div>
           </td>
-          <td style="color: #6B7280;">{{ shop.installed_at|date:"M d, Y" }}</td>
+          <td class="installed-date">{{ shop.installed_at|date:"M d, Y" }}</td>
           <td><strong>{{ shop.analysis_count }}</strong></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    <!-- Shops Pagination -->
     <div class="pagination" id="shopsPagination"></div>
   </div>
 </div>
@@ -266,13 +194,14 @@
         }
         
         updateRowNumbers() {
-            // Get only the visible rows and number them sequentially starting from 1
+            // Continuous numbering: calculate starting number based on current page
+            const startNumber = (this.currentPage - 1) * this.itemsPerPage + 1;
             const visibleRows = this.filteredRows.filter(row => row.style.display !== 'none');
             
             visibleRows.forEach((row, index) => {
                 const numCell = row.querySelector('.row-number');
                 if (numCell) {
-                    numCell.textContent = index + 1;
+                    numCell.textContent = startNumber + index;
                 }
             });
         }
@@ -403,9 +332,16 @@
                 logsTableBody.innerHTML = data.logs.map((log, index) => `
                     <tr>
                         <td class="row-number">${index + 1}</td>
-                        <td>${log.time}</td><td>${log.domain}</td>
+                        <td>${log.time}</td>
+                        <td>
+                            <div class="domain-link-wrapper">
+                                <span class="domain-text" title="${log.domain}">${log.domain}</span>
+                                <a href="https://${log.domain}" target="_blank" class="external-link">↗</a>
+                            </div>
+                        </td>
                         <td><span class="badge badge-${log.device.toLowerCase()}">${log.device}</span></td>
-                        <td style="color: #6B7280;">${log.ip}</td>
+                        <td class="ip-address">${log.ip}</td>
+                        <td></td>
                     </tr>
                 `).join('');
                 logsPaginator.updateRows();
@@ -428,14 +364,14 @@
                 domainTableBody.innerHTML = data.domains.map((d, index) => `
                     <tr>
                         <td class="row-number">${index + 1}</td>
-                        <td style="font-weight: 600;">${d.title}</td>
+                        <td class="shop-title">${d.title}</td>
                         <td>
                             <div class="domain-link-wrapper">
-                                ${d.domain} 
+                                <span class="domain-text" title="${d.domain}">${d.domain}</span>
                                 <a href="https://${d.domain}" target="_blank" class="external-link">↗</a>
                             </div>
                         </td>
-                        <td style="color: #6B7280;">${d.installed_on}</td>
+                        <td class="installed-date">${d.installed_on}</td>
                         <td><strong>${d.analysis_count}</strong></td>
                     </tr>
                 `).join('');
