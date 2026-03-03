@@ -214,26 +214,25 @@
     // PAGINATION CLASS
     // ============================================
     class TablePaginator {
-        constructor(tableBodyId, paginationId, itemsPerPage = 15, pageWindow = 5) {
+        constructor(tableBodyId, paginationId, itemsPerPage = 15, pageWindow = 5, instanceName = null) {
             this.tableBody = document.getElementById(tableBodyId);
             this.paginationContainer = document.getElementById(paginationId);
             this.itemsPerPage = itemsPerPage;
-            this.pageWindow = pageWindow; // Number of page buttons to show
+            this.pageWindow = pageWindow;
             this.currentPage = 1;
             this.allRows = [];
             this.filteredRows = [];
+            this.instanceName = instanceName; // Store instance name for dynamic reference
             
             this.init();
         }
         
         init() {
-            // Store all rows
             this.allRows = Array.from(this.tableBody.querySelectorAll('tr'));
             this.filteredRows = [...this.allRows];
             this.render();
         }
         
-        // Update rows (for AJAX updates)
         updateRows() {
             this.allRows = Array.from(this.tableBody.querySelectorAll('tr'));
             this.filteredRows = [...this.allRows];
@@ -241,7 +240,6 @@
             this.render();
         }
         
-        // Go to specific page
         goToPage(page) {
             const totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage);
             if (page < 1 || page > totalPages) return;
@@ -249,7 +247,6 @@
             this.render();
         }
         
-        // Render table and pagination
         render() {
             this.renderTable();
             this.renderPagination();
@@ -260,23 +257,25 @@
             const start = (this.currentPage - 1) * this.itemsPerPage;
             const end = start + this.itemsPerPage;
             
-            // Hide all rows first
             this.allRows.forEach(row => row.style.display = 'none');
             
-            // Show only current page rows
             this.filteredRows.slice(start, end).forEach(row => {
                 row.style.display = '';
             });
         }
         
         updateRowNumbers() {
-            // FIX: Row number should be the absolute index in the filtered list + 1
-            this.filteredRows.forEach((row, index) => {
+            // FIX: Only update visible rows with sequential numbers for current page
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = Math.min(start + this.itemsPerPage, this.filteredRows.length);
+            
+            for (let i = start; i < end; i++) {
+                const row = this.filteredRows[i];
                 const numCell = row.querySelector('.row-number');
                 if (numCell) {
-                    numCell.textContent = index + 1;
+                    numCell.textContent = i + 1; // Absolute index + 1 for continuous numbering
                 }
-            });
+            }
         }
         
         renderPagination() {
@@ -288,12 +287,14 @@
                 return;
             }
             
+            // FIX: Use dynamic instance reference instead of hardcoded name
+            const instanceRef = this.instanceName;
+            
             let html = '';
             
             // Previous button
-            html += `<button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="logsPaginator.goToPage(${this.currentPage - 1})">←</button>`;
+            html += `<button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="${instanceRef}.goToPage(${this.currentPage - 1})">←</button>`;
             
-            // Calculate page window
             let startPage = Math.max(1, this.currentPage - Math.floor(this.pageWindow / 2));
             let endPage = Math.min(totalPages, startPage + this.pageWindow - 1);
             
@@ -301,31 +302,27 @@
                 startPage = Math.max(1, endPage - this.pageWindow + 1);
             }
             
-            // First page + ellipsis
             if (startPage > 1) {
-                html += `<button class="pagination-btn ${this.currentPage === 1 ? 'active' : ''}" onclick="logsPaginator.goToPage(1)">1</button>`;
+                html += `<button class="pagination-btn ${this.currentPage === 1 ? 'active' : ''}" onclick="${instanceRef}.goToPage(1)">1</button>`;
                 if (startPage > 2) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
             }
             
-            // Page numbers
             for (let i = startPage; i <= endPage; i++) {
-                html += `<button class="pagination-btn ${this.currentPage === i ? 'active' : ''}" onclick="logsPaginator.goToPage(${i})">${i}</button>`;
+                html += `<button class="pagination-btn ${this.currentPage === i ? 'active' : ''}" onclick="${instanceRef}.goToPage(${i})">${i}</button>`;
             }
             
-            // Last page + ellipsis
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
                     html += `<span class="pagination-ellipsis">...</span>`;
                 }
-                html += `<button class="pagination-btn ${this.currentPage === totalPages ? 'active' : ''}" onclick="logsPaginator.goToPage(${totalPages})">${totalPages}</button>`;
+                html += `<button class="pagination-btn ${this.currentPage === totalPages ? 'active' : ''}" onclick="${instanceRef}.goToPage(${totalPages})">${totalPages}</button>`;
             }
             
-            // Next button
-            html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="logsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
+            html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="${instanceRef}.goToPage(${this.currentPage + 1})">→</button>`;
             
-            // FIX: Info calculation
+            // Info calculation (correct)
             const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
             const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
             html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
@@ -338,58 +335,9 @@
     // SHOPS PAGINATOR (separate instance)
     // ============================================
     class ShopsPaginator extends TablePaginator {
-        renderPagination() {
-            const totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage);
-            const totalItems = this.filteredRows.length;
-            
-            if (totalPages <= 1) {
-                this.paginationContainer.innerHTML = '';
-                return;
-            }
-            
-            let html = '';
-            
-            // Previous button
-            html += `<button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="shopsPaginator.goToPage(${this.currentPage - 1})">←</button>`;
-            
-            // Calculate page window
-            let startPage = Math.max(1, this.currentPage - Math.floor(this.pageWindow / 2));
-            let endPage = Math.min(totalPages, startPage + this.pageWindow - 1);
-            
-            if (endPage - startPage < this.pageWindow - 1) {
-                startPage = Math.max(1, endPage - this.pageWindow + 1);
-            }
-            
-            // First page + ellipsis
-            if (startPage > 1) {
-                html += `<button class="pagination-btn ${this.currentPage === 1 ? 'active' : ''}" onclick="shopsPaginator.goToPage(1)">1</button>`;
-                if (startPage > 2) {
-                    html += `<span class="pagination-ellipsis">...</span>`;
-                }
-            }
-            
-            // Page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                html += `<button class="pagination-btn ${this.currentPage === i ? 'active' : ''}" onclick="shopsPaginator.goToPage(${i})">${i}</button>`;
-            }
-            
-            // Last page + ellipsis
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    html += `<span class="pagination-ellipsis">...</span>`;
-                }
-                html += `<button class="pagination-btn ${this.currentPage === totalPages ? 'active' : ''}" onclick="shopsPaginator.goToPage(${totalPages})">${totalPages}</button>`;
-            }
-            
-            // Next button
-            html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="shopsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
-            
-            // FIX: Info calculation
-            const startItem = totalItems === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
-            const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
-            html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
-            
-            this.paginationContainer.innerHTML = html;
+        constructor(tableBodyId, paginationId, itemsPerPage = 25, pageWindow = 7) {
+            // Pass instance name to parent - no need to override renderPagination
+            super(tableBodyId, paginationId, itemsPerPage, pageWindow, 'shopsPaginator');
         }
     }
 
@@ -463,7 +411,6 @@
                         <td style="color: #6B7280;">${log.ip}</td>
                     </tr>
                 `).join('');
-                // Reinitialize paginator after AJAX update
                 logsPaginator.updateRows();
             });
     });
@@ -495,7 +442,6 @@
                         <td><strong>${d.analysis_count}</strong></td>
                     </tr>
                 `).join('');
-                // Reinitialize paginator after AJAX update
                 shopsPaginator.updateRows();
             })
             .catch(err => console.error("Error updating table:", err))
@@ -509,7 +455,7 @@
     
     // Initialize paginators on page load
     document.addEventListener('DOMContentLoaded', function() {
-        logsPaginator = new TablePaginator('logsTableBody', 'logsPagination', 15, 5);
+        logsPaginator = new TablePaginator('logsTableBody', 'logsPagination', 15, 5, 'logsPaginator');
         shopsPaginator = new ShopsPaginator('domainTableBody', 'shopsPagination', 25, 7);
     });
 </script>
