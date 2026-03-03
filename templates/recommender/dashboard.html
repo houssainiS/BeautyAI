@@ -82,7 +82,7 @@
                     <td>
                         <div class="domain-link-wrapper">
                             <span class="domain-text" title="{{ log.domain }}">{{ log.domain }}</span>
-                            <a href="//{{ log.domain }}" target="_blank" class="external-link">↗</a>
+                            <a href="{{ log.domain }}" target="_blank" class="external-link">↗</a>
                         </div>
                     </td>
                     <td><span class="badge {% if log.device_type == 'Mobile' %}badge-mobile{% elif log.device_type == 'Tablet' %}badge-tablet{% else %}badge-desktop{% endif %}">{{ log.device_type|default:"Desktop" }}</span></td>
@@ -336,7 +336,7 @@
                         <td>
                             <div class="domain-link-wrapper">
                                 <span class="domain-text" title="${log.domain}">${log.domain}</span>
-                                <a href="//${log.domain}" target="_blank" class="external-link">↗</a>
+                                <a href="${log.domain.startsWith('http') ? log.domain : `//${log.domain}`}" target="_blank" class="external-link">↗</a>
                             </div>
                         </td>
                         <td><span class="badge badge-${log.device.toLowerCase()}">${log.device}</span></td>
