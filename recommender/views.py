@@ -1,16 +1,16 @@
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import JsonResponse
-from django.db.models import F
-from django.db.models import Q
+from django.db.models import F, Q, Count
 from PIL import Image
 import base64
 import io
 import json
 import gc  # garbage collection import
+from datetime import datetime, timedelta
+from django.utils.timezone import now
 
 from recommender.AImodels.ml_model import predict
 from recommender.AImodels.yolo_model import detect_skin_defects_yolo
@@ -477,28 +477,20 @@ def privacy_policy(request):
 
 
 ############# dashboard #############
-from django.db.models import Count
-from datetime import datetime, timedelta
-from django.utils import timezone
+
 
 @login_required
 def dashboard(request):
     if not (request.user.is_staff or request.user.is_superuser):
         return redirect('staff_login')
-    today = timezone.now().date()
+        
+    today = now().date()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
 
-    # Get filter from GET params (domain filter)
-    domain_filter = request.GET.get('domain', '')
-
-    # Filter FaceAnalysis by domain if search is used
-    analysis_qs = FaceAnalysis.objects.all()
-    if domain_filter:
-        analysis_qs = analysis_qs.filter(domain__icontains=domain_filter)
-
+    # 1. Top Card Stats
     stats = {
-        "main_visitors": Visitor.objects.count(),  # Main page visitors only
+        "total_visitors": Visitor.objects.count(),
         "analysis_today": FaceAnalysis.objects.filter(timestamp__date=today).count(),
         "analysis_week": FaceAnalysis.objects.filter(timestamp__date__gte=week_ago).count(),
         "analysis_month": FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).count(),
@@ -506,94 +498,100 @@ def dashboard(request):
         "dislikes": Feedback.objects.filter(feedback_type="dislike").count(),
     }
 
-    visitors_by_day = (
-        Visitor.objects.filter(date__gte=week_ago)
-        .values("date")
-        .annotate(count=Count("id"))
-        .order_by("date")
-    )
-    dates = [v["date"].strftime("%Y-%m-%d") for v in visitors_by_day]
-    counts = [v["count"] for v in visitors_by_day]
+    # 2. Trends Logic
+    visitor_trend_labels, visitor_trend_data = [], []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        visitor_trend_labels.append(date.strftime("%b %d"))
+        visitor_trend_data.append(Visitor.objects.filter(date=date).count())
 
-    analysis_today_hours = []
-    analysis_today_counts = []
+    analysis_today_labels, analysis_today_counts = [], []
     for hour in range(24):
-        hour_start = timezone.make_aware(datetime.combine(today, datetime.min.time()) + timedelta(hours=hour))
-        hour_end = hour_start + timedelta(hours=1)
-        count = FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_end).count()
-        if count > 0 or hour <= timezone.now().hour:  # Only show up to current hour
-            analysis_today_hours.append(f"{hour:02d}:00")
-            analysis_today_counts.append(count)
+        hour_start = datetime.combine(today, datetime.min.time()).replace(hour=hour)
+        analysis_today_labels.append(f"{hour:02d}:00")
+        analysis_today_counts.append(FaceAnalysis.objects.filter(timestamp__gte=hour_start, timestamp__lt=hour_start + timedelta(hours=1)).count())
+
+    analysis_week_labels, analysis_week_data = [], []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        analysis_week_labels.append(date.strftime("%b %d"))
+        analysis_week_data.append(FaceAnalysis.objects.filter(timestamp__date=date).count())
+
+    analysis_month_labels, analysis_month_data = [], []
+    for i in range(29, -1, -1):
+        date = today - timedelta(days=i)
+        label = date.strftime("%b %d") if i % 3 == 0 or i == 0 else ""
+        analysis_month_labels.append(label)
+        analysis_month_data.append(FaceAnalysis.objects.filter(timestamp__date=date).count())
+
+    # 3. Tables Data - Pass ALL data for client-side pagination
+    # Analysis logs: last 30 days (no limit for pagination)
+    analysis_logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
     
-    analysis_week_dates = []
-    analysis_week_counts = []
-    for i in range(7):
-        date = today - timedelta(days=6-i)
-        count = FaceAnalysis.objects.filter(timestamp__date=date).count()
-        analysis_week_dates.append(date.strftime("%m/%d"))
-        analysis_week_counts.append(count)
-    
-    analysis_month_dates = []
-    analysis_month_counts = []
-    for i in range(10):  # 10 groups of 3 days
-        end_date = today - timedelta(days=i*3)
-        start_date = end_date - timedelta(days=2)
-        count = FaceAnalysis.objects.filter(
-            timestamp__date__gte=start_date,
-            timestamp__date__lte=end_date
-        ).count()
-        analysis_month_dates.insert(0, f"{start_date.strftime('%m/%d')}-{end_date.strftime('%m/%d')}")
-        analysis_month_counts.insert(0, count)
+    # Shops: all active shops (no limit for pagination)
+    shops = Shop.objects.filter(is_active=True).order_by("-analysis_count")
 
-    feedback_data = [
-        Feedback.objects.filter(feedback_type="like").count(),
-        Feedback.objects.filter(feedback_type="dislike").count(),
-    ]
-
-    top_domains = (
-        FaceAnalysis.objects.values("domain")
-        .annotate(total=Count("id"))
-        .order_by("-total")[:5]
-    )
-
-    domain_stats = (
-        analysis_qs.values("domain")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
+    # 4. Device Split
+    device_stats = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).values('device_type').annotate(count=Count('id'))
+    device_labels = [d['device_type'] if d['device_type'] else 'Desktop' for d in device_stats]
+    device_counts = [d['count'] for d in device_stats]
 
     context = {
         "stats": stats,
-        "dates": dates,
-        "counts": counts,
-        "feedback_data": feedback_data,
-        "top_domains": top_domains,
-        "domain_stats": domain_stats,
-        "domain_filter": domain_filter,
-        "analysis_today_labels": analysis_today_hours,
-        "analysis_today_data": analysis_today_counts,
-        "analysis_week_labels": analysis_week_dates,
-        "analysis_week_data": analysis_week_counts,
-        "analysis_month_labels": analysis_month_dates,
-        "analysis_month_data": analysis_month_counts,
+        "visitor_trend_labels": json.dumps(visitor_trend_labels),
+        "visitor_trend_data": json.dumps(visitor_trend_data),
+        "analysis_today_labels": json.dumps(analysis_today_labels),
+        "analysis_today_data": json.dumps(analysis_today_counts),
+        "analysis_week_labels": json.dumps(analysis_week_labels),
+        "analysis_week_data": json.dumps(analysis_week_data),
+        "analysis_month_labels": json.dumps(analysis_month_labels),
+        "analysis_month_data": json.dumps(analysis_month_data),
+        "feedback_data": json.dumps([stats["likes"], stats["dislikes"]]),
+        "device_labels": json.dumps(device_labels),
+        "device_counts": json.dumps(device_counts),
+        "analysis_logs": analysis_logs,
+        "domain_stats": shops,
     }
     return render(request, "recommender/dashboard.html", context)
 
+
 @login_required
 def search_domains(request):
-    domain_filter = request.GET.get('domain', '')
-    analysis_qs = FaceAnalysis.objects.all()
+    query = request.GET.get('domain', '')
+    sort_by = request.GET.get('sort', 'analyses')
+    shops = Shop.objects.filter(is_active=True)
+    
+    if query:
+        # Fixed: Changed title__icontains to shop_name__icontains
+        shops = shops.filter(Q(domain__icontains=query) | Q(custom_domain__icontains=query) | Q(shop_name__icontains=query))
+    
+    if sort_by == 'newest':
+        shops = shops.order_by('-created_at')
+    else:
+        shops = shops.order_by('-analysis_count')
 
-    if domain_filter:
-        analysis_qs = analysis_qs.filter(domain__icontains=domain_filter)
+    results = []
+    for s in shops:
+        results.append({
+            "title": s.shop_name or "No Title", # Changed s.title to s.shop_name
+            "domain": s.custom_domain or s.domain,
+            "installed_on": s.created_at.strftime("%b %d, %Y"),
+            "analysis_count": s.analysis_count
+        })
+    return JsonResponse({"domains": results})
 
-    domain_stats = (
-        analysis_qs.values("domain")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
 
-    return JsonResponse({"domains": list(domain_stats)})
+@login_required
+def filter_logs(request):
+    device = request.GET.get('device', '')
+    month_ago = now().date() - timedelta(days=30)
+    logs = FaceAnalysis.objects.filter(timestamp__date__gte=month_ago).order_by('-timestamp')
+    if device:
+        logs = logs.filter(device_type__iexact=device)
+    
+    # Return ALL matching logs (no limit) for client-side pagination
+    results = [{"time": l.timestamp.strftime("%b %d, %H:%M"), "domain": l.domain or "Unknown", "device": l.device_type or "Desktop", "ip": l.ip_address or "0.0.0.0"} for l in logs]
+    return JsonResponse({"logs": results})
 
 
 def staff_login(request):

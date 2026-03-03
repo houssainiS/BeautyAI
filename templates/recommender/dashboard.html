@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,822 +6,512 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Beautyxia Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'images/logo-white.png' %}">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: #F9FAFB;
-      color: #202223;
-      min-height: 100vh;
-    }
-
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: 24px 32px;
-      max-width: 1400px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    /* Top Bar */
-    .top-bar {
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; background: #F3F4F6; color: #4B5563; }
+    .badge-mobile { background: #DBEAFE; color: #1E40AF; }
+    .badge-tablet { background: #FEF3C7; color: #92400E; }
+    .badge-desktop { background: #D1FAE5; color: #065F46; }
+    #logsTableBody, #domainTableBody { transition: opacity 0.2s ease; }
+    
+    /* Pagination Styles */
+    .pagination {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #E5E7EB;
+      gap: 4px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
     }
-
-    .page-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #202223;
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #008060, #00C9A7);
-      display: flex;
+    
+    .pagination-btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    /* Logout Button */
-    .logout-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      background-color: #F3F4F6;
-      color: #4B5563;
-      border: 1px solid #D1D5DB;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .logout-btn:hover {
-      background-color: #E5E7EB;
-      color: #202223;
-    }
-
-    .logout-icon {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 20px;
-      transition: all 0.3s ease;
-      animation: fadeIn 0.5s ease;
-    }
-
-    .stat-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
-    }
-
-    .stat-label {
-      font-size: 13px;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      background: var(--color-white);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
       font-weight: 500;
-      color: #6B7280;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
-      font-size: 32px;
-      font-weight: 700;
-      color: #202223;
-    }
-
-    .stat-trend {
-      font-size: 12px;
-      color: #008060;
-      margin-top: 4px;
-      font-weight: 500;
-    }
-
-    /* Section */
-    .section {
-      margin-bottom: 32px;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #202223;
-    }
-
-    /* Card */
-    .card {
-      background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 24px;
-      animation: fadeIn 0.6s ease;
-    }
-
-    /* Charts */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    .chart-card {
-      background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 24px;
-      animation: fadeIn 0.7s ease;
-    }
-
-    .chart-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #202223;
-      margin-bottom: 20px;
-    }
-
-    /* Table */
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .data-table thead {
-      background-color: #F9FAFB;
-      border-bottom: 2px solid #E5E7EB;
-    }
-
-    .data-table th {
-      text-align: left;
-      padding: 12px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #6B7280;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .data-table td {
-      padding: 16px;
-      border-bottom: 1px solid #F3F4F6;
-      font-size: 14px;
-      color: #202223;
-    }
-
-    .data-table tbody tr:hover {
-      background-color: #F9FAFB;
-    }
-
-    /* Search/Filter */
-    .filter-bar {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
-
-    .search-input {
-      flex: 1;
-      max-width: 400px;
-      padding: 10px 16px;
-      border: 1px solid #D1D5DB;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: 'Inter', sans-serif;
-      transition: all 0.2s;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: #008060;
-      box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
+      transition: all var(--transition-fast);
     }
-
-    .btn-primary {
-      background-color: #008060;
-      color: white;
+    
+    .pagination-btn:hover:not(:disabled) {
+      background: var(--color-gray-50);
+      border-color: var(--color-gray-300);
+      color: var(--text-primary);
     }
-
-    .btn-primary:hover {
-      background-color: #005E46;
+    
+    .pagination-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
     }
-
-    .btn-secondary {
-      background-color: #F3F4F6;
-      color: #4B5563;
-      border: 1px solid #D1D5DB;
+    
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-
-    .btn-secondary:hover {
-      background-color: #E5E7EB;
+    
+    .pagination-info {
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+      margin: 0 8px;
     }
-
-    /* Active Button Styling */
-    .btn-secondary.active {
-      background-color: #008060;
-      color: white;
-      border-color: #008060;
+    
+    .pagination-ellipsis {
+      color: var(--text-muted);
+      padding: 0 4px;
     }
-
-    .btn-secondary.active:hover {
-      background-color: #005E46;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .main-content {
-        padding: 16px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .page-title {
-        font-size: 24px;
-      }
-
-      .logout-btn {
-        padding: 8px 12px;
-        font-size: 13px;
-      }
-
-      .logout-btn span {
-        display: none;
-      }
-    }
-
-    /* Empty State */
-    .empty-state {
+    
+    /* Row Number Column */
+    .row-number {
+      color: var(--text-muted);
+      font-weight: 500;
+      width: 50px;
       text-align: center;
-      padding: 48px 24px;
-      color: #6B7280;
     }
-
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-
-    /* Badge */
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .badge-success {
-      background-color: #D1FAE5;
-      color: #065F46;
-    }
-
-    .badge-warning {
-      background-color: #FEF3C7;
-      color: #92400E;
-    }
-
-    .hidden {
-      display: none;
+    
+    .domain-table th:first-child,
+    .domain-table td:first-child {
+      width: 50px;
+      text-align: center;
     }
   </style>
+<base target="_blank">
 </head>
-
 <body>
-  <main class="main-content">
 
-    <div class="top-bar">
-      <h1 class="page-title">Dashboard Overview</h1>
-      <div class="user-menu">
-        <div class="user-avatar">A</div>
-        <a href="{% url 'staff_logout' %}" class="logout-btn">
-          <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
-          </svg>
-          <span>Logout</span>
-        </a>
-      </div>
+<div class="main-content">
+  <div class="header">
+    <h1>Analytics Overview</h1>
+    <a href="{% url 'staff_logout' %}" class="logout-btn">Logout</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Analyses Today</div><div class="stat-value">{{ stats.analysis_today }}</div></div>
+    <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value">{{ stats.analysis_week }}</div></div>
+    <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value">{{ stats.analysis_month }}</div></div>
+    <div class="stat-card">
+        <div class="stat-label">Feedback Sentiment</div>
+        <div class="stat-value">{{ stats.likes }} <span style="font-size: 14px; color: #6B7280; font-weight: 400;">likes</span></div>
+        <div class="stat-trend" style="color: #BF0711;">{{ stats.dislikes }} dislikes</div>
     </div>
+  </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Main Page Visitors</div>
-        <div class="stat-value">{{ stats.main_visitors }}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Analyses Today</div>
-        <div class="stat-value">{{ stats.analysis_today }}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Last 7 Days</div>
-        <div class="stat-value">{{ stats.analysis_week }}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Last 30 Days</div>
-        <div class="stat-value">{{ stats.analysis_month }}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Feedback Likes</div>
-        <div class="stat-value">{{ stats.likes }}</div>
-        <div class="stat-trend">{{ stats.dislikes }} dislikes</div>
-      </div>
-    </div>
-
-    <div class="charts-grid">
-      <div class="chart-card">
-        <h3 class="chart-title">Visitors Trend (Last 7 Days)</h3>
-        <canvas id="visitorsChart"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h3 class="chart-title" style="margin-bottom: 0;">Analysis Trend</h3>
-          <div class="btn-group" style="display: flex; gap: 8px;">
-            <button class="period-btn btn-secondary active" data-period="today" style="padding: 8px 16px; font-size: 13px;">Today</button>
-            <button class="period-btn btn-secondary" data-period="week" style="padding: 8px 16px; font-size: 13px;">Last 7 Days</button>
-            <button class="period-btn btn-secondary" data-period="month" style="padding: 8px 16px; font-size: 13px;">Last 30 Days</button>
-          </div>
+  <div class="charts-grid-triple">
+    <div class="card"><h3>Visitor Trend (7D)</h3><div class="chart-container"><canvas id="visitorChart"></canvas></div></div>
+    <div class="card">
+      <div class="chart-header-flex">
+        <h3>Analysis Trend</h3>
+        <div class="btn-group">
+          <button class="period-btn active" data-period="today">Today</button>
+          <button class="period-btn" data-period="week">7D</button>
+          <button class="period-btn" data-period="month">30D</button>
         </div>
-        <canvas id="analysisChart"></canvas>
       </div>
+      <div class="chart-container"><canvas id="analysisChart"></canvas></div>
+    </div>
+    <div class="card"><h3>Device Split (30D)</h3><div class="chart-container"><canvas id="deviceChart"></canvas></div></div>
+  </div>
 
-      <div class="chart-card">
-        <h3 class="chart-title">Feedback Ratio</h3>
-        <canvas id="feedbackChart"></canvas>
-      </div>
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-top: 24px;">
+    <div class="card">
+        <h3>User Feedback</h3>
+        <div class="chart-container" style="height: 280px;"><canvas id="feedbackChart"></canvas></div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <h2 class="section-title">Domain Analysis</h2>
-      </div>
-
-      <div class="card">
-        <div class="filter-bar">
-          <input 
-            type="text" 
-            id="domainSearch"
-            class="search-input" 
-            placeholder="Search by domain name..." 
-            value="{{ domain_filter }}"
-          >
-          <button id="clearBtn" class="btn btn-secondary hidden">Clear</button>
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3>Recent Analysis Logs (30 Days)</h3>
+            <select id="deviceFilter" class="search-input" style="width: 150px;">
+                <option value="">All Devices</option>
+                <option value="Mobile">Mobile</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Desktop">Desktop</option>
+            </select>
         </div>
-
-        <div class="table-container">
-          <table class="data-table">
+        <table class="domain-table">
             <thead>
               <tr>
+                <th>#</th>
+                <th>Time</th>
                 <th>Domain</th>
-                <th>Total Analyses</th>
+                <th>Device</th>
+                <th>IP Address</th>
               </tr>
             </thead>
-            <tbody id="domainTableBody">
-              {% for d in domain_stats|slice:":5" %}
-                <tr class="domain-row">
-                  <td>{{ d.domain|default:"(unknown)" }}</td>
-                  <td><strong>{{ d.total }}</strong></td>
+            <tbody id="logsTableBody">
+                {% for log in analysis_logs %}
+                <tr data-log-id="{{ log.id }}">
+                    <td class="row-number">{{ forloop.counter }}</td>
+                    <td>{{ log.timestamp|date:"M d, H:i" }}</td>
+                    <td>{{ log.domain }}</td>
+                    <td><span class="badge {% if log.device_type == 'Mobile' %}badge-mobile{% elif log.device_type == 'Tablet' %}badge-tablet{% else %}badge-desktop{% endif %}">{{ log.device_type|default:"Desktop" }}</span></td>
+                    <td style="color: #6B7280;">{{ log.ip_address }}</td>
                 </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="2">
-                    <div class="empty-state">
-                      <div class="empty-state-icon">📊</div>
-                      <p>No domain analyses found</p>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-              {% for d in domain_stats|slice:"5:" %}
-                <tr class="domain-row hidden-row" style="display: none;">
-                  <td>{{ d.domain|default:"(unknown)" }}</td>
-                  <td><strong>{{ d.total }}</strong></td>
-                </tr>
-              {% endfor %}
+                {% endfor %}
             </tbody>
-          </table>
-        </div>
-      </div>
+        </table>
+        <!-- Analysis Logs Pagination -->
+        <div class="pagination" id="logsPagination"></div>
     </div>
-  </main>
+  </div>
 
- 
-  {{ dates|json_script:"dates-data" }}
-  {{ counts|json_script:"counts-data" }}
-  {{ feedback_data|json_script:"feedback-data" }}
-  {{ analysis_today_labels|json_script:"analysis-today-labels" }}
-  {{ analysis_today_data|json_script:"analysis-today-data" }}
-  {{ analysis_week_labels|json_script:"analysis-week-labels" }}
-  {{ analysis_week_data|json_script:"analysis-week-data" }}
-  {{ analysis_month_labels|json_script:"analysis-month-labels" }}
-  {{ analysis_month_data|json_script:"analysis-month-data" }}
-
-  <script>
-    // Parse Django data
-    const dates = JSON.parse(document.getElementById('dates-data').textContent);
-    const counts = JSON.parse(document.getElementById('counts-data').textContent);
-    const feedbackData = JSON.parse(document.getElementById('feedback-data').textContent);
-    
-    const analysisTodayLabels = JSON.parse(document.getElementById('analysis-today-labels').textContent);
-    const analysisTodayData = JSON.parse(document.getElementById('analysis-today-data').textContent);
-    const analysisWeekLabels = JSON.parse(document.getElementById('analysis-week-labels').textContent);
-    const analysisWeekData = JSON.parse(document.getElementById('analysis-week-data').textContent);
-    const analysisMonthLabels = JSON.parse(document.getElementById('analysis-month-labels').textContent);
-    const analysisMonthData = JSON.parse(document.getElementById('analysis-month-data').textContent);
-
-    console.log('[v0] Analysis Today Labels:', analysisTodayLabels);
-    console.log('[v0] Analysis Today Data:', analysisTodayData);
-    console.log('[v0] Analysis Week Labels:', analysisWeekLabels);
-    console.log('[v0] Analysis Week Data:', analysisWeekData);
-    console.log('[v0] Analysis Month Labels:', analysisMonthLabels);
-    console.log('[v0] Analysis Month Data:', analysisMonthData);
-
-    // Visitors Trend Chart
-    const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
-    new Chart(visitorsCtx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [ {
-          label: 'Daily Visitors',
-          data: counts,
-          borderColor: '#008060',
-          backgroundColor: 'rgba(0, 128, 96, 0.1)',
-          fill: true,
-          tension: 0.4,
-          borderWidth: 2,
-          pointRadius: 4,
-          pointBackgroundColor: '#008060',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            backgroundColor: '#202223',
-            padding: 12,
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: '#E5E7EB',
-            borderWidth: 1,
-            cornerRadius: 8
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: '#F3F4F6',
-              drawBorder: false
-            },
-            ticks: {
-              color: '#6B7280',
-              font: {
-                size: 12
-              }
-            }
-          },
-          x: {
-            grid: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: {
-              color: '#6B7280',
-              font: {
-                size: 12
-              }
-            }
-          }
-        }
-      }
-    });
-
-    // Feedback Doughnut Chart
-    const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
-    new Chart(feedbackCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Likes 👍', 'Dislikes 👎'],
-        datasets: [ {
-          data: feedbackData,
-          backgroundColor: ['#008060', '#E5E7EB'],
-          borderWidth: 0,
-          hoverOffset: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 20,
-              font: {
-                size: 13,
-                family: 'Inter'
-              },
-              color: '#202223',
-              usePointStyle: true,
-              pointStyle: 'circle'
-            }
-          },
-          tooltip: {
-            backgroundColor: '#202223',
-            padding: 12,
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            cornerRadius: 8
-          }
-        },
-        cutout: '65%'
-      }
-    });
-
-    // Analysis Trend Chart
-    const analysisCtx = document.getElementById('analysisChart').getContext('2d');
-    let analysisChart = new Chart(analysisCtx, {
-      type: 'line',
-      data: {
-        labels: analysisTodayLabels,
-        datasets: [ {
-          label: 'Analyses',
-          data: analysisTodayData,
-          borderColor: '#008060',
-          backgroundColor: 'rgba(0, 128, 96, 0.1)',
-          fill: true,
-          tension: 0.4,
-          borderWidth: 2,
-          pointRadius: 4,
-          pointBackgroundColor: '#008060',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            backgroundColor: '#202223',
-            padding: 12,
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: '#E5E7EB',
-            borderWidth: 1,
-            cornerRadius: 8
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: '#F3F4F6',
-              drawBorder: false
-            },
-            ticks: {
-              color: '#6B7280',
-              font: {
-                size: 12
-              },
-              stepSize: 1
-            }
-          },
-          x: {
-            grid: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: {
-              color: '#6B7280',
-              font: {
-                size: 12
-              },
-              maxRotation: 45,
-              minRotation: 45
-            }
-          }
-        }
-      }
-    });
-
-    // Period button functionality
-    const periodButtons = document.querySelectorAll('.period-btn');
-    periodButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        console.log('[v0] Period button clicked:', button.getAttribute('data-period'));
-        
-        periodButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-
-        const period = button.getAttribute('data-period');
-        let labels, data;
-
-        switch (period) {
-          case 'today':
-            labels = analysisTodayLabels;
-            data = analysisTodayData;
-            console.log('[v0] Switching to today data');
-            break;
-          case 'week':
-            labels = analysisWeekLabels;
-            data = analysisWeekData;
-            console.log('[v0] Switching to week data');
-            break;
-          case 'month':
-            labels = analysisMonthLabels;
-            data = analysisMonthData;
-            console.log('[v0] Switching to month data');
-            break;
-          default:
-            labels = analysisTodayLabels;
-            data = analysisTodayData;
-        }
-
-        analysisChart.data.labels = labels;
-        analysisChart.data.datasets[0].data = data;
-        analysisChart.update();
-        
-        console.log('[v0] Chart updated with labels:', labels, 'and data:', data);
-      });
-    });
-
-    // Live Domain Search
-    const domainSearchInput = document.getElementById('domainSearch');
-    const domainTableBody = document.getElementById('domainTableBody');
-    const clearBtn = document.getElementById('clearBtn');
-    
-    let searchTimeout;
-
-    // Debounced search function
-    domainSearchInput.addEventListener('input', (e) => {
-      clearTimeout(searchTimeout);
-      const query = e.target.value.trim();
-      
-      // Show/hide clear button
-      if (query) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
-      }
-      
-      searchTimeout = setTimeout(() => {
-        fetchDomains(query);
-      }, 300);
-    });
-
-    // Clear button functionality
-    clearBtn.addEventListener('click', () => {
-      domainSearchInput.value = '';
-      clearBtn.classList.add('hidden');
-      fetchDomains('');
-    });
-
-    // Fetch domains from server
-    async function fetchDomains(query) {
-      try {
-        const response = await fetch(`/dashboard/search-domains/?domain=${encodeURIComponent(query)}`);
-        const data = await response.json();
-        
-        // When query is empty, show all domains from server
-        // When query has value, filter the results
-        const domainsToShow = data.domains || [];
-        
-        renderDomains(domainsToShow);
-      } catch (error) {
-        console.error('Error fetching domains:', error);
-        domainTableBody.innerHTML = `
-          <tr>
-            <td colspan="2">
-              <div class="empty-state">
-                <div class="empty-state-icon">⚠️</div>
-                <p>Error loading domains</p>
-              </div>
-            </td>
-          </tr>
-        `;
-      }
-    }
-
-    // Render domains in table
-    function renderDomains(domains) {
-      if (!domains || domains.length === 0) {
-        domainTableBody.innerHTML = `
-          <tr>
-            <td colspan="2">
-              <div class="empty-state">
-                <div class="empty-state-icon">📊</div>
-                <p>No domain analyses found</p>
-              </div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      domainTableBody.innerHTML = domains.map(d => `
+  <div class="card" style="margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3>Active Shop Performance</h3>
+        <div style="display: flex; gap: 12px;">
+            <select id="shopSort" class="search-input" style="width: 180px;">
+                <option value="analyses">Sort by Analyses</option>
+                <option value="newest">Sort by Newest</option>
+            </select>
+            <div style="width: 250px;"><input type="text" id="domainSearch" class="search-input" placeholder="Search shop..."></div>
+        </div>
+    </div>
+    <table class="domain-table">
+      <thead>
         <tr>
-          <td>${d.domain || '(unknown)'}</td>
-          <td><strong>${d.total}</strong></td>
+            <th>#</th>
+            <th>Shop Title</th>
+            <th>Shop Domain</th>
+            <th>Installed On</th>
+            <th>Lifetime Analyses</th>
         </tr>
-      `).join('');
+      </thead>
+      <tbody id="domainTableBody">
+        {% for shop in domain_stats %}
+        <tr data-shop-id="{{ shop.id }}">
+          <td class="row-number">{{ forloop.counter }}</td>
+          <td style="font-weight: 600;">{{ shop.shop_name|default:"No Title" }}</td>
+          <td>
+            <div class="domain-link-wrapper">
+                {{ shop.custom_domain|default:shop.domain }}
+                <a href="https://{{ shop.domain }}" target="_blank" class="external-link">↗</a>
+            </div>
+          </td>
+          <td style="color: #6B7280;">{{ shop.created_at|date:"M d, Y" }}</td>
+          <td><strong>{{ shop.analysis_count }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <!-- Shops Pagination -->
+    <div class="pagination" id="shopsPagination"></div>
+  </div>
+</div>
+
+<script>
+    // ============================================
+    // PAGINATION CLASS
+    // ============================================
+    class TablePaginator {
+        constructor(tableBodyId, paginationId, itemsPerPage = 15, pageWindow = 5) {
+            this.tableBody = document.getElementById(tableBodyId);
+            this.paginationContainer = document.getElementById(paginationId);
+            this.itemsPerPage = itemsPerPage;
+            this.pageWindow = pageWindow; // Number of page buttons to show
+            this.currentPage = 1;
+            this.allRows = [];
+            this.filteredRows = [];
+            
+            this.init();
+        }
+        
+        init() {
+            // Store all rows
+            this.allRows = Array.from(this.tableBody.querySelectorAll('tr'));
+            this.filteredRows = [...this.allRows];
+            this.render();
+        }
+        
+        // Update rows (for AJAX updates)
+        updateRows() {
+            this.allRows = Array.from(this.tableBody.querySelectorAll('tr'));
+            this.filteredRows = [...this.allRows];
+            this.currentPage = 1;
+            this.render();
+        }
+        
+        // Go to specific page
+        goToPage(page) {
+            const totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            this.currentPage = page;
+            this.render();
+        }
+        
+        // Render table and pagination
+        render() {
+            this.renderTable();
+            this.renderPagination();
+            this.updateRowNumbers();
+        }
+        
+        renderTable() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            
+            // Hide all rows first
+            this.allRows.forEach(row => row.style.display = 'none');
+            
+            // Show only current page rows
+            this.filteredRows.slice(start, end).forEach(row => {
+                row.style.display = '';
+            });
+        }
+        
+        updateRowNumbers() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            this.filteredRows.forEach((row, index) => {
+                const numCell = row.querySelector('.row-number');
+                if (numCell) {
+                    numCell.textContent = start + index + 1;
+                }
+            });
+        }
+        
+        renderPagination() {
+            const totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage);
+            const totalItems = this.filteredRows.length;
+            
+            if (totalPages <= 1) {
+                this.paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="logsPaginator.goToPage(${this.currentPage - 1})">←</button>`;
+            
+            // Calculate page window
+            let startPage = Math.max(1, this.currentPage - Math.floor(this.pageWindow / 2));
+            let endPage = Math.min(totalPages, startPage + this.pageWindow - 1);
+            
+            if (endPage - startPage < this.pageWindow - 1) {
+                startPage = Math.max(1, endPage - this.pageWindow + 1);
+            }
+            
+            // First page + ellipsis
+            if (startPage > 1) {
+                html += `<button class="pagination-btn ${this.currentPage === 1 ? 'active' : ''}" onclick="logsPaginator.goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${this.currentPage === i ? 'active' : ''}" onclick="logsPaginator.goToPage(${i})">${i}</button>`;
+            }
+            
+            // Last page + ellipsis
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+                html += `<button class="pagination-btn ${this.currentPage === totalPages ? 'active' : ''}" onclick="logsPaginator.goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="logsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
+            
+            // Info
+            const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
+            html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
+            
+            this.paginationContainer.innerHTML = html;
+        }
     }
-  </script>
+    
+    // ============================================
+    // SHOPS PAGINATOR (separate instance)
+    // ============================================
+    class ShopsPaginator extends TablePaginator {
+        renderPagination() {
+            const totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage);
+            const totalItems = this.filteredRows.length;
+            
+            if (totalPages <= 1) {
+                this.paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button class="pagination-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="shopsPaginator.goToPage(${this.currentPage - 1})">←</button>`;
+            
+            // Calculate page window
+            let startPage = Math.max(1, this.currentPage - Math.floor(this.pageWindow / 2));
+            let endPage = Math.min(totalPages, startPage + this.pageWindow - 1);
+            
+            if (endPage - startPage < this.pageWindow - 1) {
+                startPage = Math.max(1, endPage - this.pageWindow + 1);
+            }
+            
+            // First page + ellipsis
+            if (startPage > 1) {
+                html += `<button class="pagination-btn ${this.currentPage === 1 ? 'active' : ''}" onclick="shopsPaginator.goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${this.currentPage === i ? 'active' : ''}" onclick="shopsPaginator.goToPage(${i})">${i}</button>`;
+            }
+            
+            // Last page + ellipsis
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+                html += `<button class="pagination-btn ${this.currentPage === totalPages ? 'active' : ''}" onclick="shopsPaginator.goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            html += `<button class="pagination-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="shopsPaginator.goToPage(${this.currentPage + 1})">→</button>`;
+            
+            // Info
+            const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
+            html += `<span class="pagination-info">${startItem}-${endItem} of ${totalItems}</span>`;
+            
+            this.paginationContainer.innerHTML = html;
+        }
+    }
+
+    // Initialize paginators
+    let logsPaginator, shopsPaginator;
+
+    // 1. Chart Data
+    const visitorLabels = JSON.parse('{{ visitor_trend_labels|safe }}');
+    const visitorData = JSON.parse('{{ visitor_trend_data|safe }}');
+    const analysisTodayLabels = JSON.parse('{{ analysis_today_labels|safe }}');
+    const analysisTodayData = JSON.parse('{{ analysis_today_data|safe }}');
+    const analysisWeekLabels = JSON.parse('{{ analysis_week_labels|safe }}');
+    const analysisWeekData = JSON.parse('{{ analysis_week_data|safe }}');
+    const analysisMonthLabels = JSON.parse('{{ analysis_month_labels|safe }}');
+    const analysisMonthData = JSON.parse('{{ analysis_month_data|safe }}');
+    const deviceLabels = JSON.parse('{{ device_labels|safe }}');
+    const deviceCounts = JSON.parse('{{ device_counts|safe }}');
+    const feedbackData = JSON.parse('{{ feedback_data|safe }}');
+
+    const compactOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } };
+
+    // 2. Render Charts
+    new Chart(document.getElementById('visitorChart'), { type: 'bar', data: { labels: visitorLabels, datasets: [{ data: visitorData, backgroundColor: '#5c6ac4', borderRadius: 4 }] }, options: compactOptions });
+    
+    let analysisChart = new Chart(document.getElementById('analysisChart'), { 
+        type: 'line', 
+        data: { labels: analysisTodayLabels, datasets: [{ data: analysisTodayData, borderColor: '#008060', backgroundColor: 'rgba(0, 128, 96, 0.05)', fill: true, tension: 0.4 }] }, 
+        options: compactOptions 
+    });
+
+    new Chart(document.getElementById('deviceChart'), { 
+        type: 'doughnut', 
+        data: { labels: deviceLabels, datasets: [{ data: deviceCounts, backgroundColor: ['#5c6ac4', '#008060', '#BF0711', '#FFC400'] }] }, 
+        options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', display: true, labels: { boxWidth: 10 } } } } 
+    });
+
+    new Chart(document.getElementById('feedbackChart'), {
+        type: 'pie',
+        data: { labels: ['Likes', 'Dislikes'], datasets: [{ data: feedbackData, backgroundColor: ['#008060', '#BF0711'] }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // 3. Switch Analysis Period
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const p = e.target.dataset.period;
+            if(p === 'today') { analysisChart.data.labels = analysisTodayLabels; analysisChart.data.datasets[0].data = analysisTodayData; }
+            else if(p === 'week') { analysisChart.data.labels = analysisWeekLabels; analysisChart.data.datasets[0].data = analysisWeekData; }
+            else { analysisChart.data.labels = analysisMonthLabels; analysisChart.data.datasets[0].data = analysisMonthData; }
+            analysisChart.update();
+        });
+    });
+
+    // 4. Device Filter AJAX with Pagination
+    const deviceFilter = document.getElementById('deviceFilter');
+    const logsTableBody = document.getElementById('logsTableBody');
+    
+    deviceFilter.addEventListener('change', (e) => {
+        logsTableBody.style.opacity = '0.5';
+        fetch(`{% url 'filter_logs' %}?device=${encodeURIComponent(e.target.value)}`)
+            .then(res => res.json())
+            .then(data => {
+                logsTableBody.style.opacity = '1';
+                logsTableBody.innerHTML = data.logs.map((log, index) => `
+                    <tr>
+                        <td class="row-number">${index + 1}</td>
+                        <td>${log.time}</td><td>${log.domain}</td>
+                        <td><span class="badge badge-${log.device.toLowerCase()}">${log.device}</span></td>
+                        <td style="color: #6B7280;">${log.ip}</td>
+                    </tr>
+                `).join('');
+                // Reinitialize paginator after AJAX update
+                logsPaginator.updateRows();
+            });
+    });
+
+    // 5. Shop Search & Sort AJAX with Pagination
+    const domainSearch = document.getElementById('domainSearch');
+    const shopSort = document.getElementById('shopSort');
+    const domainTableBody = document.getElementById('domainTableBody');
+
+    function updateShopTable() {
+        domainTableBody.style.opacity = '0.5';
+        const query = domainSearch.value;
+        const sort = shopSort.value;
+        
+        fetch(`{% url 'search_domains' %}?domain=${encodeURIComponent(query)}&sort=${sort}`)
+            .then(res => res.json())
+            .then(data => {
+                domainTableBody.innerHTML = data.domains.map((d, index) => `
+                    <tr>
+                        <td class="row-number">${index + 1}</td>
+                        <td style="font-weight: 600;">${d.title}</td>
+                        <td>
+                            <div class="domain-link-wrapper">
+                                ${d.domain} 
+                                <a href="https://${d.domain}" target="_blank" class="external-link">↗</a>
+                            </div>
+                        </td>
+                        <td style="color: #6B7280;">${d.installed_on}</td>
+                        <td><strong>${d.analysis_count}</strong></td>
+                    </tr>
+                `).join('');
+                // Reinitialize paginator after AJAX update
+                shopsPaginator.updateRows();
+            })
+            .catch(err => console.error("Error updating table:", err))
+            .finally(() => {
+                domainTableBody.style.opacity = '1';
+            });
+    }
+
+    domainSearch.addEventListener('input', updateShopTable);
+    shopSort.addEventListener('change', updateShopTable);
+    
+    // Initialize paginators on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        logsPaginator = new TablePaginator('logsTableBody', 'logsPagination', 15, 5);
+        shopsPaginator = new ShopsPaginator('domainTableBody', 'shopsPagination', 25, 7);
+    });
+</script>
 </body>
 </html>

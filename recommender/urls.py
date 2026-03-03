@@ -20,6 +20,7 @@ urlpatterns = [
     path("login/", views.staff_login, name="staff_login"),
     path("logout/", views.staff_logout, name="staff_logout"),
     path("dashboard/search-domains/", views.search_domains, name="search_domains"),
+    path("dashboard/filter-logs/", views.filter_logs, name="filter_logs"),
     #mandatory GDPR webhooks 
     path('webhooks/customers_data_request/', webhooks.customers_data_request, name='customers_data_request'),
     path('webhooks/customers_redact/', webhooks.customers_redact, name='customers_redact'),
